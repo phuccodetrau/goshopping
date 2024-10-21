@@ -1,10 +1,10 @@
-const db = require('../config/db');
-const UserModel = require("./user.model");
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+import UserModel from './user.model.js';
+
 const { Schema } = mongoose;
 
 const toDoSchema = new Schema({
-    userId:{
+    userId: {
         type: Schema.Types.ObjectId,
         ref: UserModel.modelName
     },
@@ -15,8 +15,9 @@ const toDoSchema = new Schema({
     description: {
         type: String,
         required: true
-    },
-},{timestamps:true});
+    }
+}, { timestamps: true });
 
-const ToDoModel = db.model('todo',toDoSchema);
-module.exports = ToDoModel;
+const ToDoModel = mongoose.model('todo', toDoSchema);
+
+export default ToDoModel;

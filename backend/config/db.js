@@ -1,9 +1,14 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
+// Nếu bạn muốn bật chế độ debug
 // mongoose.set('debug', true);
 
-
-const connection = mongoose.createConnection(`mongodb://127.0.0.1:27017/ToDoDB`).on('open',()=>{console.log("MongoDB Connected");}).on('error',()=>{
-    console.log("MongoDB Connection error");
+const connection = mongoose.connect(
+    "mongodb+srv://phucnh0703:hoangphuc0703@cluster0.8tjiz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+).then(() => {
+    console.log("Thành công");
+}).catch(() => {
+    console.log("Thất bại");
 });
 
-module.exports = connection;
+export default connection;

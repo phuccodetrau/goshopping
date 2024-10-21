@@ -1,6 +1,6 @@
-const db = require('../config/db');
-const bcrypt = require("bcrypt");
-const mongoose = require('mongoose');
+import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
+
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
@@ -8,7 +8,6 @@ const userSchema = new Schema({
         type: String,
         lowercase: true,
         required: [true, "userName can't be empty"],
-        // @ts-ignore
         match: [
             /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/,
             "userName format is not correct",
@@ -19,31 +18,27 @@ const userSchema = new Schema({
         type: String,
         required: [true, "password is required"],
     },
-},{timestamps:true});
-
+}, { timestamps: true });
 
 // used while encrypting user entered password
-userSchema.pre("save",async function(){
-    var user = this;
-    if(!user.isModified("password")){
-        return
+userSchema.pre("save", async function () {
+    const user = this;
+    if (!user.isModified("password")) {
+        return;
     }
-    try{
+    try {
         const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(user.password,salt);
-
+        const hash = await bcrypt.hash(user.password, salt);
         user.password = hash;
-    }catch(err){
+    } catch (err) {
         throw err;
     }
 });
 
-
-//used while signIn decrypt
+// used while signIn decrypt
 userSchema.methods.comparePassword = async function (candidatePassword) {
     try {
-        console.log('----------------no password',this.password);
-        // @ts-ignore
+        console.log('----------------no password', this.password);
         const isMatch = await bcrypt.compare(candidatePassword, this.password);
         return isMatch;
     } catch (error) {
@@ -51,5 +46,6 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
     }
 };
 
-const UserModel = db.model('user',userSchema);
-module.exports = UserModel;
+const UserModel = mongoose.model('user', userSchema);
+
+export default UserModel;  // Xuất default

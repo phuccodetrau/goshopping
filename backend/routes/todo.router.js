@@ -1,12 +1,10 @@
-const router = require("express").Router();
-const ToDoController = require('../controller/todo.controller')
+import { Router } from 'express';
+import ToDoController from '../controller/todo.controller.js';
 
-router.post("/createToDo",ToDoController.createToDo);
+const router = Router();
 
-router.get('/getUserTodoList',ToDoController.getToDoList)
+router.post("/createToDo", ToDoController.createToDo);
+router.get('/getUserTodoList', ToDoController.getToDoList);
+router.post("/deleteTodo", ToDoController.deleteToDo);
 
-router.post("/deleteTodo",ToDoController.deleteToDo)
-
-
-
-module.exports = router;
+export default router;

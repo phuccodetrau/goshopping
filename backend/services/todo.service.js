@@ -1,22 +1,20 @@
-const { deleteToDo } = require("../controller/todo.controller");
-const ToDoModel = require("../models/todo.model");
+import ToDoModel from "../models/todo.model.js";
 
-
-class ToDoService{
-    static async createToDo(userId,title,description){
-            const createToDo = new ToDoModel({userId,title,description});
-            return await createToDo.save();
+class ToDoService {
+    static async createToDo(userId, title, description) {
+        const createToDo = new ToDoModel({ userId, title, description });
+        return await createToDo.save();
     }
 
-    static async getUserToDoList(userId){
-        const todoList = await ToDoModel.find({userId})
+    static async getUserToDoList(userId) {
+        const todoList = await ToDoModel.find({ userId });
         return todoList;
-   }
+    }
 
-   static async deleteToDo(id){
-        const deleted = await ToDoModel.findByIdAndDelete({_id:id})
+    static async deleteToDo(id) {
+        const deleted = await ToDoModel.findByIdAndDelete({ _id: id });
         return deleted;
-   }
+    }
 }
 
-module.exports = ToDoService;
+export default ToDoService;
