@@ -1,0 +1,86 @@
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
+
+const userSchema = new Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  name: { type: String, required: true },
+  language: { type: String, required: true },
+  timezone: { type: String, required: true },
+  device: { type: String },
+  image: { type: String }
+});
+
+const categorySchema = new Schema({
+  name: { type: String, required: true }
+});
+
+const unitSchema = new Schema({
+  name: { type: String, required: true }
+});
+
+const foodSchema = new Schema({
+  name: { type: String, required: true },
+  categoryName: { type: String, required: true },
+  unitName: { type: String, required: true },
+  image: { type: String }
+});
+
+const itemSchema = new Schema({
+  foodName: { type: String, required: true },
+  expireDate: { type: Date, required: true },
+  amount: { type: Number, required: true }
+});
+
+const listTaskItemSchema = new Schema({
+  foodName: { type: String, required: true },
+  amount: { type: Number, required: true }
+});
+
+const listTaskSchema = new Schema({
+  name: { type: String, required: true },
+  memberEmail: { type: String, required: true },
+  note: { type: String },
+  date: { type: Date, required: true },
+  list_item: [listTaskItemSchema], // Array of items
+  state: { type: Boolean, default: false }
+});
+
+const recipeItemSchema = new Schema({
+  foodName: { type: String, required: true },
+  amount: { type: Number, required: true }
+});
+
+const recipeSchema = new Schema({
+  name: { type: String, required: true },
+  description: { type: String },
+  list_item: [recipeItemSchema] // Array of items
+});
+
+const mealPlanSchema = new Schema({
+  date: { type: Date, required: true },
+  course: { type: String, required: true },
+  listRecipe: [{ type: Schema.Types.ObjectId, ref: 'Recipe' }] // Array of Recipe references
+});
+
+const groupUserSchema = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  role: { type: String, required: true }
+});
+
+const groupSchema = new Schema({
+  name: { type: String, required: true },
+  listUser: [groupUserSchema],
+  refrigerator: [itemSchema]
+});
+
+export const User = mongoose.model('User', userSchema);
+export const Category = mongoose.model('Category', categorySchema);
+export const Unit = mongoose.model('Unit', unitSchema);
+export const Food = mongoose.model('Food', foodSchema);
+export const Item = mongoose.model('Item', itemSchema);
+export const ListTask = mongoose.model('ListTask', listTaskSchema);
+export const Recipe = mongoose.model('Recipe', recipeSchema);
+export const MealPlan = mongoose.model('MealPlan', mealPlanSchema);
+export const Group = mongoose.model('Group', groupSchema);
