@@ -12,24 +12,28 @@ const userSchema = new Schema({
 });
 
 const categorySchema = new Schema({
-  name: { type: String, required: true }
+  name: { type: String, required: true },
+  group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
 });
 
 const unitSchema = new Schema({
-  name: { type: String, required: true }
+  name: { type: String, required: true },
+  group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
 });
 
 const foodSchema = new Schema({
   name: { type: String, required: true },
   categoryName: { type: String, required: true },
   unitName: { type: String, required: true },
-  image: { type: String }
+  image: { type: String },
+  group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
 });
 
 const itemSchema = new Schema({
   foodName: { type: String, required: true },
   expireDate: { type: Date, required: true },
-  amount: { type: Number, required: true }
+  amount: { type: Number, required: true },
+  group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
 });
 
 const listTaskItemSchema = new Schema({
@@ -42,8 +46,9 @@ const listTaskSchema = new Schema({
   memberEmail: { type: String, required: true },
   note: { type: String },
   date: { type: Date, required: true },
-  list_item: [listTaskItemSchema], // Array of items
-  state: { type: Boolean, default: false }
+  list_item: [listTaskItemSchema],
+  state: { type: Boolean, default: false },
+  group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
 });
 
 const recipeItemSchema = new Schema({
@@ -54,13 +59,15 @@ const recipeItemSchema = new Schema({
 const recipeSchema = new Schema({
   name: { type: String, required: true },
   description: { type: String },
-  list_item: [recipeItemSchema] // Array of items
+  list_item: [recipeItemSchema],
+  group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
 });
 
 const mealPlanSchema = new Schema({
   date: { type: Date, required: true },
   course: { type: String, required: true },
-  listRecipe: [{ type: Schema.Types.ObjectId, ref: 'Recipe' }] // Array of Recipe references
+  listRecipe: [{ type: Schema.Types.ObjectId, ref: 'Recipe' }],
+  group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
 });
 
 const groupUserSchema = new Schema({
