@@ -3,47 +3,41 @@ import MealPlanService from "../services/mealplan.service.js";
 const createMealPlan = async (req, res, next) => {
     try {
         const { date, course, listRecipe, group } = req.body;
-        let mealplanData = await MealPlanService.createMealPlan(date, course, listRecipe, group);
-        res.json({ status: true, success: mealplanData });
+        const result = await MealPlanService.createMealPlan(date, course, listRecipe, group);
+        res.json(result);
     } catch (error) {
-        console.log(error, 'err---->');
-        next(error);
+        return res.json({ code: 101, message: "Server error!", data: "" });
     }
-}
+};
 
-const getMealPlanByDate = async (req, res, next) => {
+const updateMealPlan = async (req, res, next) => {
     try {
-        const { group, date } = req.body;
-        let mealplanData = await MealPlanService.getMealPlanByDate(group, date);
-        res.json({ status: true, success: mealplanData });
+        const { id, newData, group } = req.body;
+        const result = await MealPlanService.updateMealPlan(id, newData, group);
+        res.json(result);
     } catch (error) {
-        console.log(error, 'err---->');
-        next(error);
+        return res.json({ code: 101, message: "Server error!", data: "" });
     }
-}
-
+};
 
 const deleteMealPlan = async (req, res, next) => {
     try {
         const { id } = req.body;
-        let deletedData = await MealPlanService.deleteMealPlan(id);
-        res.json({ status: true, success: deletedData });
+        const result = await MealPlanService.deleteMealPlan(id);
+        res.json(result);
     } catch (error) {
-        console.log(error, 'err---->');
-        next(error);
+        return res.json({ code: 101, message: "Server error!", data: "" });
     }
-}
+};
 
-
-const updateMealPlan = async (req, res, next) => {
+const getMealPlanByDate = async (req, res, next) => {
     try {
-        const { id, newData } = req.body;
-        let updatedData = await MealPlanService.updateMealPlan(id, newData);
-        res.json({ status: true, success: updatedData });
+        const { group, date } = req.body;
+        const result = await MealPlanService.getMealPlanByDate(group, date);
+        res.json(result);
     } catch (error) {
-        console.log(error, 'err---->');
-        next(error);
+        return res.json({ code: 101, message: "Server error!", data: "" });
     }
-}
+};
 
-export default { createMealPlan, getMealPlanByDate, deleteMealPlan, updateMealPlan };
+export default { createMealPlan, updateMealPlan, deleteMealPlan, getMealPlanByDate };
