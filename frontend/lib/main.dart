@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false, // Tắt banner debug
-      home:HomeScreen()// Sử dụng Begin() làm widget chính của app
+      home: HomeScreen() // Sử dụng Begin() làm widget chính của app
     );
   }
 }

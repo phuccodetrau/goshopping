@@ -9,7 +9,7 @@ const createListTask = async (req, res, next) => {
         console.log(error, 'err---->');
         next(error);
     }
-}
+};
 
 const getListTasks = async (req, res, next) => {
     try {
@@ -20,7 +20,7 @@ const getListTasks = async (req, res, next) => {
         console.log(error, 'err---->');
         next(error);
     }
-}
+};
 
 const updateListTask = async (req, res, next) => {
     try {
@@ -31,7 +31,7 @@ const updateListTask = async (req, res, next) => {
         console.log(error, 'err---->');
         next(error);
     }
-}
+};
 
 const deleteListTask = async (req, res, next) => {
     try {
@@ -42,6 +42,6 @@ const deleteListTask = async (req, res, next) => {
         console.log(error, 'err---->');
         next(error);
     }
-}
+};
 
-export default { createListTask, getListTasks, updateListTask, deleteListTask };
+export default { createListTask, getListTasks, updateListTask, deleteListTask }; 

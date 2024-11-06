@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../group/add_group/add_group_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -121,7 +122,12 @@ class HomeScreen extends StatelessWidget {
 
       // Nút thêm nhóm
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddGroup()),
+          );
+        },
         backgroundColor: Colors.green[700],
         child: const Icon(Icons.add, color: Colors.white),
       ),
