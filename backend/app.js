@@ -11,7 +11,6 @@ import UnitRoute from './routes/unit.router.js'
 import dotenv from 'dotenv';
 import AuthRoute from './routes/auth.router.js'
 dotenv.config();
-import FoodRoute from "./routes/food.router.js";
 import listTaskRouter from './routes/listTask.router.js';
 import groupRouter from './routes/group.router.js';
 
