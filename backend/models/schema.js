@@ -33,6 +33,7 @@ const itemSchema = new Schema({
   foodName: { type: String, required: true },
   expireDate: { type: Date, required: true },
   amount: { type: Number, required: true },
+  note: { type: Number },
   group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
 });
 
