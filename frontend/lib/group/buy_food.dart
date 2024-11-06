@@ -17,7 +17,7 @@ class _BuyFoodState extends State<BuyFood> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             // Action quay lại
           },
@@ -34,36 +34,36 @@ class _BuyFoodState extends State<BuyFood> {
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(12),
-                image: DecorationImage(
+                image: const DecorationImage(
                   image: AssetImage('images/fish.png'), // Đường dẫn đến ảnh biểu ngữ
                   fit: BoxFit.cover,
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               "Tên thực phẩm",
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             // Tên thực phẩm
             TextField(
               decoration: InputDecoration(
                 labelText: "Tên thực phẩm",
-                labelStyle: TextStyle(color: Colors.grey),
+                labelStyle: const TextStyle(color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Loại thực phẩm
             Text(
               "Loại thực phẩm",
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -77,7 +77,7 @@ class _BuyFoodState extends State<BuyFood> {
                 _buildChip("Hoa quả"),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Số lượng và phân công
             Row(
@@ -93,7 +93,7 @@ class _BuyFoodState extends State<BuyFood> {
                     keyboardType: TextInputType.number,
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 DropdownButton<String>(
                   value: selectedUnit,
                   items: <String>['Kg', 'L', 'Gram', 'Tạo mới'].map((String value) {
@@ -112,7 +112,7 @@ class _BuyFoodState extends State<BuyFood> {
                     }
                   },
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     decoration: InputDecoration(
@@ -134,14 +134,14 @@ class _BuyFoodState extends State<BuyFood> {
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Thời gian thực hiện dự kiến
             Text(
               "Thời gian thực hiện dự kiến",
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
@@ -155,7 +155,7 @@ class _BuyFoodState extends State<BuyFood> {
                     readOnly: true,
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     decoration: InputDecoration(
@@ -177,7 +177,7 @@ class _BuyFoodState extends State<BuyFood> {
         onTap: (index) {
           // Xử lý khi chuyển đổi tab
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: "",
@@ -205,7 +205,7 @@ class _BuyFoodState extends State<BuyFood> {
     return Chip(
       label: Text(
         label,
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.black,
           fontWeight: FontWeight.bold,
         ),
@@ -223,8 +223,8 @@ class _BuyFoodState extends State<BuyFood> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Tạo đại lượng mới"),
-          content: TextField(
+          title: const Text("Tạo đại lượng mới"),
+          content: const TextField(
             decoration: InputDecoration(
               hintText: "Tên đại lượng mới",
               border: OutlineInputBorder(),
@@ -235,14 +235,14 @@ class _BuyFoodState extends State<BuyFood> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text("Hủy"),
+              child: const Text("Hủy"),
             ),
             ElevatedButton(
               onPressed: () {
                 // Thêm đại lượng mới
                 Navigator.of(context).pop();
               },
-              child: Text("Tạo mới"),
+              child: const Text("Tạo mới"),
             ),
           ],
         );

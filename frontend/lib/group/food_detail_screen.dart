@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 
 class FoodDetail extends StatelessWidget {
+  const FoodDetail({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green[700],
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Thông tin chi tiết',
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {},
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.home, color: Colors.white),
+            icon: const Icon(Icons.home, color: Colors.white),
             onPressed: () {},
           ),
         ],
@@ -36,12 +38,12 @@ class FoodDetail extends StatelessWidget {
                 // Phần chứa hình ảnh và thông tin món ăn
                 Column(
                   children: [
-                    SizedBox(height: 16),
-                    CircleAvatar(
+                    const SizedBox(height: 16),
+                    const CircleAvatar(
                       radius: 60,
                       backgroundImage: AssetImage('images/group.png'), // Thay bằng đường dẫn hình ảnh của bạn
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text(
                       'Pad Thái',
                       style: TextStyle(
@@ -50,7 +52,7 @@ class FoodDetail extends StatelessWidget {
                         color: Colors.green[900],
                       ),
                     ),
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.local_fire_department, color: Colors.orange),
@@ -62,7 +64,7 @@ class FoodDetail extends StatelessWidget {
                         Text('50 min'),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ],
@@ -81,7 +83,7 @@ class FoodDetail extends StatelessWidget {
                       color: Colors.grey[800],
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   IngredientCard(
                     imagePath: 'images/group.png', // Thay bằng đường dẫn hình ảnh của bạn
                     name: 'Tôm sú',
@@ -98,7 +100,7 @@ class FoodDetail extends StatelessWidget {
                     buttonLabel: 'Mua thêm',
                     buttonColor: Colors.grey,
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Center(
                     child: Text(
                       'Xem tất cả',
@@ -108,7 +110,7 @@ class FoodDetail extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   // Hướng dẫn cách làm
                   Text(
                     'Hướng dẫn cách làm',
@@ -118,7 +120,7 @@ class FoodDetail extends StatelessWidget {
                       color: Colors.grey[800],
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     'Ngâm sợi Pad Thái trong nước lạnh 15 phút để nở. '
                         'Tôm sú bóc vỏ, rửa sạch, để ráo. Đậu phộng thái nhuyễn khô dầu. '
@@ -149,7 +151,7 @@ class IngredientCard extends StatelessWidget {
   final String buttonLabel;
   final Color buttonColor;
 
-  IngredientCard({
+  const IngredientCard({super.key, 
     required this.imagePath,
     required this.name,
     required this.quantity,
@@ -164,7 +166,7 @@ class IngredientCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -178,14 +180,14 @@ class IngredientCard extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -193,7 +195,7 @@ class IngredientCard extends StatelessWidget {
                   Text(quantity),
                   Text(
                     remaining,
-                    style: TextStyle(color: Colors.red),
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ],
               ),

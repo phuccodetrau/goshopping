@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,12 +28,12 @@ class HomeScreen extends StatelessWidget {
           children: [
             // Tìm kiếm nhóm
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(8.0),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Expanded(
                     child: TextField(
@@ -45,7 +47,7 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Thẻ nhóm
             Card(
@@ -58,14 +60,14 @@ class HomeScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     // Hình ảnh nhóm
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 30,
                       backgroundImage: AssetImage('images/group.png'), // Thay bằng đường dẫn hình ảnh của bạn
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
 
                     // Thông tin nhóm
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -95,7 +97,7 @@ class HomeScreen extends StatelessWidget {
                     ),
 
                     // Ảnh đại diện và số thành viên
-                    Column(
+                    const Column(
                       children: [
                         CircleAvatar(
                           radius: 15,
@@ -106,7 +108,7 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                     IconButton(
-                      icon: Icon(Icons.more_vert),
+                      icon: const Icon(Icons.more_vert),
                       onPressed: () {},
                     ),
                   ],
@@ -121,7 +123,7 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         backgroundColor: Colors.green[700],
-        child: Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
 
       // Thanh điều hướng
@@ -129,7 +131,7 @@ class HomeScreen extends StatelessWidget {
         currentIndex: 0,
         selectedItemColor: Colors.green[700],
         unselectedItemColor: Colors.grey,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: '',

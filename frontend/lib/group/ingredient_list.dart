@@ -9,19 +9,19 @@ class IngredientListScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
+        title: const Text(
           '',
           style: TextStyle(color: Colors.black),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             // Xử lý khi nhấn nút quay lại
           },
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.home, color: Colors.black),
+            icon: const Icon(Icons.home, color: Colors.black),
             onPressed: () {
               // Xử lý khi nhấn nút về trang chủ
             },
@@ -37,7 +37,7 @@ class IngredientListScreen extends StatelessWidget {
             TextField(
               decoration: InputDecoration(
                 hintText: 'Nguyên liệu, thành phần',
-                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 filled: true,
                 fillColor: Colors.grey[200],
                 border: OutlineInputBorder(
@@ -46,7 +46,7 @@ class IngredientListScreen extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Tiêu đề
             Text(
@@ -57,7 +57,7 @@ class IngredientListScreen extends StatelessWidget {
                 color: Colors.grey[800],
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
 
             // Danh sách nguyên liệu
             Expanded(
@@ -90,7 +90,7 @@ class IngredientListScreen extends StatelessWidget {
         onPressed: () {
           // Xử lý khi nhấn nút thêm
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -102,7 +102,7 @@ class IngredientCard extends StatelessWidget {
   final String name;
   final String quantity;
 
-  IngredientCard({
+  const IngredientCard({super.key, 
     required this.imagePath,
     required this.name,
     required this.quantity,
@@ -111,7 +111,7 @@ class IngredientCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
@@ -134,7 +134,7 @@ class IngredientCard extends StatelessWidget {
         ),
         subtitle: Text(quantity),
         trailing: IconButton(
-          icon: Icon(Icons.more_vert),
+          icon: const Icon(Icons.more_vert),
           onPressed: () {
             // Xử lý khi nhấn nút "more"
           },
@@ -145,7 +145,7 @@ class IngredientCard extends StatelessWidget {
 }
 
 void main() {
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     debugShowCheckedModeBanner: false,
     home: IngredientListScreen(),
   ));

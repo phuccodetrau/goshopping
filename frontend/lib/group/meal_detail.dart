@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 
 class MealDetailScreen extends StatelessWidget {
+  const MealDetailScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green[700],
         elevation: 0,
-        title: Text(
+        title: const Text(
           '',
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {},
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.home, color: Colors.white),
+            icon: const Icon(Icons.home, color: Colors.white),
             onPressed: () {},
           ),
         ],
@@ -31,7 +33,7 @@ class MealDetailScreen extends StatelessWidget {
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Tìm trong danh sách món ăn',
-                  prefixIcon: Icon(Icons.search, color: Colors.grey),
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   filled: true,
                   fillColor: Colors.grey[200],
                   border: OutlineInputBorder(
@@ -59,21 +61,21 @@ class MealDetailScreen extends StatelessWidget {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.edit, color: Colors.grey),
+                        icon: const Icon(Icons.edit, color: Colors.grey),
                         onPressed: () {},
                       ),
                     ],
                   ),
                   // Thông tin thời gian và ngày
                   Container(
-                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.green[100],
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
                       children: [
-                        Row(
+                        const Row(
                           children: [
                             Icon(Icons.access_time, color: Colors.green),
                             SizedBox(width: 8),
@@ -84,16 +86,16 @@ class MealDetailScreen extends StatelessWidget {
                             Text('20 Tháng 10, 2024'),
                           ],
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.group, color: Colors.green),
-                            SizedBox(width: 8),
+                            const Icon(Icons.group, color: Colors.green),
+                            const SizedBox(width: 8),
                             Wrap(
                               spacing: 8,
                               children: [
                                 Chip(
-                                  label: Text('Hùng'),
+                                  label: const Text('Hùng'),
                                   backgroundColor: Colors.green[200],
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20), // Điều chỉnh góc bo tròn ở đây
@@ -101,7 +103,7 @@ class MealDetailScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Chip(
-                                  label: Text('Hương'),
+                                  label: const Text('Hương'),
                                   backgroundColor: Colors.green[200],
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20), // Điều chỉnh góc bo tròn ở đây
@@ -109,7 +111,7 @@ class MealDetailScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Chip(
-                                  label: Text('Hoàng'),
+                                  label: const Text('Hoàng'),
                                   backgroundColor: Colors.green[200],
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20), // Điều chỉnh góc bo tròn ở đây
@@ -123,7 +125,7 @@ class MealDetailScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   // Danh sách món ăn đã chọn
                   Text(
                     'Danh sách món ăn đã chọn',
@@ -132,7 +134,7 @@ class MealDetailScreen extends StatelessWidget {
                       color: Colors.grey[700],
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Container(
                     height: 100,
                     width: double.infinity,
@@ -148,7 +150,7 @@ class MealDetailScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   // Danh sách các món ăn
                   MealItemCard(
                     imagePath: 'images/group.png',
@@ -181,7 +183,7 @@ class MealItemCard extends StatelessWidget {
   final String title;
   final String description;
 
-  MealItemCard({
+  const MealItemCard({super.key, 
     required this.imagePath,
     required this.title,
     required this.description,
@@ -190,7 +192,7 @@ class MealItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
@@ -206,7 +208,7 @@ class MealItemCard extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(description),
         trailing: IconButton(

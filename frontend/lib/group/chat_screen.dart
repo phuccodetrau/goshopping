@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ChatScreen extends StatelessWidget {
+  const ChatScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -8,10 +10,10 @@ class ChatScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {},
         ),
-        title: Row(
+        title: const Row(
           children: [
             CircleAvatar(
               backgroundImage: AssetImage('images/group.png'),
@@ -25,11 +27,11 @@ class ChatScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.phone, color: Colors.green),
+            icon: const Icon(Icons.phone, color: Colors.green),
             onPressed: () {},
           ),
           IconButton(
-            icon: Icon(Icons.video_call, color: Colors.green),
+            icon: const Icon(Icons.video_call, color: Colors.green),
             onPressed: () {},
           ),
         ],
@@ -38,40 +40,40 @@ class ChatScreen extends StatelessWidget {
         children: [
           Expanded(
             child: ListView(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               children: [
-                Center(
+                const Center(
                   child: Text(
                     'Today',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       backgroundImage: AssetImage('images/group.png'),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Jhon Abraham',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Container(
-                          padding: EdgeInsets.all(12),
-                          margin: EdgeInsets.only(top: 5),
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(top: 5),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade200,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text('Hello! Nazrul How are you?'),
+                          child: const Text('Hello! Nazrul How are you?'),
                         ),
-                        SizedBox(height: 5),
-                        Text(
+                        const SizedBox(height: 5),
+                        const Text(
                           '09:25 AM',
                           style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
@@ -79,25 +81,25 @@ class ChatScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Align(
                   alignment: Alignment.centerRight,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Container(
-                        padding: EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.green,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
+                        child: const Text(
                           'You did your job well!',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
-                      SizedBox(height: 5),
-                      Text(
+                      const SizedBox(height: 5),
+                      const Text(
                         '09:25 AM',
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
@@ -112,7 +114,7 @@ class ChatScreen extends StatelessWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.photo, color: Colors.grey),
+                  icon: const Icon(Icons.photo, color: Colors.grey),
                   onPressed: () {},
                 ),
                 Expanded(
@@ -129,7 +131,7 @@ class ChatScreen extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send, color: Colors.green),
+                  icon: const Icon(Icons.send, color: Colors.green),
                   onPressed: () {},
                 ),
               ],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
+  const ForgotPasswordScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +29,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                 color: Colors.green[900],
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Nhập số điện thoại đăng kí',
               style: TextStyle(
@@ -35,7 +37,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                 color: Colors.grey[700],
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
@@ -51,7 +53,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                 fillColor: Colors.grey[200],
               ),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             Center(
               child: SizedBox(
                 width: double.infinity,
@@ -66,7 +68,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Tiếp theo',
                     style: TextStyle(
                       fontSize: 18,

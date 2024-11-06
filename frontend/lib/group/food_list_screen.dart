@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class FoodListScreen extends StatelessWidget {
+  const FoodListScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,18 +29,18 @@ class FoodListScreen extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Thanh tìm kiếm
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.search, color: Colors.grey),
                   SizedBox(width: 8),
@@ -53,7 +55,7 @@ class FoodListScreen extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             // Gợi ý món ăn hôm nay
             Text(
               'Gợi ý món ăn hôm nay',
@@ -63,7 +65,7 @@ class FoodListScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Bạn có muốn ăn nhẹ nhàng?',
               style: TextStyle(
@@ -71,7 +73,7 @@ class FoodListScreen extends StatelessWidget {
                 color: Colors.grey[700],
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             // Hình ảnh gợi ý món ăn
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -83,7 +85,7 @@ class FoodListScreen extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             // Danh sách món ăn
             Text(
               'Danh sách món ăn',
@@ -126,7 +128,7 @@ class FoodListScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         backgroundColor: Colors.green,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -136,7 +138,7 @@ class FoodListScreen extends StatelessWidget {
 class FoodSuggestionImage extends StatelessWidget {
   final String imagePath;
 
-  FoodSuggestionImage(this.imagePath);
+  const FoodSuggestionImage(this.imagePath, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +163,7 @@ class FoodItemCard extends StatelessWidget {
   final String title;
   final String description;
 
-  FoodItemCard({
+  const FoodItemCard({super.key, 
     required this.imagePath,
     required this.title,
     required this.description,
@@ -170,7 +172,7 @@ class FoodItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
@@ -184,13 +186,13 @@ class FoodItemCard extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(description),
         trailing: DropdownButton<String>(
-          underline: SizedBox(),
+          underline: const SizedBox(),
           icon: Icon(Icons.more_vert, color: Colors.green[700]),
 
-          items: [
+          items: const [
             DropdownMenuItem(value: 'Bữa sáng', child: Text('Bữa sáng')),
             DropdownMenuItem(value: 'Bữa trưa', child: Text('Bữa trưa')),
             DropdownMenuItem(value: 'Bữa tối', child: Text('Bữa tối')),

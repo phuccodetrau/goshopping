@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
 class GroupMainScreen extends StatelessWidget {
+  const GroupMainScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.arrow_back),
+        leading: const Icon(Icons.arrow_back),
         title: Text("Gia đình bên nội",style: TextStyle(color: Colors.green[800],fontWeight: FontWeight.bold),),
         actions: [
-          IconButton(icon: Icon(Icons.person_add), onPressed: () {}),
-          IconButton(icon: Icon(Icons.chat_bubble_outline), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.person_add), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.chat_bubble_outline), onPressed: () {}),
         ],
 
       ),
@@ -27,7 +29,7 @@ class GroupMainScreen extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
 
-                Positioned(
+                const Positioned(
                   bottom: 16,
                   child: Column(
                     children: [
@@ -46,7 +48,7 @@ class GroupMainScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                Positioned(
+                const Positioned(
                   bottom: 16,
                   right: 16,
                   child: Icon(
@@ -63,15 +65,15 @@ class GroupMainScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   MemberAvatar(name: "Hung", imagePath: 'images/group.png'),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   MemberAvatar(name: "Hung", imagePath: 'images/group.png'),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   MemberAvatar(name: "Hoang", imagePath: 'images/group.png'),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   CircleAvatar(
                     radius: 20,
                     backgroundColor: Colors.grey[300],
-                    child: Text("+3", style: TextStyle(color: Colors.black)),
+                    child: const Text("+3", style: TextStyle(color: Colors.black)),
                   ),
                 ],
               ),
@@ -120,7 +122,7 @@ class MemberAvatar extends StatelessWidget {
   final String name;
   final String imagePath;
 
-  MemberAvatar({required this.name, required this.imagePath});
+  const MemberAvatar({super.key, required this.name, required this.imagePath});
 
   @override
   Widget build(BuildContext context) {
@@ -130,8 +132,8 @@ class MemberAvatar extends StatelessWidget {
           radius: 20,
           backgroundImage: AssetImage(imagePath),
         ),
-        SizedBox(height: 5),
-        Text(name, style: TextStyle(fontSize: 12)),
+        const SizedBox(height: 5),
+        Text(name, style: const TextStyle(fontSize: 12)),
       ],
     );
   }
@@ -141,7 +143,7 @@ class MemberAvatar extends StatelessWidget {
 class SectionTitle extends StatelessWidget {
   final String title;
 
-  SectionTitle({required this.title});
+  const SectionTitle({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +153,7 @@ class SectionTitle extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Text(
           title,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -166,7 +168,7 @@ class FoodCard extends StatelessWidget {
   final String iconPath;
 
 
-  FoodCard({
+  const FoodCard({super.key, 
 
     required this.title,
     required this.description,
@@ -178,7 +180,7 @@ class FoodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width * 0.4,
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(12),
@@ -187,18 +189,18 @@ class FoodCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(child: Image.asset(iconPath, height: 50,),),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             title,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,color: Colors.white),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold,color: Colors.white),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Text(
             description,
-            style: TextStyle(fontSize: 12,color: Colors.white),
+            style: const TextStyle(fontSize: 12,color: Colors.white),
           ),
-          SizedBox(height: 10),
-          Row(
+          const SizedBox(height: 10),
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Icon(Icons.cloud, size: 20),
@@ -218,7 +220,7 @@ class ActivityCard extends StatelessWidget {
   final String adminName;
   final String adminAvatarPath;
 
-  ActivityCard({
+  const ActivityCard({super.key, 
     required this.title,
     required this.filesCount,
     required this.adminName,
@@ -230,7 +232,7 @@ class ActivityCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Container(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.grey[200],
           borderRadius: BorderRadius.circular(12),
@@ -241,23 +243,23 @@ class ActivityCard extends StatelessWidget {
               radius: 20,
               backgroundImage: AssetImage(adminAvatarPath),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
                 Text(
                   "$filesCount Files  Admin: $adminName",
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
-            Spacer(),
-            Icon(Icons.more_vert),
+            const Spacer(),
+            const Icon(Icons.more_vert),
           ],
         ),
       ),

@@ -28,8 +28,12 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void dispose() {
     // Dispose controllers and focus nodes to avoid memory leaks
-    otpControllers.forEach((controller) => controller.dispose());
-    otpFocusNodes.forEach((focusNode) => focusNode.dispose());
+    for (var controller in otpControllers) {
+      controller.dispose();
+    }
+    for (var focusNode in otpFocusNodes) {
+      focusNode.dispose();
+    }
     super.dispose();
   }
 
@@ -51,9 +55,9 @@ class _OtpScreenState extends State<OtpScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("Nhập mã OTP"),
+        title: const Text("Nhập mã OTP"),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             // Action quay lại
           },
@@ -64,15 +68,15 @@ class _OtpScreenState extends State<OtpScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               "Nhập mã 4 chữ số được gửi đến",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            Text(
+            const Text(
               "(+84 123 456 789)",
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: List.generate(4, (index) {
@@ -93,22 +97,22 @@ class _OtpScreenState extends State<OtpScreen> {
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
                       maxLength: 1,
-                      style: TextStyle(fontSize: 24),
+                      style: const TextStyle(fontSize: 24),
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.black), // Viền đen mặc định
+                          borderSide: const BorderSide(color: Colors.black), // Viền đen mặc định
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.black), // Viền đen khi ô không focus
+                          borderSide: const BorderSide(color: Colors.black), // Viền đen khi ô không focus
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.black, width: 2), // Viền đen dày hơn khi focus
+                          borderSide: const BorderSide(color: Colors.black, width: 2), // Viền đen dày hơn khi focus
                         ),
                         counterText: "",
-                        contentPadding: EdgeInsets.symmetric(vertical: 0),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
                       ),
                       onChanged: (value) => _onOtpChanged(index, value),
                     ),
@@ -116,9 +120,9 @@ class _OtpScreenState extends State<OtpScreen> {
                 );
               }),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             if (isLoading) ...[
-              Center(child: CircularProgressIndicator()),
+              const Center(child: CircularProgressIndicator()),
             ] else ...[
               Row(
                 children: [
@@ -128,7 +132,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       // Action khi chọn "Tôi không nhận được mã"
                     },
                   ),
-                  Expanded(
+                  const Expanded(
                     child: Text(
                       "I didn’t receive a code",
                       style: TextStyle(color: Colors.blue),
@@ -136,9 +140,9 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               if (isError)
-                Text(
+                const Text(
                   "Mã OTP bạn nhập không hợp lệ!",
                   style: TextStyle(color: Colors.red),
                 ),

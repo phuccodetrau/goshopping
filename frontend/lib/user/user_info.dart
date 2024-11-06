@@ -10,7 +10,7 @@ class PersonalInfoScreen extends StatelessWidget {
         backgroundColor: Colors.green[700],
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             // Xử lý khi nhấn nút quay lại
           },
@@ -24,12 +24,12 @@ class PersonalInfoScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               children: [
-                CircleAvatar(
+                const CircleAvatar(
                   radius: 40,
                   backgroundImage: AssetImage('images/group.png'), // Thay bằng đường dẫn ảnh của bạn
                 ),
-                SizedBox(height: 8),
-                Text(
+                const SizedBox(height: 8),
+                const Text(
                   'Hung Hoang Dinh',
                   style: TextStyle(
                     fontSize: 20,
@@ -37,28 +37,28 @@ class PersonalInfoScreen extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                Text(
+                const Text(
                   '@hoanghung',
                   style: TextStyle(color: Colors.white70),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.message, color: Colors.white),
+                      icon: const Icon(Icons.message, color: Colors.white),
                       onPressed: () {},
                     ),
                     IconButton(
-                      icon: Icon(Icons.video_call, color: Colors.white),
+                      icon: const Icon(Icons.video_call, color: Colors.white),
                       onPressed: () {},
                     ),
                     IconButton(
-                      icon: Icon(Icons.call, color: Colors.white),
+                      icon: const Icon(Icons.call, color: Colors.white),
                       onPressed: () {},
                     ),
                     IconButton(
-                      icon: Icon(Icons.more_horiz, color: Colors.white),
+                      icon: const Icon(Icons.more_horiz, color: Colors.white),
                       onPressed: () {},
                     ),
                   ],
@@ -66,7 +66,7 @@ class PersonalInfoScreen extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           // Thống kê
           Padding(
@@ -79,7 +79,7 @@ class PersonalInfoScreen extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           // Các tùy chọn
           Expanded(
@@ -90,8 +90,8 @@ class PersonalInfoScreen extends StatelessWidget {
                 _buildListTile(Icons.star, 'Đánh giá'),
                 _buildListTile(Icons.share, 'Chia sẻ với bạn bè'),
                 ListTile(
-                  leading: Icon(Icons.logout, color: Colors.red),
-                  title: Text(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text(
                     'Đăng xuất',
                     style: TextStyle(color: Colors.red),
                   ),
@@ -109,7 +109,7 @@ class PersonalInfoScreen extends StatelessWidget {
         onTap: (index) {
           // Xử lý khi chuyển đổi tab
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: "",
@@ -132,7 +132,7 @@ class PersonalInfoScreen extends StatelessWidget {
   Widget _buildStatisticCard(String number, String label, Color color) {
     return Container(
       width: 120,
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(8),
@@ -141,12 +141,12 @@ class PersonalInfoScreen extends StatelessWidget {
         children: [
           Text(
             number,
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
             textAlign: TextAlign.center,
           ),
         ],
@@ -158,7 +158,7 @@ class PersonalInfoScreen extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: Colors.green[700]),
       title: Text(title),
-      trailing: Icon(Icons.arrow_forward_ios, size: 16),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: () {
         // Xử lý khi nhấn vào mục
       },
@@ -167,7 +167,7 @@ class PersonalInfoScreen extends StatelessWidget {
 }
 
 void main() {
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     debugShowCheckedModeBanner: false,
     home: PersonalInfoScreen(),
   ));

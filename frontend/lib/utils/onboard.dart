@@ -6,7 +6,7 @@ class OnboardingPage extends StatelessWidget {
   final String subtitle;
 
 
-  OnboardingPage({
+  const OnboardingPage({super.key, 
     required this.imagePath,
     required this.title,
     required this.subtitle,
@@ -20,27 +20,27 @@ class OnboardingPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Spacer(),
+          const Spacer(),
           Image.asset(imagePath, height: 250), // Adjust height as necessary
-          Spacer(),
+          const Spacer(),
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.green,
             ),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             subtitle,
-            style: TextStyle(fontSize: 16, color: Colors.black54),
+            style: const TextStyle(fontSize: 16, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
-          Spacer(),
+          const Spacer(),
 
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
         ],
       ),
     );

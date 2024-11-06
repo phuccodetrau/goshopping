@@ -9,12 +9,12 @@ class NotificationScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Thông báo',
           style: TextStyle(color: Colors.black),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             // Xử lý khi nhấn nút quay lại
           },
@@ -57,7 +57,7 @@ class NotificationScreen extends StatelessWidget {
         onTap: (index) {
           // Xử lý khi chuyển đổi tab
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: "",
@@ -81,13 +81,13 @@ class NotificationScreen extends StatelessWidget {
 class NotificationItem extends StatelessWidget {
   final int index;
 
-  const NotificationItem({required this.index});
+  const NotificationItem({super.key, required this.index});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      padding: EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: index % 2 == 0 ? Colors.green[50] : Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -98,8 +98,8 @@ class NotificationItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.notifications, color: Colors.green),
-              SizedBox(width: 8),
+              const Icon(Icons.notifications, color: Colors.green),
+              const SizedBox(width: 8),
               Text(
                 'Yêu cầu theo dõi mới!',
                 style: TextStyle(
@@ -107,14 +107,14 @@ class NotificationItem extends StatelessWidget {
                   color: Colors.grey[800],
                 ),
               ),
-              Spacer(),
+              const Spacer(),
               Text(
                 '1 phút trước',
                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Bạn có một yêu cầu theo dõi mới!\nHoàng vừa nhấn theo dõi bạn.',
             style: TextStyle(color: Colors.grey[700]),
@@ -126,7 +126,7 @@ class NotificationItem extends StatelessWidget {
 }
 
 void main() {
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     debugShowCheckedModeBanner: false,
     home: NotificationScreen(),
   ));

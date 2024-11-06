@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             // Xử lý quay lại
           },
@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               "Thông Tin Tài Khoản",
               style: TextStyle(
                 fontSize: 18,
@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Colors.black,
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               controller: phoneController,
               keyboardType: TextInputType.phone,
@@ -84,9 +84,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 prefixIcon: Icon(Icons.phone, color: Colors.grey[600]),
               ),
-              style: TextStyle(fontSize: 16, color: Colors.black),
+              style: const TextStyle(fontSize: 16, color: Colors.black),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               controller: passwordController,
               obscureText: true,
@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 prefixIcon: Icon(Icons.lock, color: Colors.grey[600]),
               ),
-              style: TextStyle(fontSize: 16, color: Colors.black),
+              style: const TextStyle(fontSize: 16, color: Colors.black),
             ),
             Align(
               alignment: Alignment.centerRight,
@@ -112,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () {
                   // Xử lý khi nhấn "Quên mật khẩu?"
                 },
-                child: Text(
+                child: const Text(
                   "Quên mật khẩu?",
                   style: TextStyle(
                     color: Colors.blue,
@@ -121,16 +121,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             if (isError)
-              Text(
+              const Text(
                 "Mật khẩu chưa chính xác, vui lòng thử lại!",
                 style: TextStyle(
                   color: Colors.red,
                   fontSize: 14,
                 ),
               ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _onLoginPressed,
               style: ElevatedButton.styleFrom(
@@ -138,9 +138,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: Center(
+              child: const Center(
                 child: Text(
                   "Đăng nhập",
                   style: TextStyle(
@@ -151,12 +151,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 32),
-            Row(
+            const SizedBox(height: 32),
+            const Row(
               children: [
                 Expanded(child: Divider(color: Colors.grey)),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
                   child: Text(
                     "",
                     style: TextStyle(color: Colors.grey, fontSize: 14),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AddGroup extends StatelessWidget {
+  const AddGroup({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,7 +30,7 @@ class AddGroup extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               "Tùy chỉnh nhóm của bạn",
               style: TextStyle(
@@ -37,13 +39,13 @@ class AddGroup extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               "Cá nhân hóa nhóm của bạn bằng cách đặt tên và thêm hình ảnh đại diện.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[700]),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
 
             // Cập nhật hình ảnh
             GestureDetector(
@@ -57,13 +59,13 @@ class AddGroup extends StatelessWidget {
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.add_photo_alternate,
                       size: 40,
                       color: Colors.grey,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     "Cập nhật hình ảnh",
                     style: TextStyle(color: Colors.green[700]),
@@ -71,7 +73,7 @@ class AddGroup extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
 
             // Ô nhập tên nhóm
             TextField(
@@ -89,7 +91,7 @@ class AddGroup extends StatelessWidget {
               maxLength: 75,
             ),
 
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Thông tin điều khoản
             Text(
@@ -115,7 +117,7 @@ class AddGroup extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Nút "Tiếp theo"
             ElevatedButton(
@@ -125,9 +127,9 @@ class AddGroup extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 32),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
               ),
-              child: Text(
+              child: const Text(
                 "Tiếp theo",
                 style: TextStyle(fontSize: 16),
               ),

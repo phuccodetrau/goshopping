@@ -10,7 +10,7 @@ class EditPersonalInfoScreen extends StatelessWidget {
         backgroundColor: Colors.green[700],
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             // Xử lý khi nhấn nút quay lại
           },
@@ -24,7 +24,7 @@ class EditPersonalInfoScreen extends StatelessWidget {
               color: Colors.green[700],
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Column(
+              child: const Column(
 
                 children: [
                   CircleAvatar(
@@ -52,7 +52,7 @@ class EditPersonalInfoScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
                     'Chỉnh sửa thông tin cá nhân',
                     style: TextStyle(
@@ -61,7 +61,7 @@ class EditPersonalInfoScreen extends StatelessWidget {
                       color: Colors.grey[700],
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   // Trường Tên của bạn
                   TextField(
                     decoration: InputDecoration(
@@ -72,7 +72,7 @@ class EditPersonalInfoScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   // Trường Email
                   TextField(
                     decoration: InputDecoration(
@@ -84,7 +84,7 @@ class EditPersonalInfoScreen extends StatelessWidget {
                     ),
                     keyboardType: TextInputType.emailAddress,
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   // Trường Nhập số điện thoại
                   TextField(
                     decoration: InputDecoration(
@@ -104,7 +104,7 @@ class EditPersonalInfoScreen extends StatelessWidget {
                     ),
                     keyboardType: TextInputType.phone,
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   // Nút Lưu thông tin
                   Center(
                     child: ElevatedButton(
@@ -116,12 +116,12 @@ class EditPersonalInfoScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 12,
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Lưu thông tin',
                         style: TextStyle(fontSize: 16, color: Colors.white),
                       ),
@@ -138,7 +138,7 @@ class EditPersonalInfoScreen extends StatelessWidget {
         onTap: (index) {
           // Xử lý khi chuyển đổi tab
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: "",

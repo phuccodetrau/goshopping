@@ -5,6 +5,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -15,6 +17,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MealPlanScreen extends StatelessWidget {
+  const MealPlanScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,8 +45,8 @@ class MealPlanScreen extends StatelessWidget {
           children: [
             // Date Selector
             DateSelector(),
-            SizedBox(height: 16),
-            Text(
+            const SizedBox(height: 16),
+            const Text(
               'Bữa ăn',
               style: TextStyle(
                 fontSize: 20,
@@ -50,14 +54,14 @@ class MealPlanScreen extends StatelessWidget {
                 color: Colors.black87,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Expanded(
               child: ListView(
                 children: [
                   MealCard(
                     mealTime: 'Bữa sáng',
                     timeRange: '7:30 - 8:30 AM',
-                    items: [
+                    items: const [
                       'Phở bò x5',
                       'Cháo thịt băm x3',
                       'Sữa đậu nành x5',
@@ -67,7 +71,7 @@ class MealPlanScreen extends StatelessWidget {
                   MealCard(
                     mealTime: 'Bữa trưa',
                     timeRange: '11:00 - 12:00 PM',
-                    items: [
+                    items: const [
                       'Nem cuốn x5',
                       'Đậu phụ rán x3',
                       'Sữa đậu nành x5',
@@ -77,7 +81,7 @@ class MealPlanScreen extends StatelessWidget {
                   MealCard(
                     mealTime: 'Bữa xế',
                     timeRange: '4:30 - 5:30 PM',
-                    items: [
+                    items: const [
                       'Phở bò x5',
                       'Cháo thịt băm x3',
                     ],
@@ -86,7 +90,7 @@ class MealPlanScreen extends StatelessWidget {
                   MealCard(
                     mealTime: 'Bữa tối',
                     timeRange: '6:30 - 7:30 PM',
-                    items: [
+                    items: const [
                       'Cơm gà x4',
                       'Canh chua x4',
                     ],
@@ -103,6 +107,8 @@ class MealPlanScreen extends StatelessWidget {
 }
 
 class DateSelector extends StatelessWidget {
+  const DateSelector({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -111,14 +117,14 @@ class DateSelector extends StatelessWidget {
         Icon(Icons.arrow_back_ios, color: Colors.green[700]),
         Column(
           children: [
-            Text(
+            const Text(
               'Tháng 12, 2024',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.black87,
               ),
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(7, (index) {
@@ -160,7 +166,7 @@ class MealCard extends StatelessWidget {
   final List<String> items;
   final int peopleCount;
 
-  MealCard({
+  const MealCard({super.key, 
     required this.mealTime,
     required this.timeRange,
     required this.items,
@@ -170,7 +176,7 @@ class MealCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
@@ -195,10 +201,10 @@ class MealCard extends StatelessWidget {
                     color: Colors.green[700],
                   ),
                 ),
-                Icon(Icons.edit, color: Colors.grey),
+                const Icon(Icons.edit, color: Colors.grey),
               ],
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               children: items
@@ -212,11 +218,11 @@ class MealCard extends StatelessWidget {
               ))
                   .toList(),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.people, color: Colors.grey),
-                SizedBox(width: 4),
+                const Icon(Icons.people, color: Colors.grey),
+                const SizedBox(width: 4),
                 Text('$peopleCount'),
               ],
             ),

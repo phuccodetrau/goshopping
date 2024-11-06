@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'user/persion_infor_change.dart';
+// import 'user/persion_infor_change.dart';
+import 'home_screen/home_screen.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -9,9 +11,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false, // Tắt banner debug
-      home:EditPersonalInfoScreen()// Sử dụng Begin() làm widget chính của app
+      home:HomeScreen()// Sử dụng Begin() làm widget chính của app
     );
   }
 }

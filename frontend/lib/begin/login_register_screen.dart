@@ -8,7 +8,7 @@ class LoginRegisterScreen extends StatelessWidget {
       children: [
         // Background Image
         Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage('images/background_login.png'),
               fit: BoxFit.cover,
@@ -30,7 +30,7 @@ class LoginRegisterScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Center(
                   child: Text(
@@ -43,7 +43,7 @@ class LoginRegisterScreen extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: OutlinedButton(
@@ -51,13 +51,13 @@ class LoginRegisterScreen extends StatelessWidget {
                   // Action khi bấm "Bạn chưa có tài khoản?"
                 },
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.white), // Viền trắng
+                  side: const BorderSide(color: Colors.white), // Viền trắng
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Center(
+                child: const Center(
                   child: Text(
                     'Bạn chưa có tài khoản?',
                     style: TextStyle(
@@ -68,7 +68,7 @@ class LoginRegisterScreen extends StatelessWidget {
                 )
               ),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
           ],
         ),
       ],

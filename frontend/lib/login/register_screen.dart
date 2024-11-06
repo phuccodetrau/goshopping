@@ -12,14 +12,14 @@ class RegisterScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               IconButton(
-                icon: Icon(Icons.arrow_back),
+                icon: const Icon(Icons.arrow_back),
                 onPressed: () {
                   // Action khi bấm nút quay lại
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
                 'Chào mừng bạn đến với',
                 style: TextStyle(fontSize: 24,  fontWeight: FontWeight.bold,color: Colors.green[800]),
@@ -29,7 +29,7 @@ class RegisterScreen extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green[800]),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               TextField(
                 decoration: InputDecoration(
                   prefixIcon: Padding(
@@ -45,7 +45,7 @@ class RegisterScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Checkbox(
@@ -56,7 +56,7 @@ class RegisterScreen extends StatelessWidget {
                   ),
                   Expanded(
                     child: RichText(
-                      text: TextSpan(
+                      text: const TextSpan(
                         text: 'Tôi đồng ý với các ',
                         style: TextStyle(color: Colors.black),
                         children: [
@@ -70,7 +70,7 @@ class RegisterScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   // Action khi bấm nút "Tiếp tục với Số điện thoại"
@@ -80,9 +80,9 @@ class RegisterScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Center(
+                child: const Center(
                   child: Text(
                     'Tiếp tục với Số điện thoại',
                     style: TextStyle(color: Colors.white, fontSize: 16),

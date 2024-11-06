@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 
 class AddFoodScreen extends StatelessWidget {
+  const AddFoodScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green[700],
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Thông tin chi tiết',
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {},
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.home, color: Colors.white),
+            icon: const Icon(Icons.home, color: Colors.white),
             onPressed: () {},
           ),
         ],
@@ -43,12 +45,12 @@ class AddFoodScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 'Cập nhật hình ảnh',
                 style: TextStyle(color: Colors.grey[700]),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
                   labelText: 'Tên món ăn',
@@ -60,7 +62,7 @@ class AddFoodScreen extends StatelessWidget {
                   fillColor: Colors.grey[200],
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
@@ -76,7 +78,7 @@ class AddFoodScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
@@ -92,7 +94,7 @@ class AddFoodScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -103,7 +105,7 @@ class AddFoodScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Container(
                 height: 100,
                 width: double.infinity,
@@ -119,7 +121,7 @@ class AddFoodScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -130,7 +132,7 @@ class AddFoodScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               TextField(
                 maxLines: 5,
                 decoration: InputDecoration(

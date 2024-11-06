@@ -15,12 +15,12 @@ class _FridgeState extends State<Fridge> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             // Xử lý khi bấm vào nút quay lại
           },
         ),
-        title: Text(
+        title: const Text(
           "Tủ lạnh",
           style: TextStyle(
             color: Colors.black,
@@ -41,8 +41,8 @@ class _FridgeState extends State<Fridge> {
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: const TextField(
                 decoration: InputDecoration(
                   hintText: "Nguyên liệu, thành phần",
                   hintStyle: TextStyle(color: Colors.grey),
@@ -51,7 +51,7 @@ class _FridgeState extends State<Fridge> {
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Danh sách danh mục nguyên liệu (cuộn ngang)
             SingleChildScrollView(
@@ -67,14 +67,14 @@ class _FridgeState extends State<Fridge> {
                 ],
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Gợi ý nguyên liệu cần mua (cuộn ngang)
-            Text(
+            const Text(
               "Gợi ý nguyên liệu cần mua",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             SizedBox(
               height: 150,
               child: ListView(
@@ -86,13 +86,13 @@ class _FridgeState extends State<Fridge> {
                 ],
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Danh sách nguyên liệu (cuộn dọc)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   "Danh sách nguyên liệu",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
@@ -100,7 +100,7 @@ class _FridgeState extends State<Fridge> {
                   onPressed: () {
                     // Xử lý khi bấm "Chỉnh sửa"
                   },
-                  child: Text(
+                  child: const Text(
                     "Chỉnh sửa",
                     style: TextStyle(color: Colors.blue),
                   ),
@@ -109,7 +109,7 @@ class _FridgeState extends State<Fridge> {
             ),
             ListView(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               children: [
                 _buildIngredientItem("Nước mắm", "1 L", "images/fish.png"),
                 _buildIngredientItem("Gạo trắng", "5 KG", "images/fish.png"),
@@ -123,14 +123,14 @@ class _FridgeState extends State<Fridge> {
           _showAddIngredientPopup(context);
         },
         backgroundColor: Colors.green[700],
-        child: Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         onTap: (index) {
           // Xử lý khi chuyển đổi tab
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: "",
@@ -173,10 +173,10 @@ class _FridgeState extends State<Fridge> {
               child: Image.asset(imagePath!, fit: BoxFit.cover),
             ),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: Colors.black),
+            style: const TextStyle(fontSize: 12, color: Colors.black),
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -196,7 +196,7 @@ class _FridgeState extends State<Fridge> {
             color: Colors.grey.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 5,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
         border: Border.all(color: Colors.grey[300]!), // Viền nhẹ
@@ -208,7 +208,7 @@ class _FridgeState extends State<Fridge> {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                 child: ColorFiltered(
                   colorFilter: ColorFilter.mode(
                     Colors.black.withOpacity(0.2), // Màu mờ phủ lên hình ảnh
@@ -234,9 +234,9 @@ class _FridgeState extends State<Fridge> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   ),
-                  child: Text(
+                  child: const Text(
                     "Mua thêm",
                     style: TextStyle(fontSize: 12),
                   ),
@@ -252,20 +252,20 @@ class _FridgeState extends State<Fridge> {
                 // Tên món hàng
                 Text(
                   name,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 // Số lượng
                 Row(
                   children: [
-                    Icon(Icons.shopping_basket, size: 12, color: Colors.grey),
-                    SizedBox(width: 4),
+                    const Icon(Icons.shopping_basket, size: 12, color: Colors.grey),
+                    const SizedBox(width: 4),
                     Text(
                       quantity,
-                      style: TextStyle(fontSize: 12, color: Colors.red),
+                      style: const TextStyle(fontSize: 12, color: Colors.red),
                     ),
-                    Spacer(),
-                    Icon(Icons.group, size: 12, color: Colors.grey),
+                    const Spacer(),
+                    const Icon(Icons.group, size: 12, color: Colors.grey),
                   ],
                 ),
               ],
@@ -279,8 +279,8 @@ class _FridgeState extends State<Fridge> {
 
   Widget _buildIngredientItem(String name, String quantity, String imagePath) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      padding: EdgeInsets.all(8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -289,7 +289,7 @@ class _FridgeState extends State<Fridge> {
             color: Colors.grey.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 5,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -304,12 +304,12 @@ class _FridgeState extends State<Fridge> {
               fit: BoxFit.cover,
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              Text(quantity, style: TextStyle(fontSize: 14, color: Colors.grey)),
+              Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(quantity, style: const TextStyle(fontSize: 14, color: Colors.grey)),
             ],
           ),
         ],
@@ -322,14 +322,14 @@ class _FridgeState extends State<Fridge> {
     return Chip(
       label: Text(label),
       backgroundColor: Colors.grey[200],
-      labelStyle: TextStyle(color: Colors.black),
+      labelStyle: const TextStyle(color: Colors.black),
     );
   }
   void _showAddIngredientPopup(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Padding(
@@ -351,36 +351,36 @@ class _FridgeState extends State<Fridge> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[700]),
                 ),
                 IconButton(
-                  icon: Icon(Icons.close, color: Colors.grey),
+                  icon: const Icon(Icons.close, color: Colors.grey),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Tên thực phẩm
             TextField(
               decoration: InputDecoration(
                 labelText: "Tên thực phẩm",
-                labelStyle: TextStyle(color: Colors.grey),
+                labelStyle: const TextStyle(color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.green),
+                  borderSide: const BorderSide(color: Colors.green),
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Loại thực phẩm
             Text(
               "Loại thực phẩm",
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -394,7 +394,7 @@ class _FridgeState extends State<Fridge> {
                 _buildChip("Hoa quả"),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Số lượng
             Row(
@@ -405,13 +405,13 @@ class _FridgeState extends State<Fridge> {
                       labelText: "Số lượng",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey),
+                        borderSide: const BorderSide(color: Colors.grey),
                       ),
                     ),
                     keyboardType: TextInputType.number,
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 DropdownButton<String>(
                   value: 'Kg',
                   items: <String>['Kg', 'L', 'Gram'].map((String value) {
@@ -426,7 +426,7 @@ class _FridgeState extends State<Fridge> {
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
           ],
         ),
       ),

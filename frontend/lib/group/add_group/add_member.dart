@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 
 class AddMember extends StatelessWidget {
+  const AddMember({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           "",
           style: TextStyle(color: Colors.green),
         ),
         actions: [
           TextButton(
             onPressed: () {},
-            child: Text(
+            child: const Text(
               "Tạo nhóm",
               style: TextStyle(color: Colors.green),
             ),
@@ -26,7 +28,7 @@ class AddMember extends StatelessWidget {
         elevation: 0,
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -36,21 +38,21 @@ class AddMember extends StatelessWidget {
                 hintText: "Nhập Tên hoặc Email để tìm kiếm",
                 filled: true,
                 fillColor: Colors.grey[200],
-                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide.none,
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             // User profile
             Row(
               children: [
                 Stack(
                   alignment: Alignment.topRight,
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       backgroundImage: AssetImage("images/group.png"),
                       radius: 30,
                     ),
@@ -62,12 +64,12 @@ class AddMember extends StatelessWidget {
                           // Thêm logic để xóa hoặc thực hiện hành động cần thiết
                         },
                         child: Container(
-                          padding: EdgeInsets.all(1),
-                          decoration: BoxDecoration(
+                          padding: const EdgeInsets.all(1),
+                          decoration: const BoxDecoration(
                             color: Colors.red,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.close,
                             color: Colors.white,
                             size: 16,
@@ -77,13 +79,13 @@ class AddMember extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
 
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             // Suggested contacts title
-            Text(
+            const Text(
               "Gợi ý",
               style: TextStyle(
                 fontSize: 16,
@@ -91,11 +93,11 @@ class AddMember extends StatelessWidget {
                 color: Colors.green,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             // Suggested contacts list
             Expanded(
               child: ListView(
-                children: [
+                children: const [
                   ContactItem(
                       name: "Hoanghung_1000",
                       image: "images/group.png",
@@ -119,7 +121,7 @@ class AddMember extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: [
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
@@ -136,7 +138,7 @@ class ContactItem extends StatelessWidget {
   final String image;
   final bool isSelected;
 
-  const ContactItem({
+  const ContactItem({super.key, 
     required this.name,
     required this.image,
     this.isSelected = false,
