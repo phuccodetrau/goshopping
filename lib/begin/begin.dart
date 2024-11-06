@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'utils/onboard.dart';
+import '../utils/onboard.dart';
 class OnBoardingScreen extends StatefulWidget {
   const OnBoardingScreen({super.key});
 

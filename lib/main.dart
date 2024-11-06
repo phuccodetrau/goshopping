@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'buy_food.dart';
+import 'user/persion_infor_change.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false, // Tắt banner debug
-      home:BuyFood() // Sử dụng Begin() làm widget chính của app
+      home:EditPersonalInfoScreen()// Sử dụng Begin() làm widget chính của app
     );
   }
 }
