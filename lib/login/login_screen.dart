@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_shopping/home_screen/home_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'forgot_password_screen.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -8,27 +13,79 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController phoneController = TextEditingController();
+  String URL=dotenv.env['ROOT_URL']!+"/user/login";
+  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isError = false;
+  bool isEmailEmpty = false;
+  bool isPasswordEmpty = false;
+
+  @override
+  void initState() {
+    super.initState();
+    emailController.addListener(_checkIfInputIsFilled);
+    passwordController.addListener(_checkIfInputIsFilled);
+  }
 
   @override
   void dispose() {
-    phoneController.dispose();
+    emailController.dispose();
     passwordController.dispose();
     super.dispose();
   }
 
-  void _onLoginPressed() {
+  bool get isInputValid {
+    return emailController.text.isNotEmpty && passwordController.text.isNotEmpty;
+  }
+
+  void _checkIfInputIsFilled() {
     setState(() {
-      // Xử lý logic đăng nhập, giả sử nếu mật khẩu rỗng thì báo lỗi
-      if (passwordController.text.isEmpty) {
-        isError = true;
-      } else {
-        isError = false;
-        // Thực hiện logic đăng nhập
-      }
+      isEmailEmpty = emailController.text.isEmpty;
+      isPasswordEmpty = passwordController.text.isEmpty;
     });
+  }
+
+  Future<void> _onLoginPressed() async{
+    final String email=emailController.text;
+    final String password=passwordController.text;
+    print(email);
+    print(password);
+    try {
+      final response = await http.post(
+        Uri.parse(URL),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email,'password':password}),
+      );
+
+      final responseData = jsonDecode(response.body);
+      print(responseData);
+      if(responseData['status']==true){
+        final String token = responseData['token'];
+
+        await _secureStorage.write(key: 'auth_token', value: token);
+        await _secureStorage.write(key: 'email', value: responseData['user']['email']);
+        await _secureStorage.write(key: 'id', value:  responseData['user']['_id'].toString());
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(),
+          ),
+        );
+      }else{
+        //TODO
+        setState(() {
+          isError=true;
+        });
+      }
+
+    } catch (e) {
+      print(e);
+      setState(() {
+          isError=true;
+      });
+    }
+
   }
 
   @override
@@ -67,11 +124,14 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             SizedBox(height: 16),
+
+            // Trường nhập email
             TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
+              controller: emailController,
+
+              keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                hintText: "+84 123 456 789",
+                hintText: "Email",
                 hintStyle: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 16,
@@ -82,16 +142,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: Icon(Icons.phone, color: Colors.grey[600]),
+                prefixIcon: Icon(Icons.email, color: Colors.grey[600]),
               ),
               style: TextStyle(fontSize: 16, color: Colors.black),
             ),
+            if (isEmailEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Text(
+                  "Vui lòng nhập email",
+                  style: TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
             SizedBox(height: 16),
+
+            // Trường nhập mật khẩu
             TextField(
               controller: passwordController,
               obscureText: true,
               decoration: InputDecoration(
-                labelText: "Mật khẩu", // Thay thế placeholder bằng label "Mật khẩu"
+                labelText: "Mật khẩu",
                 labelStyle: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 16,
@@ -106,11 +176,24 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               style: TextStyle(fontSize: 16, color: Colors.black),
             ),
+            if (isPasswordEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Text(
+                  "Vui lòng nhập mật khẩu",
+                  style: TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () {
-                  // Xử lý khi nhấn "Quên mật khẩu?"
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ForgotPasswordScreen(),
+                    ),
+                  );
                 },
                 child: Text(
                   "Quên mật khẩu?",
@@ -122,6 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             SizedBox(height: 8),
+
             if (isError)
               Text(
                 "Mật khẩu chưa chính xác, vui lòng thử lại!",
@@ -131,10 +215,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             SizedBox(height: 16),
+
             ElevatedButton(
-              onPressed: _onLoginPressed,
+              onPressed: isInputValid ? _onLoginPressed : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
+                backgroundColor: isInputValid ? Colors.green[700] : Colors.grey,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -165,7 +250,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 Expanded(child: Divider(color: Colors.grey)),
               ],
             ),
-
           ],
         ),
       ),

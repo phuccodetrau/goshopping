@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_shopping/login/login_screen.dart';
+import 'package:go_shopping/login/register_screen.dart';
 class LoginRegisterScreen extends StatelessWidget {
   const LoginRegisterScreen({super.key});
 
@@ -23,7 +25,9 @@ class LoginRegisterScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: ElevatedButton(
                 onPressed: () {
-                  // Action khi bấm nút đăng nhập
+                  Navigator.push(context, MaterialPageRoute(builder: (context){
+                    return LoginScreen();
+                  }));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
@@ -48,7 +52,9 @@ class LoginRegisterScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: OutlinedButton(
                 onPressed: () {
-                  // Action khi bấm "Bạn chưa có tài khoản?"
+                  Navigator.push(context, MaterialPageRoute(builder: (context){
+                    return RegisterScreen();
+                  }));
                 },
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: Colors.white), // Viền trắng

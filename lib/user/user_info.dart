@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
-
-class PersonalInfoScreen extends StatelessWidget {
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_shopping/begin/splashScreen.dart';
+class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
+
+  @override
+  State<PersonalInfoScreen> createState() => _PersonalInfoScreenState();
+}
+
+class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
+  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +104,15 @@ class PersonalInfoScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.red),
                   ),
                   onTap: () {
-                    // Xử lý khi nhấn Đăng xuất
+                    setState(() {
+                      _secureStorage.deleteAll();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SplashScreen(),
+                        ),
+                      );
+                    });
                   },
                 ),
               ],

@@ -1,5 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import '../home_screen/home_screen.dart';
 import '../utils/onboard.dart';
+import 'login_register_screen.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 class OnBoardingScreen extends StatefulWidget {
   const OnBoardingScreen({super.key});
 
@@ -8,6 +15,52 @@ class OnBoardingScreen extends StatefulWidget {
 }
 
 class _OnBoardingScreenState extends State<OnBoardingScreen> {
+  String URL = dotenv.env['ROOT_URL']!+ "/user/check_login";
+  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize(); // Call the async method here
+  }
+
+  Future<void> _initialize() async {
+    final String email = await getEmail();
+    print(email);
+
+    if (email.isNotEmpty) { // Check if email is not empty
+      if (await check_email(email)) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<String> getEmail() async {
+    final email = await _secureStorage.read(key: "email");
+    return email ?? ''; // Return empty string if email is null
+  }
+
+  Future<bool> check_email(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse(URL),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      return responseData['status'] == true;
+    } catch (e) {
+      print(e); // Optional: print the error
+      return false;
+    }
+  }
   PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -36,6 +89,9 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
       duration: Duration(milliseconds: 500),
       curve: Curves.ease,
     );
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return LoginRegisterScreen();
+    }));
   }
 
   void _onNext() {
@@ -45,7 +101,9 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
         curve: Curves.ease,
       );
     } else {
-      // Đưa ra hành động khi đã đến trang cuối (vd: vào màn hình chính)
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return LoginRegisterScreen();
+      }));
     }
   }
 
@@ -89,7 +147,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 onboardingData.length,
-                    (index) => buildDot(index, context),
+                (index) => buildDot(index, context),
               ),
             ),
           ),
@@ -115,9 +173,9 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
           ),
         ],
       ),
-
     );
   }
+
   Widget buildDot(int index, BuildContext context) {
     return Container(
       height: 10,
