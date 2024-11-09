@@ -4,11 +4,13 @@ const { Schema } = mongoose;
 const userSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  name: { type: String, required: true },
-  language: { type: String, required: true },
-  timezone: { type: String, required: true },
+  name: { type: String,},
+  language: { type: String },
+  timezone: { type: String },
   device: { type: String },
-  image: { type: String }
+  image: { type: String },
+  verificationCodeExpires:{type:Date},
+  verificationCode:{type:String}
 });
 
 const categorySchema = new Schema({

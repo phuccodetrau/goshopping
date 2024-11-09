@@ -1,39 +1,66 @@
 import AuthService from "../services/auth.service.js";
 import 'dotenv/config'
+import jwt from 'jsonwebtoken';
+
 const login=async(req,res,next)=>{
     try {
         const{email,password}=req.body;
         if(!email ||!password){
-            return res.status(400).json({ message: 'Email and password are required' });
+            return res.status(400).json({ status:false,message: 'Email and password are required' });
         }else{
             const result=await AuthService.login(email,password);
             console.log(result);
-            if(result.status===true){
-                    return res.status(200).json({ status: true, token:result.token });
+            if(result.user){
+                const token = jwt.sign(
+                    { userId: result.user._id, email: result.user.email },
+                    process.env.JWT_SECRET_KEY, 
+                    { expiresIn: '1h' } 
+                );
+                res.setHeader('Authorization', `Bearer ${token}`);
+                res.cookie('auth_token', token, {
+                    httpOnly: true,  
+                    secure: process.env.NODE_ENV === 'production', 
+                    maxAge: 180, 
+                    sameSite: 'Strict', 
+                });
+                return  res.status(201).json({ status: true, message: 'User logined successfully',user:result.user,token:token });
+
             }else{
-                return res.status(401).json({ message: 'Invalid email or password' });
+                return res.status(401).json({status:false, message: 'Invalid email or password' });
             }
         }
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ status:false,message: error.message });
     }
 }
 const register=async(req,res,next)=>{
     try {
-        const { email, password, name, language, timezone, deviceId } = req.body;
+        const { email, password} = req.body;
 
-        if (!email || !password || !name || !language || !timezone || !deviceId) {
-            return res.status(400).json({ message: 'All fields are required' });
+        if (!email || !password) {
+            return res.status(400).json({status:false, message: 'All fields are required' });
         }
-        const result=await AuthService.register(email, password, name, language, timezone, deviceId);
-        if(!result.user){
-            return  res.status(201).json({ status: true, message: 'User registered successfully' });
+        const result=await AuthService.register(email, password);
+        if(result.user){
+            const token = jwt.sign(
+                { userId: result.user._id, email: result.user.email },
+                process.env.JWT_SECRET_KEY, 
+                { expiresIn: '1h' } 
+            );
+            res.setHeader('Authorization', `Bearer ${token}`);
+            res.cookie('auth_token', token, {
+                httpOnly: true,  
+                secure: process.env.NODE_ENV === 'production', 
+                maxAge: 180, 
+                sameSite: 'Strict', 
+            });
+            return  res.status(201).json({ status: true, message: 'User registered successfully',user:result.user,token:token });
         }else{
-            return res.status(500).json({ message: result.message });
+            return res.status(500).json({status:false, message: result.message });
         }
 
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({status:false, message: error.message });
     }
 }
 const logout = async (req, res) => {
@@ -63,9 +90,34 @@ const sendVerificationCode = async (req, res) => {
         return res.status(400).json({ status: false, message: 'Email is required' });
     }
     const result=await AuthService.sendVerificationCode(email);
-    console.log(result);
+    
     return res.status(200).json(result);
     
 };
+const checkVerificationCode = async (req, res) => {
+    const { email,otp } = req.body;
+    console.log(otp)
+    if (!email) {
+        return res.status(400).json({ status: false, message: 'Email is required' });
+    }
+    const result=await AuthService.checkVerificationCode(email,otp);
+ 
+    return res.status(200).json(result);
+    
+};
+const check_login=async(req,res)=>{
+    const {email}=req.body;
+    //TODO
+    if (!email) {
+        return res.status(400).json({ status: false, message: 'Email is required' });
+    }else{
+        const result=await AuthService.checkLogin(email);
+        if(result.email){
+            return res.status(200).json({status:true,message:'User is logged in'})
+        }else{
+            return res.status(200).json({status:false,message:'User is not exist'})
+        }
+    }
+}
 
-export default {login,register,logout,refreshToken,sendVerificationCode};
+export default {login,register,logout,refreshToken,sendVerificationCode,check_login,checkVerificationCode};
