@@ -1,53 +1,43 @@
 import UnitService from "../services/unit.service.js";
 
-const createUnit = async(req,res,next)=>{
-    try{
-        console.log(req.body)
-        const {unitName,groupId}=req.body;
-        const unit=await UnitService.createUnit(unitName,groupId);
-        return res.json({status:true,success:unit})
-    }catch(err){
-        return res.status(500).send({message:err});
-    }
-}
-const getAllUnit=async(req,res,next)=>{
+const createUnit = async (req, res, next) => {
     try {
-        const {groupId}=req.params;
-    const units=await UnitService.getAllUnit(groupId);
-    return res.json({status:true,success:units});
+        const { unitName, groupId } = req.body;
+        const result = await UnitService.createUnit(unitName, groupId);
+        res.json(result);
     } catch (error) {
-        return res.status(500).send({message:error});
-    }
-}
-const updateUnit=async(req,res,next)=>{
-    try {
-        const {oldName,newName}=req.body;
-        const unit=await UnitService.editUnit(oldName,newName);
-        return res.json({status:true,success:unit});
-    } catch (error) {
-        return res.status(500).send({message:error});
-    }
-}
-const deleteUnit= async (req, res,next) => {
-    try {
-        const { name } = req.body;
-
-        // Validate input
-        if (!name) {
-            return res.status(400).json({ message: 'Category name is required' });
-        }
-
-       
-        const result = await UnitService.deleteUnit(name);
-
-        if (result.deletedCount === 0) {
-            return res.status(404).json({ message: 'Unit not found' });
-        }
-
-        return res.status(200).json({ status: true, message: 'Unit deleted successfully' });
-    } catch (err) {
-        return res.status(500).json({ message: err.message });
+        return res.json({ code: 101, message: "Server error!", data: "" });
     }
 };
 
-export default {createUnit,getAllUnit,updateUnit,deleteUnit};
+const getAllUnit = async (req, res, next) => {
+    try {
+        const { groupId } = req.params;
+        const result = await UnitService.getAllUnit(groupId);
+        res.json(result);
+    } catch (error) {
+        return res.json({ code: 101, message: "Server error!", data: "" });
+    }
+};
+
+const updateUnit = async (req, res, next) => {
+    try {
+        const { oldName, newName, groupId } = req.body;
+        const result = await UnitService.editUnit(oldName, newName, groupId);
+        res.json(result);
+    } catch (error) {
+        return res.json({ code: 101, message: "Server error!", data: "" });
+    }
+};
+
+const deleteUnit = async (req, res, next) => {
+    try {
+        const { name, groupId } = req.body;
+        const result = await UnitService.deleteUnit(name, groupId);
+        res.json(result);
+    } catch (error) {
+        return res.json({ code: 101, message: "Server error!", data: "" });
+    }
+};
+
+export default { createUnit, getAllUnit, updateUnit, deleteUnit };

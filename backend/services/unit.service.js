@@ -1,35 +1,87 @@
-import { Unit} from "../models/schema.js";
-class UnitService{
-    static async createUnit(unitName,groupId){
-        try {
-            const createUnit = new Unit({name:unitName,group: groupId });
-            return await createUnit.save();
-        } catch (error) {
-            return error;
-        }
-    }
-    static async getAllUnit(groupId){
-        try {
-            const  units = await Unit.find({group:groupId});
-            return units;
+import { Unit } from "../models/schema.js";
 
-        } catch (err) {
-            return err;
+class UnitService {
+    static async createUnit(unitName, groupId) {
+        if (!unitName || !groupId) {
+            return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" };
+        }
+
+        const existingUnit = await Unit.findOne({ name: unitName, group: groupId });
+        if (existingUnit) {
+            return { code: 702, message: "Tên đơn vị đã tồn tại trong nhóm này", data: "" };
+        }
+
+        try {
+            const createUnit = new Unit({ name: unitName, group: groupId });
+            const savedUnit = await createUnit.save();
+            return { code: 700, message: "Tạo đơn vị thành công", data: savedUnit };
+        } catch (error) {
+            console.error("Lỗi khi tạo đơn vị:", error);
+            throw error;
         }
     }
-    static async editUnit(oldName,newName){
+
+    static async getAllUnit(groupId) {
+        if (!groupId) {
+            return { code: 701, message: "Vui lòng cung cấp groupId", data: "" };
+        }
+
         try {
-            const unit=await Unit.updateOne({name:oldName},{name:newName});
-            return unit;
-        } catch (error) {
-            return error;
-    }}
-    static async deleteUnit(name) {
+            const units = await Unit.find({ group: groupId });
+            return { code: 700, message: "Lấy tất cả đơn vị thành công", data: units };
+        } catch (err) {
+            console.error("Lỗi khi lấy danh sách đơn vị:", err);
+            throw err;
+        }
+    }
+
+    static async editUnit(oldName, newName, groupId) {
+        if (!oldName || !newName || !groupId) {
+            return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" };
+        }
+
+        const existingUnit = await Unit.findOne({
+            name: newName,
+            group: groupId,
+            _id: { $ne: (await Unit.findOne({ name: oldName, group: groupId }))._id }
+        });
+
+        if (existingUnit) {
+            return { code: 702, message: "Tên đơn vị mới đã tồn tại trong nhóm này", data: "" };
+        }
+
         try {
-            const result = await Unit.deleteOne({ name }); 
-            return result
+            const updatedUnit = await Unit.findOneAndUpdate(
+                { name: oldName, group: groupId },
+                { name: newName },
+                { new: true }
+            );
+
+            if (!updatedUnit) {
+                return { code: 703, message: "Không tìm thấy đơn vị để cập nhật", data: "" };
+            }
+
+            return { code: 700, message: "Cập nhật đơn vị thành công", data: updatedUnit };
         } catch (error) {
-            throw new Error(`Error deleting category: ${error.message}`);
+            console.error("Lỗi khi cập nhật đơn vị:", error);
+            throw error;
+        }
+    }
+
+    static async deleteUnit(name, groupId) {
+        if (!name || !groupId) {
+            return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" };
+        }
+
+        try {
+            const result = await Unit.deleteOne({ name: name, group: groupId });
+            if (result.deletedCount === 0) {
+                return { code: 404, message: "Đơn vị không tìm thấy", data: "" };
+            }
+            return { code: 700, message: "Đơn vị đã xóa thành công", data: "" };
+        } catch (error) {
+            console.error("Lỗi khi xóa đơn vị:", error);
+            throw error;
         }
     }
 }
