@@ -33,25 +33,27 @@ class GroupService {
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
-
-    static async addMember(groupId, member) {
+    static async addMembers(groupName, members) {
         try {
-            const updatedGroup = await Group.findByIdAndUpdate(
-                groupId,
-                { $push: { listUser: member } },
+            const updatedGroup = await Group.findOneAndUpdate(
+                { name: groupName },
+                { $addToSet: { listUser: { $each: members } } }, // Sử dụng $each để thêm nhiều phần tử
                 { new: true }
             );
-
+    
             if (!updatedGroup) {
                 return { code: 703, message: "Không tìm thấy nhóm để thêm thành viên", data: "" };
             }
-
-            return { code: 702, message: "Thêm thành viên thành công", data: updatedGroup };
+    
+            return { code: 702, message: "Thêm danh sách thành viên thành công", data: updatedGroup };
         } catch (error) {
-            console.error('Lỗi khi thêm thành viên:', error);
+            console.error('Lỗi khi thêm danh sách thành viên:', error);
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
+    
+    
+    
 
     static async removeMember(groupId, email) {
         try {

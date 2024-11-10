@@ -5,7 +5,7 @@ const router = Router();
 
 router.post('/create-group', groupController.createGroup);
 router.delete('/delete-group/:groupId', groupController.deleteGroup);
-router.post('/add-member', groupController.addMember);
+router.put('/add-member', groupController.addMembers);
 router.post('/remove-member', groupController.removeMember);
 
 export default router; 

@@ -20,24 +20,27 @@ const deleteGroup = async (req, res) => {
     }
 };
 
-const addMember = async (req, res) => {
+const addMembers = async (req, res) => {
     try {
-        const { groupId, member } = req.body;
-        const result = await GroupService.addMember(groupId, member);
+        const { groupName, members } = req.body; // Nhận danh sách members
+        const result = await GroupService.addMembers(groupName, members);
         return res.status(result.code === 702 ? 200 : 404).json(result);
     } catch (error) {
         return res.status(500).json(error);
     }
 };
 
+
+
+
 const removeMember = async (req, res) => {
     try {
-        const { groupId, email } = req.body;
-        const result = await GroupService.removeMember(groupId, email);
+        const { groupName, email } = req.body;
+        const result = await GroupService.removeMember(groupName, email);
         return res.status(result.code === 703 ? 200 : 404).json(result);
     } catch (error) {
         return res.status(500).json(error);
     }
 };
 
-export default { createGroup, deleteGroup, addMember, removeMember }; 
+export default { createGroup, deleteGroup, addMembers, removeMember }; 
