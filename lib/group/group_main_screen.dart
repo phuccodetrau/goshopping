@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'chat_screen.dart';
+
 class GroupMainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -9,7 +11,12 @@ class GroupMainScreen extends StatelessWidget {
         title: Text("Gia đình bên nội",style: TextStyle(color: Colors.green[800],fontWeight: FontWeight.bold),),
         actions: [
           IconButton(icon: Icon(Icons.person_add), onPressed: () {}),
-          IconButton(icon: Icon(Icons.chat_bubble_outline), onPressed: () {}),
+          IconButton(icon: Icon(Icons.chat_bubble_outline), onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ChatScreen()),
+            );
+          }),
         ],
 
       ),

@@ -84,7 +84,9 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
     if (response.statusCode == 201) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => AddMember()),
+        MaterialPageRoute(
+          builder: (context) => AddMember(groupName: groupName), // Pass groupName here
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -164,7 +166,9 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
 
   Widget _buildImageUploadSection() {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        // Add logic for image upload here
+      },
       child: Column(
         children: [
           Container(
