@@ -2,6 +2,7 @@ import app from './app.js';
 // import UserModel from './models/user.model.js';
 import mongoose from 'mongoose';
 import { Group } from './models/schema.js';
+import userRoutes from './routes/user.routes.js';
 const port = 3000;
 
 const createGroup = async () => {
@@ -32,6 +33,7 @@ mongoose.connect(
     console.log("Thất bại");
 });
 
+app.use('/user', userRoutes);
 
 app.get('/', (req, res) => {
     res.send("Hello World");

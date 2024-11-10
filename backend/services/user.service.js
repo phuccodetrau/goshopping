@@ -17,6 +17,7 @@ class UserServices {
             return await UserModel.findOne({ email });
         } catch (err) {
             console.log(err);
+            throw err;
         }
     }
 
@@ -31,6 +32,22 @@ class UserServices {
     static async generateAccessToken(tokenData, JWTSecret_Key, JWT_EXPIRE) {
         return jwt.sign(tokenData, JWTSecret_Key, { expiresIn: JWT_EXPIRE });
     }
+
+    static async getUserNameByEmail(email) {
+        try {
+            console.log("Querying for email:", email); // Log email đang được truy vấn
+            const user = await UserModel.findOne({ email }); // Tìm kiếm email
+            console.log("User found:", user); // Log thông tin người dùng tìm thấy
+            if (user) {
+                return user; // Trả về tên nếu tìm thấy
+            }
+            return null; // Trả về null nếu không tìm thấy
+        } catch (err) {
+            console.error("Error fetching user:", err);
+            throw err;
+        }
+    }
+    
 }
 
 export default UserServices; // Xuất mặc định
