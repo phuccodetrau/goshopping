@@ -14,8 +14,8 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  String URL = dotenv.env["ROOT_URL"]! + "/user/sendverification-code";
-  String submit_URL = dotenv.env["ROOT_URL"]! + "/user/checkverification-code"; // API kiểm tra OTP
+  String URL = dotenv.env["ROOT_URL"]! + "/auth/user/sendverification-code";
+  String submit_URL = dotenv.env["ROOT_URL"]! + "/auth/user/checkverification-code"; // API kiểm tra OTP
   // API kiểm tra OTP
   List<TextEditingController> otpControllers =
   List.generate(4, (index) => TextEditingController());

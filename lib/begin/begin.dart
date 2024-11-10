@@ -15,7 +15,7 @@ class OnBoardingScreen extends StatefulWidget {
 }
 
 class _OnBoardingScreenState extends State<OnBoardingScreen> {
-  String URL = dotenv.env['ROOT_URL']!+ "/user/check_login";
+  String URL = dotenv.env['ROOT_URL']!+ "/auth/user/check_login";
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   @override
@@ -42,6 +42,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
 
   Future<String> getEmail() async {
     final email = await _secureStorage.read(key: "email");
+    print(await _secureStorage.read(key: "auth_token"));
     return email ?? ''; // Return empty string if email is null
   }
 

@@ -13,7 +13,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  final String URL =dotenv.env['ROOT_URL']!+ "/user";
+  final String URL =dotenv.env['ROOT_URL']!+ "/auth/user";
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
