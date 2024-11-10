@@ -45,4 +45,21 @@ const login = async (req, res, next) => {
         next(error);
     }
 };
-export default {register, login}
+
+const getUserByEmail = async (req, res, next) => {
+    try {
+        const { email } = req.query; // Lấy email từ query parameters
+        const user = await UserServices.getUserByEmail(email);
+        
+        if (!user) {
+            return res.status(404).json({ status: false, message: 'User not found' });
+        }
+
+        res.json({ status: true, user });
+    } catch (err) {
+        console.log(err);
+        next(err);
+    }
+};
+
+export default { register, login, getUserByEmail }; // Xuất phương thức

@@ -20,6 +20,26 @@ const createGroup = async () => {
     }
 };
 
+const addUsers = async () => {
+  const users = [
+      { email: 'alice@example.com', password: 'password123', name: 'Alice', language: 'en', timezone: 'UTC' },
+      { email: 'bob@example.com', password: 'password123', name: 'Bob', language: 'en', timezone: 'UTC' },
+      { email: 'charlie@example.com', password: 'password123', name: 'Charlie', language: 'en', timezone: 'UTC' },
+      { email: 'david@example.com', password: 'password123', name: 'David', language: 'en', timezone: 'UTC' },
+      { email: 'eve@example.com', password: 'password123', name: 'Eve', language: 'en', timezone: 'UTC' }
+  ];
+
+  try {
+      for (const user of users) {
+          const newUser = new UserModel(user);
+          await newUser.save();
+          console.log('User added:', newUser);
+      }
+  } catch (error) {
+      console.error('Error adding users:', error);
+  }
+};
+
 mongoose.connect(
     "mongodb+srv://phucnh0703:hoangphuc0703@cluster0.8tjiz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 ).then(() => {

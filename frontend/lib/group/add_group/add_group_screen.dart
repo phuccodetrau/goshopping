@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'add_member.dart';
 
 class AddGroup extends StatelessWidget {
   const AddGroup({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Biến để lưu trữ hình ảnh đã upload
+    String? uploadedImage;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -17,7 +22,10 @@ class AddGroup extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              // Chuyển đến trang add_member.dart mà không lưu hình ảnh
+              Navigator.pushNamed(context, '/add_member');
+            },
             child: Text(
               "Bỏ qua",
               style: TextStyle(color: Colors.green[800]),
@@ -49,7 +57,16 @@ class AddGroup extends StatelessWidget {
 
             // Cập nhật hình ảnh
             GestureDetector(
-              onTap: () {},
+              onTap: () async {
+                // Logic để upload hình ảnh
+                uploadedImage = await uploadImage(); // Lưu trữ hình ảnh đã upload
+                if (uploadedImage != null) {
+                  // Hiển thị thông báo thành công khi upload thành công
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Hình ảnh đã được upload thành công!")),
+                  );
+                }
+              },
               child: Column(
                 children: [
                   Container(
@@ -77,7 +94,6 @@ class AddGroup extends StatelessWidget {
 
             // Ô nhập tên nhóm
             TextField(
-
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.grey[200],
@@ -86,7 +102,6 @@ class AddGroup extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 counterText: "0/75",
-
               ),
               maxLength: 75,
             ),
@@ -121,7 +136,28 @@ class AddGroup extends StatelessWidget {
 
             // Nút "Tiếp theo"
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () async {
+                if (uploadedImage == null) {
+                  // Hiển thị cảnh báo nếu chưa upload hình ảnh
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Vui lòng upload hình ảnh trước!")),
+                  );
+                } else {
+                  // Giả sử bạn có một hàm để lưu ảnh
+                  bool isImageSaved = await saveImage(); // Thay thế bằng hàm lưu ảnh của bạn
+
+                  if (isImageSaved) {
+                    // Nếu lưu ảnh thành công, điều hướng đến AddMember
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddMember()), // Điều hướng đến AddMember
+                    );
+                  } else {
+                    // Xử lý khi lưu ảnh không thành công (nếu cần)
+                    print('Lưu ảnh không thành công');
+                  }
+                }
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green[700],
                 shape: RoundedRectangleBorder(
@@ -138,5 +174,22 @@ class AddGroup extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<String?> uploadImage() async {
+    // Sử dụng ImagePicker để chọn hình ảnh từ thư viện
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      // Trả về đường dẫn hình ảnh đã chọn
+      return image.path;
+    }
+    return null; // Trả về null nếu không có hình ảnh nào được chọn
+  }
+
+  Future<bool> saveImage() async {
+    // Thực hiện lưu ảnh ở đây và trả về true nếu thành công, false nếu không
+    return true; // Thay thế bằng logic thực tế của bạn
   }
 }

@@ -17,6 +17,7 @@ class UserServices {
             return await UserModel.findOne({ email });
         } catch (err) {
             console.log(err);
+            throw err;
         }
     }
 
