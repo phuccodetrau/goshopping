@@ -42,6 +42,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
 
   Future<String> getEmail() async {
     final email = await _secureStorage.read(key: "email");
+    print(await _secureStorage.read(key: "auth_token"));
     return email ?? ''; // Return empty string if email is null
   }
 

@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final String token = responseData['token'];
 
         await _secureStorage.write(key: 'auth_token', value: token);
-        await _secureStorage.write(key: 'email', value: responseData['user']['email']);
+        await _secureStorage.write(key: 'email', value: responseData['user']['email'].toString());
         await _secureStorage.write(key: 'id', value:  responseData['user']['_id'].toString());
         await _secureStorage.write(key:"name",value:responseData['user']['name'].toString());
 

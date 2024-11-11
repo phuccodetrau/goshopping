@@ -1,22 +1,41 @@
 import 'package:flutter/material.dart';
+import 'chat_screen.dart';
 
 class GroupMainScreen extends StatelessWidget {
+  final String groupName; // Nhận tên nhóm từ màn hình trước
+  final String adminName; // Nhận tên admin từ màn hình trước
+
+  GroupMainScreen({required this.groupName, required this.adminName});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.arrow_back),
-        title: Text("Gia đình bên nội",style: TextStyle(color: Colors.green[800],fontWeight: FontWeight.bold),),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          groupName,
+          style: TextStyle(color: Colors.green[800], fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(icon: Icon(Icons.person_add), onPressed: () {}),
-          IconButton(icon: Icon(Icons.chat_bubble_outline), onPressed: () {}),
+          IconButton(
+            icon: Icon(Icons.chat_bubble_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ChatScreen()),
+              );
+            },
+          ),
         ],
-
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header Image and Family Title
+            // Header Image and Group Title
             Stack(
               alignment: Alignment.bottomCenter,
               children: [
@@ -26,7 +45,6 @@ class GroupMainScreen extends StatelessWidget {
                   width: double.infinity,
                   fit: BoxFit.cover,
                 ),
-
                 Positioned(
                   bottom: 16,
                   child: Column(
@@ -36,7 +54,7 @@ class GroupMainScreen extends StatelessWidget {
                         color: Colors.white,
                       ),
                       Text(
-                        "Gia đình bên nội",
+                        groupName,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -56,26 +74,6 @@ class GroupMainScreen extends StatelessWidget {
                 ),
               ],
             ),
-            // Family Members
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  MemberAvatar(name: "Hung", imagePath: 'images/group.png'),
-                  SizedBox(width: 10),
-                  MemberAvatar(name: "Hung", imagePath: 'images/group.png'),
-                  SizedBox(width: 10),
-                  MemberAvatar(name: "Hoang", imagePath: 'images/group.png'),
-                  SizedBox(width: 10),
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.grey[300],
-                    child: Text("+3", style: TextStyle(color: Colors.black)),
-                  ),
-                ],
-              ),
-            ),
             // Food Management Section
             SectionTitle(title: "Quản lí thực phẩm"),
             Padding(
@@ -84,12 +82,10 @@ class GroupMainScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   FoodCard(
-
                     title: "Thực phẩm tủ lạnh",
                     description: "Quản lí số lượng các loại thực phẩm",
                     color: Colors.green[700]!,
                     iconPath: 'images/group.png',
-
                   ),
                   FoodCard(
                     title: "Món ăn theo ngày",
@@ -105,34 +101,12 @@ class GroupMainScreen extends StatelessWidget {
             ActivityCard(
               title: "Kế hoạch nấu ăn",
               filesCount: 4,
-              adminName: "@hung123",
-              adminAvatarPath: "images/group.png"
+              adminName: adminName,
+              adminAvatarPath: "images/group.png",
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-// Widget for family member avatars
-class MemberAvatar extends StatelessWidget {
-  final String name;
-  final String imagePath;
-
-  MemberAvatar({required this.name, required this.imagePath});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 20,
-          backgroundImage: AssetImage(imagePath),
-        ),
-        SizedBox(height: 5),
-        Text(name, style: TextStyle(fontSize: 12)),
-      ],
     );
   }
 }
@@ -165,9 +139,7 @@ class FoodCard extends StatelessWidget {
   final Color color;
   final String iconPath;
 
-
   FoodCard({
-
     required this.title,
     required this.description,
     required this.color,
@@ -186,16 +158,18 @@ class FoodCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(child: Image.asset(iconPath, height: 50,),),
+          Center(
+            child: Image.asset(iconPath, height: 50),
+          ),
           SizedBox(height: 10),
           Text(
             title,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,color: Colors.white),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           SizedBox(height: 5),
           Text(
             description,
-            style: TextStyle(fontSize: 12,color: Colors.white),
+            style: TextStyle(fontSize: 12, color: Colors.white),
           ),
           SizedBox(height: 10),
           Row(
