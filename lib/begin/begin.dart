@@ -15,7 +15,7 @@ class OnBoardingScreen extends StatefulWidget {
 }
 
 class _OnBoardingScreenState extends State<OnBoardingScreen> {
-  String URL = dotenv.env['ROOT_URL']!+ "/user/check_login";
+  String URL = dotenv.env['ROOT_URL']!+ "/auth/user/check_login";
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   @override

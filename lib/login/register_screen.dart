@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:go_shopping/home_screen/home_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -13,8 +14,9 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  final String URL =dotenv.env['ROOT_URL']!+ "/user";
+  final String URL = dotenv.env['ROOT_URL']! + "/auth/user";
 
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
@@ -23,7 +25,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _responseMessage;
 
   bool get _isButtonEnabled =>
-      _emailController.text.isNotEmpty &&
+      _usernameController.text.isNotEmpty &&
+          _emailController.text.isNotEmpty &&
           _passwordController.text.isNotEmpty &&
           _confirmPasswordController.text.isNotEmpty &&
           _isAgree &&
@@ -33,6 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _confirmPasswordController.text.isEmpty ||
           _passwordController.text == _confirmPasswordController.text;
 
+  bool get _isUsernameValid => _usernameController.text.isNotEmpty;
   bool get _isEmailValid => _emailController.text.isNotEmpty;
   bool get _isPasswordValid => _passwordController.text.isNotEmpty;
   bool get _isConfirmPasswordValid =>
@@ -42,6 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void initState() {
     super.initState();
+    _usernameController.addListener(_onFormChanged);
     _emailController.addListener(_onFormChanged);
     _passwordController.addListener(_onFormChanged);
     _confirmPasswordController.addListener(_onFormChanged);
@@ -49,6 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -66,41 +72,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
+    final String username = _usernameController.text;
     final String email = _emailController.text;
-    final String password=_passwordController.text;
-    print(email);
-    print(password);
+    final String password = _passwordController.text;
+
     try {
       final response = await http.post(
         Uri.parse(URL),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email,'password':password}),
+        body: jsonEncode({'name': username, 'email': email, 'password': password}),
       );
 
       final responseData = jsonDecode(response.body);
-      if(responseData['status']==true){
+      if (responseData['status'] == true) {
         final String token = responseData['token'];
         await _secureStorage.write(key: 'auth_token', value: token);
         await _secureStorage.write(key: 'email', value: responseData['user']['email']);
-        await _secureStorage.write(key: 'id', value:  responseData['user']['_id'].toString());
+        await _secureStorage.write(key: 'id', value: responseData['user']['_id'].toString());
+        await _secureStorage.write(key:"name",value:responseData['user']['name'].toString());
+        print(await _secureStorage.read(key: 'name'));
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => HomeScreen(),
           ),
         );
-      }else{
-        //TODO
+      } else {
+        // TODO: Hiển thị thông báo lỗi nếu cần
       }
-      print(responseData);
-      setState(() {
-
-      });
+      setState(() {});
     } catch (e) {
       print(e);
-      setState(() {
-
-      });
+      setState(() {});
     }
   }
 
@@ -130,6 +133,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green[800]),
               ),
               SizedBox(height: 30),
+
+              // Trường nhập tên người dùng
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.person),
+                  hintText: 'Enter your username',
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                textInputAction: TextInputAction.next,
+              ),
+              if (!_isUsernameValid)
+                Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Text(
+                    'Please enter your username',
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              SizedBox(height: 10),
 
               // Trường nhập email
               TextField(
@@ -246,13 +274,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    'Tiếp tục với Số điện thoại',
+                    'Tiếp tục với Email',
                     style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ),
-
-
             ],
           ),
         ),

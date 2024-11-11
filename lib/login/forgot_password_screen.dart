@@ -10,7 +10,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   // Biến để kiểm tra email và trạng thái lỗi
-  String URL=dotenv.env["ROOT_URL"]!+"/user/sendverification-code";
+  String URL=dotenv.env["ROOT_URL"]!+"/auth/user/sendverification-code";
   TextEditingController _emailController = TextEditingController();
   String? _errorText;
   bool _isEmailValid = false;

@@ -13,7 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  String URL=dotenv.env['ROOT_URL']!+"/user/login";
+  String URL=dotenv.env['ROOT_URL']!+"/auth/user/login";
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -66,6 +66,8 @@ class _LoginScreenState extends State<LoginScreen> {
         await _secureStorage.write(key: 'auth_token', value: token);
         await _secureStorage.write(key: 'email', value: responseData['user']['email']);
         await _secureStorage.write(key: 'id', value:  responseData['user']['_id'].toString());
+        await _secureStorage.write(key:"name",value:responseData['user']['name'].toString());
+
         Navigator.push(
           context,
           MaterialPageRoute(
