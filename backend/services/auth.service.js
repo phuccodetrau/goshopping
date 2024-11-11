@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+
 function generateRandomPassword(length) {
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
     let password = '';
@@ -12,6 +13,7 @@ function generateRandomPassword(length) {
     }
     return password;
   }
+
 class AuthService{
    static async login(email,password){
        const user=await User.findOne({email:email});
@@ -24,12 +26,19 @@ class AuthService{
         }
         const return_user={
             email:user.email,
-            _id:user._id
+            _id:user._id,
+            name: user.name
         }
         return {message:'User logined successfully',user:return_user}
 
    }
-   static async register(email, password){
+
+   static async generateAccessToken(user) {
+    const payload = { email: user.email, id: user._id };
+    return jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+  }
+
+   static async register(email, password,name){
       try {
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -39,13 +48,14 @@ class AuthService{
         const newUser = new User({
             email,
             password: hashedPassword, 
-           
+            name:name
         });
 
         await newUser.save();
         const return_user={
             email:newUser.email,
-            _id:newUser._id
+            _id:newUser._id,
+            name:newUser.name
         }
         return {message:'User registered successfully',user:return_user};
       } catch (error) {

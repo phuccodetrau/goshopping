@@ -1,4 +1,6 @@
 import UserServices from '../services/user.service.js';
+import authMiddleware from '../middleware/auth.js';
+
 
 const register = async (req, res, next) => {
     try {
@@ -48,22 +50,23 @@ const login = async (req, res, next) => {
 
 const getUserNameByEmail = async (req, res, next) => {
     try {
-        const { email } = req.query;
-        console.log("Received email:", email); // Log email nhận được từ query
-        const userName = await UserServices.getUserNameByEmail(email);
-        
-        if (userName !== null) { // Sửa logic kiểm tra để trả về đúng dữ liệu
-            console.log("User found, name:", userName); // Log tên người dùng nếu tìm thấy
-            res.json({ status: true, name: userName });
-        } else {
-            console.log("User not found with email:", email); // Log nếu không tìm thấy
-            res.json({ status: false, message: 'User not found' });
-        }
+      const email = req.user.email; // Extract email from token
+      console.log("Authenticated email:", email);
+  
+      const userName = await UserServices.getUserNameByEmail(email);
+      
+      if (userName !== null) {
+        console.log("User found, name:", userName);
+        res.json({ status: true, name: userName });
+      } else {
+        console.log("User not found with email:", email);
+        res.json({ status: false, message: 'User not found' });
+      }
     } catch (error) {
-        console.error("Error in getUserNameByEmail:", error);
-        next(error);
+      console.error("Error in getUserNameByEmail:", error);
+      next(error);
     }
-};
+  };
 
 
 

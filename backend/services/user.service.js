@@ -1,5 +1,7 @@
 import UserModel from "../models/user.model.js"; // Chắc chắn thêm .js vào cuối
 import jwt from "jsonwebtoken"; // Import jwt
+import authMiddleware from '../middleware/auth.js';
+
 
 class UserServices {
     static async registerUser(email, password) {

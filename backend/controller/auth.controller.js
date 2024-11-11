@@ -36,12 +36,12 @@ const login=async(req,res,next)=>{
 }
 const register=async(req,res,next)=>{
     try {
-        const { email, password} = req.body;
+        const { email, password,name} = req.body;
 
         if (!email || !password) {
             return res.status(400).json({status:false, message: 'All fields are required' });
         }
-        const result=await AuthService.register(email, password);
+        const result=await AuthService.register(email, password,name);
         if(result.user){
             const token = jwt.sign(
                 { userId: result.user._id, email: result.user.email },
