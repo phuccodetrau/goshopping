@@ -52,17 +52,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<String> _fetchUserNameByEmail(String email) async {
     try {
-      final response = await http.get(Uri.parse('$_url/user/get-user-name-by-email?email=$email'));
+      final String? token = await _secureStorage.read(key: "auth_token");
+      final response = await http.get(
+        Uri.parse('$_url/user/get-user-name-by-email'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
       if (response.statusCode == 200) {
+        print(response);
+        print(token);
         final data = jsonDecode(response.body);
-        if (data['status'] == true && data['name'] != null && data['name']['name'] != null) {
-          return data['name']['name'];
+        if (data['status'] == true && data['name'] != null) {
+          return data['name'];
         }
       }
     } catch (error) {
       print("Error fetching user name: $error");
     }
-    return email.isNotEmpty ? email.substring(0, 15) : "Unknown User";
+    return "Unknown User";
   }
 
   Future<void> _fetchUserGroups() async {
