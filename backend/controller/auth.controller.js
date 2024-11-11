@@ -14,8 +14,9 @@ const login=async(req,res,next)=>{
                 const token = jwt.sign(
                     { userId: result.user._id, email: result.user.email },
                     process.env.JWT_SECRET_KEY, 
-                    { expiresIn: '1h' } 
+                    { expiresIn: '7d' } 
                 );
+                
                 res.setHeader('Authorization', `Bearer ${token}`);
                 res.cookie('auth_token', token, {
                     httpOnly: true,  
@@ -45,7 +46,7 @@ const register=async(req,res,next)=>{
             const token = jwt.sign(
                 { userId: result.user._id, email: result.user.email },
                 process.env.JWT_SECRET_KEY, 
-                { expiresIn: '1h' } 
+                { expiresIn: '10h' } 
             );
             res.setHeader('Authorization', `Bearer ${token}`);
             res.cookie('auth_token', token, {

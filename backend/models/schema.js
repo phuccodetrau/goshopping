@@ -82,8 +82,10 @@ const groupUserSchema = new Schema({
 const groupSchema = new Schema({
   name: { type: String, required: true },
   listUser: [groupUserSchema],
-  refrigerator: [itemSchema]
+  refrigerator: [itemSchema],
+  image: { type: String }  // New field to store image URLs or file paths
 });
+
 
 export const User = mongoose.model('User', userSchema);
 export const Category = mongoose.model('Category', categorySchema);
