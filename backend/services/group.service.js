@@ -21,56 +21,39 @@ class GroupService {
         }
     }
 
-    static async deleteGroup(groupId) {
-        try {
-            const deletedGroup = await Group.findByIdAndDelete(groupId);
-            if (!deletedGroup) {
-                return { code: 702, message: "Không tìm thấy nhóm để xóa", data: "" };
-            }
-            return { code: 701, message: "Xóa nhóm thành công", data: deletedGroup };
-        } catch (error) {
-            console.error('Lỗi khi xóa nhóm:', error);
-            throw { code: 101, message: "Server error!", data: "" };
-        }
-    }
+
     static async addMembers(groupName, members) {
         try {
-            const updatedGroup = await Group.findOneAndUpdate(
-                { name: groupName },
-                { $addToSet: { listUser: { $each: members } } }, // Sử dụng $each để thêm nhiều phần tử
-                { new: true }
-            );
-    
-            if (!updatedGroup) {
+            // Find the group by name
+            const group = await Group.findOne({ name: groupName });
+            if (!group) {
                 return { code: 703, message: "Không tìm thấy nhóm để thêm thành viên", data: "" };
             }
     
-            return { code: 702, message: "Thêm danh sách thành viên thành công", data: updatedGroup };
+            // Filter out members who are already in the group
+            const newMembers = members.filter(member => 
+                !group.listUser.some(existingMember => existingMember.email === member.email)
+            );
+    
+            // If no new members to add, return a message
+            if (newMembers.length === 0) {
+                return { code: 706, message: "Tất cả thành viên đã có trong nhóm", data: "" };
+            }
+    
+            // Add only the new members
+            const updatedGroup = await Group.findOneAndUpdate(
+                { name: groupName },
+                { $addToSet: { listUser: { $each: newMembers } } },
+                { new: true }
+            );
+    
+            return { code: 702, message: "Thêm thành viên thành công", data: updatedGroup };
         } catch (error) {
             console.error('Lỗi khi thêm danh sách thành viên:', error);
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
-
-    static async removeMember(groupId, email) {
-        try {
-            const updatedGroup = await Group.findByIdAndUpdate(
-                groupId,
-                { $pull: { listUser: { email: email } } },
-                { new: true }
-            );
-
-            if (!updatedGroup) {
-                return { code: 704, message: "Không tìm thấy nhóm để xóa thành viên", data: "" };
-            }
-
-            return { code: 703, message: "Xóa thành viên thành công", data: updatedGroup };
-        } catch (error) {
-            console.error('Lỗi khi xóa thành viên:', error);
-            throw { code: 101, message: "Server error!", data: "" };
-        }
-    }
-
+    
 
     static async getGroupsByMemberEmail(email) {
         try {
@@ -115,6 +98,40 @@ class GroupService {
         }
     }
     
+    
+    static async deleteGroup(groupName) {
+        try {
+            const deletedGroup = await Group.findOneAndDelete({ name: groupName });
+    
+            if (!deletedGroup) {
+                return { code: 706, message: "Không tìm thấy nhóm để xóa", data: "" };
+            }
+    
+            return { code: 700, message: "Xóa nhóm thành công", data: deletedGroup };
+        } catch (error) {
+            console.error('Lỗi khi xóa nhóm:', error);
+            throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
+
+    static async removeMember(groupName, email) {
+        try {
+            const updatedGroup = await Group.findOneAndUpdate(
+                { name: groupName },
+                { $pull: { listUser: { email: email } } }, // Remove member with matching email
+                { new: true }
+            );
+    
+            if (!updatedGroup) {
+                return { code: 706, message: "Không tìm thấy nhóm hoặc thành viên để xóa", data: "" };
+            }
+    
+            return { code: 700, message: "Xóa thành viên thành công", data: updatedGroup };
+        } catch (error) {
+            console.error('Lỗi khi xóa thành viên:', error);
+            throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
     
     
       
