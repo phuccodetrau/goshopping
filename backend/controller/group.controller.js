@@ -43,4 +43,28 @@ const removeMember = async (req, res) => {
     }
 };
 
-export default { createGroup, deleteGroup, addMembers, removeMember }; 
+const getGroupsByMemberEmail = async (req, res) => {
+    try {
+        const { email } = req.query;
+        console.log("Received email:", email); // Kiểm tra xem email có nhận đúng không
+        const result = await GroupService.getGroupsByMemberEmail(email);
+        return res.status(result.code === 700 ? 200 : 404).json(result);
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
+
+const getAdminsByGroupName = async (req, res) => {
+    try {
+        const { groupName } = req.query; // Nhận groupName từ query
+        console.log("Received group name:", groupName); // Log để kiểm tra giá trị
+        const result = await GroupService.getAdminsByGroupName(groupName);
+        return res.status(result.code === 700 ? 200 : 404).json(result);
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
+
+
+
+export default { createGroup, deleteGroup, addMembers, removeMember, getGroupsByMemberEmail, getAdminsByGroupName }; 

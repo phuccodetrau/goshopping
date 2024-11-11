@@ -51,9 +51,6 @@ class GroupService {
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
-    
-    
-    
 
     static async removeMember(groupId, email) {
         try {
@@ -73,6 +70,55 @@ class GroupService {
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
+
+
+    static async getGroupsByMemberEmail(email) {
+        try {
+            const groups = await Group.find({}); // Lấy tất cả nhóm
+            console.log("All groups:", groups); // Log tất cả các nhóm tìm thấy
+    
+            if (groups.length === 0) {
+                return { code: 704, message: "Không tìm thấy nhóm nào", data: [] };
+            }
+    
+            // Lấy tên của tất cả các nhóm
+            const groupNames = groups.map(group => group.name);
+            return { code: 700, message: "Lấy danh sách tất cả nhóm thành công", data: groupNames };
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách tất cả nhóm:', error);
+            throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
+
+    static async getAdminsByGroupName(groupName) {
+        try {
+            // Tìm nhóm dựa trên tên và chỉ lấy listUser chứa thông tin người dùng
+            const group = await Group.findOne({ name: groupName });
+    
+            if (!group) {
+                return { code: 704, message: "Không tìm thấy nhóm với tên này", data: [] };
+            }
+    
+            // Lọc ra danh sách người dùng có role là "admin"
+            const admins = group.listUser
+                .filter(user => user.role === "admin")
+                .map(admin => admin.name); // Chỉ lấy tên của admin
+    
+            if (admins.length === 0) {
+                return { code: 705, message: "Không có admin trong nhóm này", data: [] };
+            }
+    
+            return { code: 700, message: "Lấy danh sách admin thành công", data: admins };
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách admin:', error);
+            throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
+    
+    
+    
+      
+
 }
 
 export default GroupService; 
