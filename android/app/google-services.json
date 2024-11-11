@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "698164820574",
+    "project_id": "goshopping-e9600",
+    "storage_bucket": "goshopping-e9600.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:698164820574:android:a292b893955ba9dbe152cf",
+        "android_client_info": {
+          "package_name": "com.example.go_shopping"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBscPa3aEJNGrTYUhRv5FcttYLIfCtQUzE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:698164820574:android:2117b0189dca334ee152cf",
+        "android_client_info": {
+          "package_name": "com.example.goshopping"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBscPa3aEJNGrTYUhRv5FcttYLIfCtQUzE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_shopping/user/user_info.dart';
 import 'package:go_shopping/group/add_group/add_group_screen.dart';
+import 'package:go_shopping/group/group_main_screen.dart'; // Import màn hình GroupMainScreen
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-
-// Chưa đúng với nhóm nhiều thành viên
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,14 +17,27 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _secureStorage = FlutterSecureStorage();
   final String _url = dotenv.env['ROOT_URL']!;
+  final TextEditingController _searchController = TextEditingController();
   String email = "";
   String name = "";
   int _selectedIndex = 0;
+  List<dynamic> userGroups = [];
+  List<dynamic> filteredGroups = [];
+  Map<String, String> adminNames = {};
 
   @override
   void initState() {
     super.initState();
-    _initializeUserInfo();
+    _initializeUserInfo().then((_) {
+      _fetchUserGroups();
+    });
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _initializeUserInfo() async {
@@ -51,6 +63,51 @@ class _HomeScreenState extends State<HomeScreen> {
       print("Error fetching user name: $error");
     }
     return email.isNotEmpty ? email.substring(0, 15) : "Unknown User";
+  }
+
+  Future<void> _fetchUserGroups() async {
+    try {
+      final response = await http.get(Uri.parse('$_url/groups/get-groups-by-member-email?email=$email'));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['code'] == 700 && data['data'] != null) {
+          setState(() {
+            userGroups = data['data'];
+            filteredGroups = userGroups;
+          });
+          _fetchAdminNamesForGroups();
+        }
+      }
+    } catch (error) {
+      print("Error fetching user groups: $error");
+    }
+  }
+
+  Future<void> _fetchAdminNamesForGroups() async {
+    for (String groupName in userGroups) {
+      try {
+        final response = await http.get(Uri.parse('$_url/groups/get-admins-by-group-name?groupName=$groupName'));
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (data['code'] == 700 && data['data'] != null && data['data'].isNotEmpty) {
+            setState(() {
+              adminNames[groupName] = data['data'][0];
+            });
+          }
+        }
+      } catch (error) {
+        print("Error fetching admin for group $groupName: $error");
+      }
+    }
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      filteredGroups = userGroups.where((groupName) {
+        return groupName.toLowerCase().contains(query);
+      }).toList();
+    });
   }
 
   void _onItemTapped(int index) {
@@ -98,7 +155,30 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _buildSearchBar(),
           SizedBox(height: 16),
-          _buildGroupCard(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredGroups.length,
+              itemBuilder: (context, index) {
+                final groupName = filteredGroups[index];
+                final adminName = adminNames[groupName] ?? "Chưa có admin";
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GroupMainScreen(
+                          groupName: groupName,
+                          adminName: adminName,
+                        ),
+                      ),
+                    );
+                  },
+                  child: _buildGroupCard(groupName, adminName),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -115,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Expanded(
             child: TextField(
+              controller: _searchController,
               decoration: InputDecoration(hintText: 'Tìm kiếm nhóm', border: InputBorder.none),
             ),
           ),
@@ -124,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildGroupCard() {
+  Widget _buildGroupCard(String groupName, String adminName) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
@@ -138,9 +219,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Nhóm của bạn', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(groupName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   SizedBox(height: 4),
-                  Row(children: [Text('Admin: $name')]),
+                  Row(children: [Text('Admin: $adminName')]),
                 ],
               ),
             ),

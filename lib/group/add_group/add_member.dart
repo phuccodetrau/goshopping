@@ -125,10 +125,19 @@ class _AddMemberState extends State<AddMember> {
         setState(() {
           _selectedUsers.clear();
         });
-        // Chuyển sang trang GroupMainScreen
+
+        // Set adminName as the creator of the group
+        final adminName = _selectedUsers.isNotEmpty ? _selectedUsers[0]['name'] ?? "Admin" : "Admin";
+
+        // Navigate to GroupMainScreen with groupName and adminName
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => GroupMainScreen()),
+          MaterialPageRoute(
+            builder: (context) => GroupMainScreen(
+              groupName: widget.groupName,
+              adminName: adminName,
+            ),
+          ),
         );
       } else {
         print("Failed to create group. Status code: ${response.statusCode}");
