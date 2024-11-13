@@ -33,16 +33,20 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
 
   Future<String> getUserNameByEmail(String email) async {
     try {
+      final String? token = await _secureStorage.read(key: "auth_token");
       final response = await http.get(
         Uri.parse('$_url/user/get-user-name-by-email?email=$email'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print("Fetched user data: $data"); // Debug print
 
-        if (data['status'] == true && data['name'] != null && data['name']['name'] != null) {
-          return data['name']['name']; // Extract the name field correctly
+        if (data['status'] == true && data['name'] != null) {
+          return data['name']; // Extract the name field correctly
         }
       }
     } catch (error) {
@@ -72,25 +76,39 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
   Future<void> _createGroup() async {
     final String groupName = _controller.text;
 
-    final response = await http.post(
-      Uri.parse("$_url/groups/create-group"),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'name': groupName,
-        'listUser': _userEmails,
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AddMember(groupName: groupName), // Pass groupName here
-        ),
+    try {
+      final String? token = await _secureStorage.read(key: "auth_token");
+      final response = await http.post(
+        Uri.parse("$_url/groups/create-group"),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': groupName,
+          'listUser': _userEmails,
+        }),
       );
-    } else {
+
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 201) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AddMember(groupName: groupName), // Pass groupName here
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi tạo nhóm.')),
+        );
+      }
+    } catch (error) {
+      print("Error creating group: $error");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi tạo nhóm.')),
+        SnackBar(content: Text('Đã xảy ra lỗi khi tạo nhóm.')),
       );
     }
   }
@@ -230,15 +248,15 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
 
   Widget _buildNextButton() {
     return ElevatedButton(
-      onPressed: _createGroup,
-      style: ElevatedButton.styleFrom(
+        onPressed: _createGroup,
+        style: ElevatedButton.styleFrom(
         backgroundColor: Colors.green[700],
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 32),
-      ),
-      child: Text("Tiếp theo", style: TextStyle(fontSize: 16)),
+        borderRadius: BorderRadius.circular(20),
+    ),
+    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 32),
+    ),
+    child: Text("Tiếp theo", style: TextStyle(fontSize: 16)),
     );
   }
 }

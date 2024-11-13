@@ -3,12 +3,19 @@ import 'chat_screen.dart';
 
 class GroupMainScreen extends StatelessWidget {
   final String groupName; // Nhận tên nhóm từ màn hình trước
-  final String adminName; // Nhận tên admin từ màn hình trước
+  final String adminName;
+  // final List<String> userEmails;// Nhận tên admin từ màn hình trước
 
-  GroupMainScreen({required this.groupName, required this.adminName});
-
+  GroupMainScreen({
+    required this.groupName,
+    required this.adminName,
+    // required this.userEmails, // Initialize email list
+  });
   @override
   Widget build(BuildContext context) {
+    print(groupName);
+    print(adminName);
+    // print(userEmails);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
