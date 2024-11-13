@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
+  console.log("req.headers",req.headers);
 
   if (!token) {
     return res.status(401).json({ status: false, message: 'Access token is missing' });
@@ -12,8 +13,7 @@ const authMiddleware = (req, res, next) => {
     if (err) {
       return res.status(403).json({ status: false, message: 'Invalid token' });
     }
-    req.user = user; // Attach user info to request
-    console.log('User email.........:', user.email); 
+    req.user = user;
     next();
   });
 };

@@ -35,7 +35,7 @@ class AuthService{
 
    static async generateAccessToken(user) {
     const payload = { email: user.email, id: user._id };
-    return jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+    return jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '7d' });
   }
 
    static async register(email, password,name){

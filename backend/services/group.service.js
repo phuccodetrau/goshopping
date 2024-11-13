@@ -5,6 +5,7 @@ class GroupService {
         if (!name || !listUser || listUser.length === 0) {
             return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" };
         }
+        
 
         const newGroup = new Group({
             name,
@@ -57,21 +58,23 @@ class GroupService {
 
     static async getGroupsByMemberEmail(email) {
         try {
-            const groups = await Group.find({}); // Lấy tất cả nhóm
-            console.log("All groups:", groups); // Log tất cả các nhóm tìm thấy
+            // Find groups where listUser contains an object with a matching email
+            const groups = await Group.find({ "listUser.email": email });
+            console.log("Filtered groups:", groups); // Log các nhóm tìm thấy
     
             if (groups.length === 0) {
-                return { code: 704, message: "Không tìm thấy nhóm nào", data: [] };
+                return { code: 704, message: "Không tìm thấy nhóm nào với email này", data: [] };
             }
     
-            // Lấy tên của tất cả các nhóm
             const groupNames = groups.map(group => group.name);
-            return { code: 700, message: "Lấy danh sách tất cả nhóm thành công", data: groupNames };
+            return { code: 700, message: "Lấy danh sách nhóm thành công", data: groupNames };
         } catch (error) {
-            console.error('Lỗi khi lấy danh sách tất cả nhóm:', error);
+            console.error('Lỗi khi lấy danh sách nhóm theo email:', error);
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
+    
+    
 
     static async getAdminsByGroupName(groupName) {
         try {
@@ -97,6 +100,24 @@ class GroupService {
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
+
+    static async getUsersByGroupName(groupName) {
+        try {
+            // Find the group by name
+            const group = await Group.findOne({ name: groupName });
+    
+            if (!group) {
+                return { code: 704, message: "Group not found", data: [] };
+            }
+    
+            // Return the list of users
+            return { code: 700, message: "Users retrieved successfully", data: group.listUser };
+        } catch (error) {
+            console.error('Error fetching users by group name:', error);
+            throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
+    
     
     
     static async deleteGroup(groupName) {

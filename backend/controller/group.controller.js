@@ -42,6 +42,22 @@ const getAdminsByGroupName = async (req, res) => {
     }
 };
 
+const getUsersByGroupName = async (req, res) => {
+    try {
+        const { groupName } = req.query; // Get groupName from query parameters
+        console.log("Received group name:", groupName); // Debugging log
+        const result = await GroupService.getUsersByGroupName(groupName);
+        return res.status(result.code === 700 ? 200 : 404).json(result);
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
+
+
+
+
+
+
 const deleteGroup = async (req, res) => {
     try {
         const { groupName } = req.body;
@@ -66,4 +82,4 @@ const removeMember = async (req, res) => {
 
 
 
-export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupName, deleteGroup, removeMember}; 
+export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupName, deleteGroup, removeMember, getUsersByGroupName}; 
