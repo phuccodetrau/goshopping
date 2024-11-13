@@ -103,17 +103,19 @@ class GroupService {
 
     static async getUsersByGroupName(groupName) {
         try {
-            // Find the group by name
+            // Tìm nhóm theo tên
             const group = await Group.findOne({ name: groupName });
     
             if (!group) {
                 return { code: 704, message: "Group not found", data: [] };
             }
     
-            // Return the list of users
-            return { code: 700, message: "Users retrieved successfully", data: group.listUser };
+            // Trích xuất danh sách email
+            const emails = group.listUser.map(user => user.email);
+    
+            return { code: 700, message: "Emails retrieved successfully", data: emails };
         } catch (error) {
-            console.error('Error fetching users by group name:', error);
+            console.error('Error fetching emails by group name:', error);
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
