@@ -51,22 +51,28 @@ class _AddMemberState extends State<AddMember> {
   // Function to search users by email
   Future<void> _searchUserByEmail(String email) async {
     try {
-      final response = await http.get(Uri.parse('$_url/user/get-user-name-by-email?email=$email'));
+      final String? token = await _secureStorage.read(key: "auth_token");
+      final response = await http.get(
+        Uri.parse('$_url/user/get-user-name-by-email?email=$email'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['status'] == true && data['name'] != null && data['name']['name'] != null) {
+        if (data['status'] == true && data['name'] != null) {
           setState(() {
             _userSuggestions = [
               {
-                "name": data['name']['name'],
+                "name": data['name'],
                 "email": email,
               }
             ];
           });
         }
       } else {
-        print("Failed to fetch user.");
+        print("Failed to fetch user. Status code: ${response.statusCode}");
       }
     } catch (error) {
       print("Error searching user: $error");
@@ -93,8 +99,8 @@ class _AddMemberState extends State<AddMember> {
     });
   }
 
-  // Function to add the group with selected members
-  Future<void> _addGroup() async {
+  // Function to add members to the group
+  Future<void> _addMembers() async {
     if (_selectedUsers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please select members to add to the group.")),
@@ -107,49 +113,49 @@ class _AddMemberState extends State<AddMember> {
         .toList();
 
     final data = {
-      "groupName": widget.groupName, // Use the passed groupName
+      "groupId": widget.groupId,
       "members": members,
     };
 
     try {
+      final String? token = await _secureStorage.read(key: "auth_token");
       final response = await http.put(
         Uri.parse('$_url/groups/add-member'),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode(data),
       );
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Group created successfully!")),
+          SnackBar(content: Text("Members added successfully!")),
         );
         setState(() {
           _selectedUsers.clear();
         });
-
-        // Set adminName as the creator of the group
-        final adminName = _selectedUsers.isNotEmpty ? _selectedUsers[0]['name'] ?? "Admin" : "Admin";
-
-        // Navigate to GroupMainScreen with groupName and adminName
+        // Navigate to GroupMainScreen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => GroupMainScreen(
-              groupName: widget.groupName,
-              adminName: adminName,
               groupId: widget.groupId,
+              groupName: widget.groupName,
+              adminName: "Admin", // Pass appropriate adminName if available
             ),
           ),
         );
       } else {
-        print("Failed to create group. Status code: ${response.statusCode}");
+        print("Failed to add members. Status code: ${response.statusCode}");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to create group.")),
+          SnackBar(content: Text("Failed to add members.")),
         );
       }
     } catch (error) {
-      print("Error creating group: $error");
+      print("Error adding members: $error");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error creating group.")),
+        SnackBar(content: Text("Error adding members.")),
       );
     }
   }
@@ -163,14 +169,14 @@ class _AddMemberState extends State<AddMember> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "",
+          "Thêm thành viên",
           style: TextStyle(color: Colors.green),
         ),
         actions: [
           TextButton(
-            onPressed: _addGroup,
+            onPressed: _addMembers,
             child: Text(
-              "Tạo nhóm",
+              "Hoàn tất",
               style: TextStyle(color: Colors.green),
             ),
           ),
@@ -183,11 +189,10 @@ class _AddMemberState extends State<AddMember> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Search bar for adding members
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: "Nhập Tên hoặc Email để tìm kiếm",
+                hintText: "Nhập Email để tìm kiếm",
                 filled: true,
                 fillColor: Colors.grey[200],
                 prefixIcon: Icon(Icons.search, color: Colors.grey),
@@ -198,44 +203,17 @@ class _AddMemberState extends State<AddMember> {
               ),
             ),
             SizedBox(height: 20),
-
-            // Display selected users with an option to remove
             Wrap(
               children: _selectedUsers.map((user) {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
-                  child: Stack(
-                    alignment: Alignment.topRight,
-                    children: [
-                      CircleAvatar(
-                        backgroundImage: AssetImage("images/group.png"),
-                        radius: 30,
-                      ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: GestureDetector(
-                          onTap: () => _removeUser(user),
-                          child: Container(
-                            padding: EdgeInsets.all(1),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.close,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: CircleAvatar(
+                    backgroundImage: AssetImage("images/group.png"),
+                    radius: 30,
                   ),
                 );
               }).toList(),
             ),
-
             SizedBox(height: 20),
             Text(
               "Gợi ý",
@@ -246,11 +224,8 @@ class _AddMemberState extends State<AddMember> {
               ),
             ),
             SizedBox(height: 10),
-
-            // Suggested contacts list based on the search
             Expanded(
-              child: _userSuggestions.isNotEmpty
-                  ? ListView.builder(
+              child: ListView.builder(
                 itemCount: _userSuggestions.length,
                 itemBuilder: (context, index) {
                   final user = _userSuggestions[index];
@@ -264,39 +239,10 @@ class _AddMemberState extends State<AddMember> {
                     ),
                   );
                 },
-              )
-                  : ListView(
-                children: [
-                  ContactItem(
-                      name: "Hoanghung_1000",
-                      image: "images/group.png",
-                      isSelected: false),
-                  ContactItem(
-                      name: "Thaomy_1000",
-                      image: "images/group.png",
-                      isSelected: false),
-                  ContactItem(
-                      name: "Alice_200",
-                      image: "images/group.png",
-                      isSelected: false),
-                  ContactItem(
-                      name: "Tom_1000",
-                      image: "images/group.png",
-                      isSelected: false),
-                ],
               ),
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-        ],
-        selectedItemColor: Colors.green,
-        unselectedItemColor: Colors.grey,
       ),
     );
   }

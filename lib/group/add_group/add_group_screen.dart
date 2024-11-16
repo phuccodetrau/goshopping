@@ -77,6 +77,12 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
     final String groupName = _controller.text;
 
     try {
+
+      print("Payload being sent: ${jsonEncode({
+        'name': groupName,
+        'listUser': _userEmails,
+      })}");
+
       final String? token = await _secureStorage.read(key: "auth_token");
       final response = await http.post(
         Uri.parse("$_url/groups/create-group"),
@@ -251,15 +257,24 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
 
   Widget _buildNextButton() {
     return ElevatedButton(
-        onPressed: _createGroup,
-        style: ElevatedButton.styleFrom(
+      onPressed: () {
+        if (_userEmails.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Danh sách người dùng trống!")),
+          );
+          return;
+        }
+        _createGroup();
+      },
+      style: ElevatedButton.styleFrom(
         backgroundColor: Colors.green[700],
         shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-    ),
-    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 32),
-    ),
-    child: Text("Tiếp theo", style: TextStyle(fontSize: 16)),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 32),
+      ),
+      child: Text("Tiếp theo", style: TextStyle(fontSize: 16)),
     );
   }
+
 }

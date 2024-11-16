@@ -4,12 +4,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'recipe_list_screen.dart';
 import 'fridge.dart';
 import 'meal_plan_screen.dart';
+import 'add_group/add_member.dart';
 
 class GroupMainScreen extends StatefulWidget {
   final String groupName;
   final String adminName;
   final String groupId;
-
 
   GroupMainScreen({
     required this.groupName,
@@ -57,7 +57,17 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
           style: TextStyle(color: Colors.green[800], fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(icon: Icon(Icons.person_add), onPressed: () {}),
+          IconButton(icon: Icon(Icons.person_add), onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddMember(
+                  groupName: widget.groupName,
+                  groupId: widget.groupId,
+                ),
+              ),
+            );
+          }),
           IconButton(
             icon: Icon(Icons.chat_bubble_outline),
             onPressed: () {

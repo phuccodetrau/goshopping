@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_shopping/user/user_info.dart';
 import 'package:go_shopping/group/add_group/add_group_screen.dart';
-import 'package:go_shopping/group/group_main_screen.dart'; // Import màn hình GroupMainScreen
+import 'package:go_shopping/group/group_main_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -62,8 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (response.statusCode == 200) {
-        print(response);
-        print(token);
         final data = jsonDecode(response.body);
         if (data['status'] == true && data['name'] != null) {
           return data['name'];
@@ -77,7 +75,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchUserGroups() async {
     try {
-      final response = await http.get(Uri.parse('$_url/groups/get-groups-by-member-email?email=$email'));
+      final String? token = await _secureStorage.read(key: "auth_token");
+      final response = await http.get(
+        Uri.parse('$_url/groups/get-groups-by-member-email?email=$email'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['code'] == 700 && data['data'] != null) {
@@ -95,20 +100,173 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchAdminNamesForGroups() async {
-    for (String groupName in userGroups) {
+    for (var groupId in filteredGroupsId) {
       try {
-        final response = await http.get(Uri.parse('$_url/groups/get-admins-by-group-name?groupName=$groupName'));
+        final String? token = await _secureStorage.read(key: "auth_token");
+        final response = await http.get(
+          Uri.parse('$_url/groups/get-admins-by-group-id?groupId=$groupId'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
+
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           if (data['code'] == 700 && data['data'] != null && data['data'].isNotEmpty) {
             setState(() {
-              adminNames[groupName] = data['data'][0];
+              adminNames[groupId.toString()] = data['data'][0]; // Giả sử API trả về admin name đầu tiên
+            });
+          } else {
+            setState(() {
+              adminNames[groupId.toString()] = "Chưa có admin";
             });
           }
+        } else {
+          setState(() {
+            adminNames[groupId.toString()] = "Chưa có admin";
+          });
         }
       } catch (error) {
-        print("Error fetching admin for group $groupName: $error");
+        print("Error fetching admin for group $groupId: $error");
+        setState(() {
+          adminNames[groupId.toString()] = "Chưa có admin";
+        });
       }
+    }
+    print("Final adminNames: $adminNames");
+  }
+
+  bool _isAdmin(String groupId) {
+    final group = userGroups.firstWhere((group) => group['id'] == groupId, orElse: () => null);
+    if (group == null) return false;
+
+    final userEmail = email;
+    return group['listUser'].any(
+          (user) => user['email'] == userEmail && user['role'] == 'admin',
+    );
+  }
+
+  void _handleMenuSelection(String value, String groupId) {
+    switch (value) {
+      case 'delete':
+        _confirmDeleteGroup(groupId); // Hiển thị hộp thoại xác nhận trước khi xóa nhóm
+        break;
+      case 'leave':
+        _confirmLeaveGroup(groupId); // Hiển thị hộp thoại xác nhận trước khi rời nhóm
+        break;
+      default:
+        break;
+    }
+  }
+
+  void _confirmDeleteGroup(String groupId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Xác nhận xóa'),
+          content: Text('Bạn có chắc chắn muốn xóa nhóm này?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteGroup(groupId);
+              },
+              child: Text('Xóa'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmLeaveGroup(String groupId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Xác nhận rời nhóm'),
+          content: Text('Bạn có chắc chắn muốn rời nhóm này?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _leaveGroup(groupId);
+              },
+              child: Text('Rời nhóm'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteGroup(String groupId) async {
+    try {
+      final String? token = await _secureStorage.read(key: "auth_token");
+      final response = await http.delete(
+        Uri.parse('$_url/groups/delete-group'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'groupId': groupId}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['code'] == 700) {
+          setState(() {
+            userGroups.removeWhere((group) => group['id'] == groupId);
+            filteredGroups.removeWhere((group) => group['id'] == groupId);
+          });
+        }
+      }
+    } catch (error) {
+      print("Error deleting group: $error");
+    }
+  }
+
+  Future<void> _leaveGroup(String groupId) async {
+    try {
+      final String? token = await _secureStorage.read(key: "auth_token");
+
+      // Kiểm tra xem groupId có tồn tại không trước khi gửi request
+      if (groupId == null || groupId.isEmpty) {
+        print("groupId is null or empty");
+        return;  // Dừng lại nếu groupId không hợp lệ
+      }
+
+      print("Sending request with groupId: $groupId");
+
+      final response = await http.delete(
+        Uri.parse('$_url/groups/leave-group'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'groupId': groupId}),  // Gửi groupId qua body
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("Response from backend: $data");
+
+        if (data['code'] == 700) {
+          setState(() {
+            userGroups.removeWhere((group) => group['id'] == groupId);
+            filteredGroups.removeWhere((group) => group['id'] == groupId);
+          });
+        }
+      }
+    } catch (error) {
+      print("Error leaving group: $error");
     }
   }
 
@@ -172,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
               itemBuilder: (context, index) {
                 final groupId = filteredGroupsId[index];
                 final groupName = filteredGroups[index];
-                final adminName = adminNames[groupName] ?? "Chưa có admin";
+                final adminName = adminNames[groupId.toString()] ?? "Chưa có admin";
 
                 return GestureDetector(
                   onTap: () {
@@ -238,7 +396,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
+            PopupMenuButton<String>(
+              onSelected: (value) => _handleMenuSelection(value, groupName),
+              itemBuilder: (BuildContext context) {
+                final isAdmin = _isAdmin(groupName); // Kiểm tra quyền
+                return isAdmin
+                    ? [
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text('Xóa nhóm'),
+                  ),
+                ]
+                    : [
+                  PopupMenuItem(
+                    value: 'leave',
+                    child: Text('Rời nhóm'),
+                  ),
+                ];
+              },
+              icon: Icon(Icons.more_vert),
+            ),
           ],
         ),
       ),
