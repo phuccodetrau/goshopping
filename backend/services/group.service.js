@@ -58,21 +58,27 @@ class GroupService {
 
     static async getGroupsByMemberEmail(email) {
         try {
-            // Find groups where listUser contains an object with a matching email
-            const groups = await Group.find({ "listUser.email": email });
+            // Tìm các nhóm mà listUser chứa một object có email khớp
+            const groups = await Group.find({ "listUser.email": email }, "name _id"); // Chỉ lấy trường `name` và `_id`
             console.log("Filtered groups:", groups); // Log các nhóm tìm thấy
     
             if (groups.length === 0) {
                 return { code: 704, message: "Không tìm thấy nhóm nào với email này", data: [] };
             }
     
-            const groupNames = groups.map(group => group.name);
-            return { code: 700, message: "Lấy danh sách nhóm thành công", data: groupNames };
+            // Tạo danh sách chứa `name` và `_id` của các nhóm
+            const groupDetails = groups.map(group => ({
+                id: group._id,
+                name: group.name,
+            }));
+    
+            return { code: 700, message: "Lấy danh sách nhóm thành công", data: groupDetails };
         } catch (error) {
             console.error('Lỗi khi lấy danh sách nhóm theo email:', error);
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
+    
     
     
 

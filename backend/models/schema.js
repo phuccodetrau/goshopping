@@ -83,7 +83,7 @@ const groupSchema = new Schema({
   name: { type: String, required: true },
   listUser: [groupUserSchema],
   refrigerator: [itemSchema],
-  image: { type: String }  // New field to store image URLs or file paths
+  image: { type: String } 
 });
 
 
