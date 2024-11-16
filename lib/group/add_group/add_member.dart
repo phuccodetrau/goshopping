@@ -7,8 +7,9 @@ import '../group_main_screen.dart';
 
 class AddMember extends StatefulWidget {
   final String groupName;
+  final String groupId;
 
-  AddMember({required this.groupName});
+  AddMember({required this.groupName, required this.groupId});
 
   @override
   _AddMemberState createState() => _AddMemberState();
@@ -135,6 +136,7 @@ class _AddMemberState extends State<AddMember> {
             builder: (context) => GroupMainScreen(
               groupName: widget.groupName,
               adminName: adminName,
+              groupId: widget.groupId,
             ),
           ),
         );

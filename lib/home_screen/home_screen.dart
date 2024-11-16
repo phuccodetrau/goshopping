@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   List<dynamic> userGroups = [];
   List<dynamic> filteredGroups = [];
+  List<dynamic> filteredGroupsId = [];
   Map<String, String> adminNames = {};
 
   @override
@@ -82,7 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
         if (data['code'] == 700 && data['data'] != null) {
           setState(() {
             userGroups = data['data'];
-            filteredGroups = userGroups;
+            filteredGroups = userGroups.map((group) => group['name']).toList();
+            filteredGroupsId = userGroups.map((group) => group['id']).toList();
           });
           _fetchAdminNamesForGroups();
         }
@@ -168,6 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.builder(
               itemCount: filteredGroups.length,
               itemBuilder: (context, index) {
+                final groupId = filteredGroupsId[index];
                 final groupName = filteredGroups[index];
                 final adminName = adminNames[groupName] ?? "Chưa có admin";
 
@@ -177,6 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => GroupMainScreen(
+                          groupId: groupId,
                           groupName: groupName,
                           adminName: adminName,
                         ),

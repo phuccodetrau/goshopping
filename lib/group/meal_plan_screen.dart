@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
+import 'meal_detail.dart';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
+class MealPlanScreen extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MealPlanScreen(),
-    );
-  }
+  _MealPlanScreenState createState() => _MealPlanScreenState();
 }
 
-class MealPlanScreen extends StatelessWidget {
+class _MealPlanScreenState extends State<MealPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,6 +55,12 @@ class MealPlanScreen extends StatelessWidget {
                       'Sữa đậu nành x5',
                     ],
                     peopleCount: 5,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MealDetailScreen()),
+                      );
+                    },
                   ),
                   MealCard(
                     mealTime: 'Bữa trưa',
@@ -73,6 +71,12 @@ class MealPlanScreen extends StatelessWidget {
                       'Sữa đậu nành x5',
                     ],
                     peopleCount: 5,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MealDetailScreen()),
+                      );
+                    },
                   ),
                   MealCard(
                     mealTime: 'Bữa xế',
@@ -82,6 +86,12 @@ class MealPlanScreen extends StatelessWidget {
                       'Cháo thịt băm x3',
                     ],
                     peopleCount: 4,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MealDetailScreen()),
+                      );
+                    },
                   ),
                   MealCard(
                     mealTime: 'Bữa tối',
@@ -91,6 +101,12 @@ class MealPlanScreen extends StatelessWidget {
                       'Canh chua x4',
                     ],
                     peopleCount: 4,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MealDetailScreen()),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -102,7 +118,12 @@ class MealPlanScreen extends StatelessWidget {
   }
 }
 
-class DateSelector extends StatelessWidget {
+class DateSelector extends StatefulWidget {
+  @override
+  _DateSelectorState createState() => _DateSelectorState();
+}
+
+class _DateSelectorState extends State<DateSelector> {
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -154,73 +175,83 @@ class DateSelector extends StatelessWidget {
   }
 }
 
-class MealCard extends StatelessWidget {
+class MealCard extends StatefulWidget {
   final String mealTime;
   final String timeRange;
   final List<String> items;
   final int peopleCount;
+  final VoidCallback onTap;
 
   MealCard({
     required this.mealTime,
     required this.timeRange,
     required this.items,
     required this.peopleCount,
+    required this.onTap,
   });
 
   @override
+  _MealCardState createState() => _MealCardState();
+}
+
+class _MealCardState extends State<MealCard> {
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  mealTime,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: mealTime == 'Bữa sáng' ? Colors.orange : Colors.blue,
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Card(
+        margin: EdgeInsets.symmetric(vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.mealTime,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: widget.mealTime == 'Bữa sáng' ? Colors.orange : Colors.blue,
+                    ),
                   ),
-                ),
-                Text(
-                  timeRange,
-                  style: TextStyle(
-                    color: Colors.green[700],
+                  Text(
+                    widget.timeRange,
+                    style: TextStyle(
+                      color: Colors.green[700],
+                    ),
                   ),
-                ),
-                Icon(Icons.edit, color: Colors.grey),
-              ],
-            ),
-            SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: items
-                  .map((item) => Chip(
-                label: Text(item),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20), // Điều chỉnh góc bo tròn ở đây
-                  side: BorderSide(color: Colors.green[700]!), // Đặt màu viền nếu muốn
-                ),
-                backgroundColor: Colors.green[200],
-              ))
-                  .toList(),
-            ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.people, color: Colors.grey),
-                SizedBox(width: 4),
-                Text('$peopleCount'),
-              ],
-            ),
-          ],
+                  Icon(Icons.edit, color: Colors.grey),
+                ],
+              ),
+              SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: widget.items
+                    .map((item) => Chip(
+                  label: Text(item),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(color: Colors.green[700]!),
+                  ),
+                  backgroundColor: Colors.green[200],
+                ))
+                    .toList(),
+              ),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.people, color: Colors.grey),
+                  SizedBox(width: 4),
+                  Text('${widget.peopleCount}'),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

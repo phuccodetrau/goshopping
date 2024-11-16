@@ -94,10 +94,13 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
       print("Response body: ${response.body}");
 
       if (response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        final String groupId = responseData['data']['_id'];
+        print("Group ID: $groupId");
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AddMember(groupName: groupName), // Pass groupName here
+            builder: (context) => AddMember(groupName: groupName, groupId: groupId), // Pass groupName here
           ),
         );
       } else {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AddFoodScreen extends StatelessWidget {
+class AddRecipeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

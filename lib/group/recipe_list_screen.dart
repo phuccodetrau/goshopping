@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import 'meal_plan_screen.dart';
+import 'recipe_detail_screen.dart';
+import 'add_recipe.dart';
 
-class FoodListScreen extends StatelessWidget {
+class RecipeListScreen extends StatefulWidget {
+  @override
+  _RecipeListScreenState createState() => _RecipeListScreenState();
+}
+
+class _RecipeListScreenState extends State<RecipeListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,7 +26,14 @@ class FoodListScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.restaurant_menu, color: Colors.green[700]),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MealPlanScreen(),
+                ),
+              );
+            },
           ),
           IconButton(
             icon: Icon(Icons.notifications, color: Colors.green[700]),
@@ -77,9 +92,9 @@ class FoodListScreen extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  FoodSuggestionImage('images/group.png'),
-                  FoodSuggestionImage('images/group.png'),
-                  FoodSuggestionImage('images/group.png'),
+                  RecipeSuggestionImage('images/group.png'),
+                  RecipeSuggestionImage('images/group.png'),
+                  RecipeSuggestionImage('images/group.png'),
                 ],
               ),
             ),
@@ -97,25 +112,57 @@ class FoodListScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  FoodItemCard(
+                  RecipeItemCard(
                     imagePath: 'images/group.png',
                     title: 'Canh rau ngót',
                     description: 'Rau ngót, thịt băm, hành, hạt nêm...',
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RecipeDetail(),
+                        ),
+                      );
+                    },
                   ),
-                  FoodItemCard(
+                  RecipeItemCard(
                     imagePath: 'images/group.png',
                     title: 'Đậu hũ sốt cà',
                     description: 'Đậu hũ, thịt băm, hành, hạt nêm...',
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RecipeDetail(),
+                        ),
+                      );
+                    },
                   ),
-                  FoodItemCard(
+                  RecipeItemCard(
                     imagePath: 'images/group.png',
                     title: 'Bún thịt nướng',
                     description: 'Bún, thịt băm, hành, hạt nêm...',
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RecipeDetail(),
+                        ),
+                      );
+                    },
                   ),
-                  FoodItemCard(
+                  RecipeItemCard(
                     imagePath: 'images/group.png',
                     title: 'Nem rán',
                     description: 'Thịt băm, hành, nấm, cà rốt...',
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RecipeDetail(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -124,7 +171,14 @@ class FoodListScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddRecipeScreen(),
+            ),
+          );
+        },
         backgroundColor: Colors.green,
         child: Icon(Icons.add),
       ),
@@ -133,11 +187,16 @@ class FoodListScreen extends StatelessWidget {
 }
 
 // Widget cho phần gợi ý hình ảnh món ăn
-class FoodSuggestionImage extends StatelessWidget {
+class RecipeSuggestionImage extends StatefulWidget {
   final String imagePath;
 
-  FoodSuggestionImage(this.imagePath);
+  RecipeSuggestionImage(this.imagePath);
 
+  @override
+  _RecipeSuggestionImageState createState() => _RecipeSuggestionImageState();
+}
+
+class _RecipeSuggestionImageState extends State<RecipeSuggestionImage> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -145,7 +204,7 @@ class FoodSuggestionImage extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: Image.asset(
-          imagePath,
+          widget.imagePath,
           width: 80,
           height: 80,
           fit: BoxFit.cover,
@@ -156,48 +215,55 @@ class FoodSuggestionImage extends StatelessWidget {
 }
 
 // Widget cho từng món ăn trong danh sách
-class FoodItemCard extends StatelessWidget {
+class RecipeItemCard extends StatefulWidget {
   final String imagePath;
   final String title;
   final String description;
+  final VoidCallback onTap;
 
-  FoodItemCard({
+  RecipeItemCard({
     required this.imagePath,
     required this.title,
     required this.description,
+    required this.onTap
   });
 
   @override
+  _RecipeItemCardState createState() => _RecipeItemCardState();
+}
+
+class _RecipeItemCardState extends State<RecipeItemCard> {
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: ListTile(
-        leading: ClipRRect(
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Card(
+        margin: EdgeInsets.symmetric(vertical: 8),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
-          child: Image.asset(
-            imagePath,
-            width: 60,
-            height: 60,
-            fit: BoxFit.cover,
-          ),
         ),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(description),
-        trailing: DropdownButton<String>(
-          underline: SizedBox(),
-          icon: Icon(Icons.more_vert, color: Colors.green[700]),
-
-          items: [
-            DropdownMenuItem(value: 'Bữa sáng', child: Text('Bữa sáng')),
-            DropdownMenuItem(value: 'Bữa trưa', child: Text('Bữa trưa')),
-            DropdownMenuItem(value: 'Bữa tối', child: Text('Bữa tối')),
-          ],
-          onChanged: (value) {
-
-          },
+        child: ListTile(
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.asset(
+              widget.imagePath,
+              width: 60,
+              height: 60,
+              fit: BoxFit.cover,
+            ),
+          ),
+          title: Text(widget.title, style: TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(widget.description),
+          trailing: DropdownButton<String>(
+            underline: SizedBox(),
+            icon: Icon(Icons.more_vert, color: Colors.green[700]),
+            items: [
+              DropdownMenuItem(value: 'Bữa sáng', child: Text('Bữa sáng')),
+              DropdownMenuItem(value: 'Bữa trưa', child: Text('Bữa trưa')),
+              DropdownMenuItem(value: 'Bữa tối', child: Text('Bữa tối')),
+            ],
+            onChanged: (value) {},
+          ),
         ),
       ),
     );

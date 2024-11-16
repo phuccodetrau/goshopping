@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class FoodDetail extends StatelessWidget {
+class RecipeDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -218,6 +218,6 @@ class IngredientCard extends StatelessWidget {
 void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
-    home: FoodDetail(),
+    home: RecipeDetail(),
   ));
 }

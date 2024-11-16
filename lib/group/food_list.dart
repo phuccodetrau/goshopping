@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class IngredientListScreen extends StatelessWidget {
-  const IngredientListScreen({super.key});
+class FoodListScreen extends StatelessWidget {
+  const FoodListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -63,17 +63,17 @@ class IngredientListScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  IngredientCard(
+                  FoodCard(
                     imagePath: 'images/group.png', // Đường dẫn hình ảnh
                     name: 'Nước mắm',
                     quantity: '1 L',
                   ),
-                  IngredientCard(
+                  FoodCard(
                     imagePath: 'images/group.png', // Đường dẫn hình ảnh
                     name: 'Gạo trắng',
                     quantity: '5 KG',
                   ),
-                  IngredientCard(
+                  FoodCard(
                     imagePath: 'images/group.png', // Đường dẫn hình ảnh
                     name: 'Gạo trắng',
                     quantity: '5 KG',
@@ -97,12 +97,12 @@ class IngredientListScreen extends StatelessWidget {
 }
 
 // Widget cho từng nguyên liệu
-class IngredientCard extends StatelessWidget {
+class FoodCard extends StatelessWidget {
   final String imagePath;
   final String name;
   final String quantity;
 
-  IngredientCard({
+  FoodCard({
     required this.imagePath,
     required this.name,
     required this.quantity,
@@ -147,6 +147,6 @@ class IngredientCard extends StatelessWidget {
 void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
-    home: IngredientListScreen(),
+    home: FoodListScreen(),
   ));
 }
