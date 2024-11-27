@@ -1,8 +1,11 @@
 import FoodService from "../services/food.service.js";
+import GroupService from "../services/group.service.js";
 
 const createFood = async (req, res, next) => {
     try {
+        console.log("Nhận được")
         const { name, categoryName, unitName, image, group } = req.body;
+        
 
         if (!name || !categoryName || !unitName || !image || !group) {
             return res.json({ code: 601, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" });
@@ -25,6 +28,23 @@ const getAllFood = async (req, res, next) => {
         const { group } = req.body;
 
         let foodData = await FoodService.getAllFood(group);
+
+        return res.json({
+            code: foodData.code,
+            message: foodData.message,
+            data: foodData.data
+        });
+    } catch (error) {
+        console.log(error, "err---->");
+        next(error);
+    }
+}
+
+const getUnavailableFoods = async (req, res, next) => {
+    try {
+        const { groupId } = req.params;
+
+        let foodData = await FoodService.getUnavailableFoods(groupId);
 
         return res.json({
             code: foodData.code,
@@ -70,4 +90,42 @@ const updateFood = async (req, res, next) => {
     }
 }
 
-export default { createFood, getAllFood, deleteFood, updateFood };
+const getFoodsByCategory = async (req, res) => {
+    try {
+        const { groupId, categoryName } = req.body;
+
+        // Lấy danh sách foods theo groupId và categoryName
+        const foodResult = await FoodService.getFoodsByCategory(groupId, categoryName);
+
+        if (foodResult.code !== 600) {
+            return res.status(404).json(foodResult); // Trả về nếu không có foods
+        }
+
+        const foods = foodResult.data;
+
+        // Duyệt qua từng food để lấy totalAmount từ ItemService
+        const foodsWithAmount = await Promise.all(
+            foods.map(async (food) => {
+                const itemResult = await GroupService.getTotalAmountByFoodName(groupId, food.name);
+                const totalAmount = itemResult.code === 700 ? itemResult.data.totalAmount : 0;
+                
+                // Bổ sung trường totalAmount vào food
+                return {
+                    ...food.toObject(), // Chuyển mongoose document thành object
+                    totalAmount
+                };
+            })
+        );
+
+        // Trả danh sách foods với trường totalAmount
+        return res.status(200).json({
+            code: 600,
+            message: "Lấy danh sách thực phẩm thành công",
+            data: foodsWithAmount
+        });
+    } catch (error) {
+        console.error("Error in getFoodsByCategory:", error);
+        return res.status(500).json({ code: 101, message: "Server error!", data: "" });
+    }
+};
+export default { createFood, getAllFood, getUnavailableFoods , deleteFood, updateFood, getFoodsByCategory };

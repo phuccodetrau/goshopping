@@ -53,6 +53,17 @@ const getUsersByGroupName = async (req, res) => {
     }
 };
 
+const getUsersByGroupId = async (req, res) => {
+    try {
+        const { groupId } = req.params; // Get groupName from query parameters
+        console.log("Received group name:", groupId); // Debugging log
+        const result = await GroupService.getUsersByGroupId(groupId);
+        return res.status(result.code === 700 ? 200 : 404).json(result);
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
+
 
 
 
@@ -79,7 +90,34 @@ const removeMember = async (req, res) => {
 };
 
 
+const addItemToRefrigerator = async (req, res) => {
+    try{
+        const {groupId, item} = req.body;
+        const result = await GroupService.addItemToRefrigerator(groupId, item);
+        return res.status(result.code === 700 ? 200 : 404).json(result);
+    }catch(error){
+        return res.status(500).json(error);
+    }
+}
 
+const getAvailableItems = async (req, res) => {
+    try{
+        const {groupId} = req.params;
+        const result = await GroupService.getAvailableItems(groupId);
+        return res.status(result.code === 700 ? 200 : 404).json(result);
+    }catch(error){
+        return res.status(500).json(error);
+    }
+}
 
+const searchItemsInRefrigerator = async (req, res) => {
+    try{
+        const {groupId, keyword} = req.body;
+        const result = await GroupService.searchItemsInRefrigerator(groupId, keyword);
+        return res.status(result.code === 700 ? 200 : 404).json(result);
+    }catch(error){
+        return res.status(500).json(error);
+    }
+}
 
-export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupName, deleteGroup, removeMember, getUsersByGroupName}; 
+export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupName, getUsersByGroupId, deleteGroup, removeMember, getUsersByGroupName, addItemToRefrigerator, getAvailableItems, searchItemsInRefrigerator}; 

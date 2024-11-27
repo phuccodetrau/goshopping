@@ -162,7 +162,144 @@ class GroupService {
         }
     }
     
+    static async getUsersByGroupId(groupId) {
+        try {
+            // Tìm nhóm theo ID
+            const group = await Group.findById(groupId);
     
+            if (!group) {
+                return { code: 704, message: "Group not found", data: [] };
+            }
+    
+            // Trích xuất danh sách người dùng
+            const users = group.listUser.map(user => ({
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }));
+    
+            return { code: 700, message: "Users retrieved successfully", data: users };
+        } catch (error) {
+            console.error('Error fetching users by group ID:', error);
+            throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
+    
+    static async addItemToRefrigerator(groupId, item) {
+        try {
+            // Tìm group theo groupId
+            const group = await Group.findById(groupId);
+            if (!group) {
+                return { code: 704, message: "Không tìm thấy nhóm", data: "" };
+            }
+    
+            // Thêm item vào refrigerator
+            group.refrigerator.push(item);
+    
+            // Lưu group sau khi cập nhật
+            const updatedGroup = await group.save();
+    
+            return { code: 700, message: "Thêm item vào tủ lạnh thành công", data: updatedGroup };
+        } catch (error) {
+            console.error('Lỗi khi thêm item vào tủ lạnh:', error);
+            throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
+
+    static async getAvailableItems(groupId) {
+        if (!groupId) {
+            return { code: 701, message: "Vui lòng cung cấp ID nhóm", data: "" };
+        }
+
+        try {
+            const group = await Group.findById(groupId).populate('refrigerator');
+            if (!group) {
+                return { code: 702, message: "Nhóm không tồn tại", data: "" };
+            }
+
+            // Lọc các item thỏa mãn điều kiện
+            const today = new Date();
+            const availableItems = group.refrigerator.filter(item => 
+                item.amount > 0 && item.expireDate > today
+            );
+
+            return {
+                code: 700,
+                message: "Lấy danh sách item thành công",
+                data: availableItems
+            };
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách item:", error);
+            throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
+
+    static async searchItemsInRefrigerator(groupId, keyword) {
+        if (!groupId) {
+            return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" };
+        }
+    
+        try {
+            const group = await Group.findById(groupId);
+            if (!group) {
+                return { code: 702, message: "Nhóm không tồn tại", data: "" };
+            }
+    
+            // Chuyển từ khóa và tên item sang chữ thường để tìm kiếm không phân biệt hoa/thường
+            const lowerKeyword = keyword.toLowerCase();
+            const matchedItems = group.refrigerator.filter(item => 
+                item.foodName.toLowerCase().includes(lowerKeyword)
+            );
+    
+            if (matchedItems.length === 0) {
+                return {
+                    code: 703,
+                    message: "Không tìm thấy item nào khớp với từ khóa",
+                    data: []
+                };
+            }
+    
+            return {
+                code: 700,
+                message: "Tìm kiếm item thành công",
+                data: matchedItems
+            };
+        } catch (error) {
+            console.error("Lỗi khi tìm kiếm item trong refrigerator:", error);
+            throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
+
+    static async getTotalAmountByFoodName(groupId, foodName) {
+        if (!groupId || !foodName) {
+            return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" };
+        }
+    
+        try {
+            const group = await Group.findById(groupId);
+            if (!group) {
+                return { code: 702, message: "Không tìm thấy nhóm", data: "" };
+            }
+            const matchedItems = group.refrigerator.filter(item => item.foodName === foodName);
+    
+            if (!matchedItems || matchedItems.length === 0) {
+                return { code: 703, message: "Không tìm thấy item nào với foodName này", data: "" };
+            }
+            const totalAmount = matchedItems.reduce((total, item) => total + item.amount, 0);
+    
+            return { 
+                code: 700, 
+                message: "Lấy tổng amount thành công", 
+                data: { 
+                    foodName, 
+                    totalAmount 
+                } 
+            };
+        } catch (error) {
+            console.error("Lỗi khi lấy tổng amount:", error);
+            throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
       
 
 }

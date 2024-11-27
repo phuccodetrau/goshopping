@@ -11,6 +11,7 @@ import UnitRoute from './routes/unit.router.js'
 import dotenv from 'dotenv';
 import AuthRoute from './routes/auth.router.js'
 import GroupRouter from './routes/group.router.js';
+import ListTaskRouter from './routes/listtask.router.js';
 
 dotenv.config();
 const app = express();
@@ -27,4 +28,5 @@ app.use("/category",CategoryRoute);
 app.use("/unit",UnitRoute);
 app.use("/auth",AuthRoute);
 app.use('/groups', GroupRouter);
+app.use("/listtask", ListTaskRouter);
 export default app;

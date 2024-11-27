@@ -1,13 +1,13 @@
 import { Item } from "../models/schema.js";
 
 class ItemService {
-    static async createItem(foodName, expireDate, amount, note, group) {
+    static async createItem(foodName, expireDate, amount, unitName, note, group) {
         if (!expireDate || amount === undefined) {
             return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" };
         }
         
         try {
-            const newItem = new Item({ foodName, expireDate, amount, note, group });
+            const newItem = new Item({ foodName, expireDate, amount, unitName, note, group });
             await newItem.save();
             return { code: 700, message: "Lưu item thành công", data: newItem };
         } catch (error) {
@@ -67,12 +67,24 @@ class ItemService {
             if (!items || items.length === 0) {
                 return { code: 708, message: "Không tìm thấy item nào với foodName này trong group", data: "" };
             }
-            return { code: 709, message: "Tìm kiếm item thành công", data: items };
+            
+            // Tính tổng amount
+            const totalAmount = items.reduce((total, item) => total + item.amount, 0);
+    
+            return { 
+                code: 709, 
+                message: "Tìm kiếm item thành công", 
+                data: { 
+                    items, 
+                    totalAmount 
+                } 
+            };
         } catch (error) {
             console.error("Lỗi khi tìm kiếm item:", error);
             throw error;
         }
     }
+    
 }
 
 export default ItemService;

@@ -8,6 +8,10 @@ router.put('/add-member', groupController.addMembers);
 router.get('/get-groups-by-member-email', groupController.getGroupsByMemberEmail);
 router.get('/get-admins-by-group-name', groupController.getAdminsByGroupName);
 router.get('/get-users-by-group-name', groupController.getUsersByGroupName);
+router.get('/get-users-by-group-id/:groupId', groupController.getUsersByGroupId);
+router.post('/addItemToRefrigerator', groupController.addItemToRefrigerator);
+router.get('/getAvailableItems/:groupId', groupController.getAvailableItems);
+router.post('/searchItemsInRefrigerator/', groupController.searchItemsInRefrigerator);
 
 router.delete('/delete-group', groupController.deleteGroup);
 router.delete('/remove-member', groupController.removeMember);

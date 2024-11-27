@@ -35,21 +35,20 @@ const itemSchema = new Schema({
   foodName: { type: String, required: true },
   expireDate: { type: Date, required: true },
   amount: { type: Number, required: true },
-  note: { type: Number },
+  unitName: { type: String, required: true },
+  note: { type: String },
   group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
-});
-
-const listTaskItemSchema = new Schema({
-  foodName: { type: String, required: true },
-  amount: { type: Number, required: true }
 });
 
 const listTaskSchema = new Schema({
   name: { type: String, required: true },
   memberEmail: { type: String, required: true },
   note: { type: String },
-  date: { type: Date, required: true },
-  list_item: [listTaskItemSchema],
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: true },
+  foodName: { type: String, required: true },
+  amount: { type: Number, required: true },
+  unitName: { type: String, required: true },
   state: { type: Boolean, default: false },
   group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
 });

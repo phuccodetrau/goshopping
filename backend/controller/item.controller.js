@@ -3,8 +3,8 @@ import { Group } from '../models/schema.js';
 
 const createItem = async (req, res, next) => {
     try {
-        const { foodName, expireDate, amount, note, group } = req.body;
-        let itemData = await ItemService.createItem(foodName, expireDate, amount, note, group);
+        const { foodName, expireDate, amount, unitName, note, group } = req.body;
+        let itemData = await ItemService.createItem(foodName, expireDate, amount, unitName, note, group);
         return res.json(itemData);
     } catch (error) {
         return res.json({code: 101, message: "Server error!", data: ""})
