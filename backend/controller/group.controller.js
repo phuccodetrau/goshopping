@@ -4,6 +4,8 @@ const createGroup = async (req, res) => {
     try {
         const { name, listUser } = req.body;
         const result = await GroupService.createGroup(name, listUser);
+        console.log("Create Group Payload:", req.body);
+
         return res.status(result.code === 700 ? 201 : 400).json(result);
     } catch (error) {
         return res.status(500).json(error);
@@ -12,8 +14,9 @@ const createGroup = async (req, res) => {
 
 const addMembers = async (req, res) => {
     try {
-        const { groupName, members } = req.body; // Nhận danh sách members
-        const result = await GroupService.addMembers(groupName, members);
+        const { groupId, members } = req.body;
+        const result = await GroupService.addMembers(groupId, members);
+        console.log("Add Members Payload:", req.body);
         return res.status(result.code === 702 ? 200 : 404).json(result);
     } catch (error) {
         return res.status(500).json(error);
@@ -31,16 +34,41 @@ const getGroupsByMemberEmail = async (req, res) => {
     }
 };
 
-const getAdminsByGroupName = async (req, res) => {
+const getAdminsByGroupId = async (req, res) => {
     try {
-        const { groupName } = req.query; // Nhận groupName từ query
-        console.log("Received group name:", groupName); // Log để kiểm tra giá trị
-        const result = await GroupService.getAdminsByGroupName(groupName);
+        const { groupId } = req.query; // Nhận groupId từ query
+        console.log("Received group ID:", groupId); // Debug
+        const result = await GroupService.getAdminsByGroupId(groupId);
         return res.status(result.code === 700 ? 200 : 404).json(result);
     } catch (error) {
         return res.status(500).json(error);
     }
 };
+const leaveGroup = async (req, res) => {
+    try {
+        // In ra request body để xem có groupId hay không
+        console.log("Request body:", req.body);
+
+        const { groupId } = req.body;  // Lấy groupId từ body
+        const userEmail = req.user.email;  // Lấy email từ token
+
+        console.log("User email:", userEmail, "Leave Group ID:", groupId);  // Kiểm tra giá trị
+
+        if (!groupId) {
+            return res.status(400).json({ message: "groupId is required" });
+        }
+
+        const result = await GroupService.leaveGroup(groupId, userEmail);
+        return res.status(result.code === 700 ? 200 : 404).json(result);
+    } catch (error) {
+        console.error("Error:", error);  // In ra lỗi nếu có
+        return res.status(500).json(error);
+    }
+};
+
+
+
+
 
 const getUsersByGroupName = async (req, res) => {
     try {
@@ -120,4 +148,4 @@ const searchItemsInRefrigerator = async (req, res) => {
     }
 }
 
-export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupName, getUsersByGroupId, deleteGroup, removeMember, getUsersByGroupName, addItemToRefrigerator, getAvailableItems, searchItemsInRefrigerator}; 
+export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupId, getUsersByGroupId, deleteGroup, removeMember, leaveGroup, getUsersByGroupName, addItemToRefrigerator, getAvailableItems, searchItemsInRefrigerator}; 

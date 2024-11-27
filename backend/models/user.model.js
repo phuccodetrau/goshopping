@@ -18,6 +18,12 @@ const userSchema = new Schema({
         type: String,
         required: [true, "password is required"],
     },
+    name: {
+        type: String,
+    },
+    phoneNumber: {
+        type: String,
+    },
 }, { timestamps: true });
 
 // used while encrypting user entered password

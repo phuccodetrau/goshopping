@@ -39,7 +39,12 @@ const login = async (req, res, next) => {
 
         // Creating Token
         let tokenData = { _id: user._id, email: user.email };
-        const token = await UserServices.generateAccessToken(tokenData, "secret", "1h");
+        const token = await UserServices.generateAccessToken(
+            tokenData,
+            process.env.JWT_SECRET_KEY,
+            process.env.JWT_EXPIRE
+        );
+
 
         res.status(200).json({ status: true, success: "sendData", token: token });
     } catch (error) {
@@ -50,24 +55,55 @@ const login = async (req, res, next) => {
 
 const getUserNameByEmail = async (req, res, next) => {
     try {
-      const email = req.user.email; // Extract email from token
-      console.log("Authenticated email:", email);
-  
-      const userName = await UserServices.getUserNameByEmail(email);
-      
-      if (userName !== null) {
-        console.log("User found, name:", userName);
-        res.json({ status: true, name: userName });
-      } else {
-        console.log("User not found with email:", email);
-        res.json({ status: false, message: 'User not found' });
-      }
+        // Ưu tiên lấy email từ query parameter
+        const email = req.query.email || req.user.email;
+
+        if (!email) {
+            return res.status(400).json({ status: false, message: 'Email is required' });
+        }
+
+        console.log("Email passed to service:", email);
+
+        const userName = await UserServices.getUserNameByEmail(email);
+
+        if (userName !== null) {
+            console.log("Found user:", userName);
+            return res.status(200).json({ status: true, name: userName });
+        } else {
+            console.log("User not found for email:", email);
+            return res.status(404).json({ status: false, message: 'User not found' });
+        }
     } catch (error) {
-      console.error("Error in getUserNameByEmail:", error);
-      next(error);
+        console.error("Error in getUserNameByEmail controller:", error);
+        return res.status(500).json({ status: false, message: 'Internal server error' });
     }
-  };
+};
 
 
 
-export default { register, login, getUserNameByEmail };
+
+const updateUser = async (req, res, next) => {
+    try {
+        const { email, name, phoneNumber } = req.body; // Chỉ chấp nhận các trường này
+        const userId = req.user._id; // Lấy user ID từ middleware
+
+        // Kiểm tra và giới hạn dữ liệu cập nhật
+        const updateData = {};
+        if (email) updateData.email = email;
+        if (name) updateData.name = name;
+        if (phoneNumber) updateData.phoneNumber = phoneNumber;
+
+        const updatedUser = await UserServices.updateUser(userId, updateData);
+
+        if (updatedUser) {
+            res.json({ status: true, message: 'User information updated successfully', user: updatedUser });
+        } else {
+            res.status(404).json({ status: false, message: 'User not found' });
+        }
+    } catch (error) {
+        console.error("Error updating user:", error);
+        next(error);
+    }
+};
+
+export default { register, login, getUserNameByEmail, updateUser };

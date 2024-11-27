@@ -37,19 +37,29 @@ class UserServices {
 
     static async getUserNameByEmail(email) {
         try {
-            console.log("Querying for email:", email); // Log email đang được truy vấn
-            const user = await UserModel.findOne({ email }); // Tìm kiếm email
-            console.log("User found:", user); // Log thông tin người dùng tìm thấy
+            console.log("Querying for email:", email);
+            const user = await UserModel.findOne({ email });
+            console.log("User found:", user);
             if (user) {
-                return user; // Trả về tên nếu tìm thấy
+                return user.name;
             }
-            return null; // Trả về null nếu không tìm thấy
+            return null;
         } catch (err) {
             console.error("Error fetching user:", err);
             throw err;
         }
     }
     
+    
+
+    static async updateUser(userId, updateData) {
+        try {
+            const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, { new: true });
+            return updatedUser;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export default UserServices; // Xuất mặc định
