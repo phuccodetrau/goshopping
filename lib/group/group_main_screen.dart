@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'recipe_list_screen.dart';
 import 'fridge.dart';
 import 'meal_plan_screen.dart';
+import 'list_task.dart';
 
 class GroupMainScreen extends StatefulWidget {
   final String groupName;
@@ -36,6 +37,8 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
       await _secureStorage.write(key: 'groupName', value: widget.groupName);
       await _secureStorage.write(key: 'groupId', value: widget.groupId);
       await _secureStorage.write(key: 'adminName', value: widget.adminName);
+      print("name: $name");
+      print("admin name: ${widget.adminName}");
     }catch(e){
       print('Error loading secure values: $e');
     }
@@ -145,6 +148,30 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
             SectionTitle(title: "Hoạt động"),
             ActivityCard(
               title: "Kế hoạch nấu ăn",
+              filesCount: 4,
+              adminName: widget.adminName,
+              adminAvatarPath: "images/group.png",
+              onTap: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MealPlanScreen()),
+                );
+              },
+            ),
+            ActivityCard(
+              title: "Phân công",
+              filesCount: 4,
+              adminName: widget.adminName,
+              adminAvatarPath: "images/group.png",
+              onTap: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ListTask()),
+                );
+              },
+            ),
+            ActivityCard(
+              title: "Thống kê",
               filesCount: 4,
               adminName: widget.adminName,
               adminAvatarPath: "images/group.png",
@@ -274,7 +301,7 @@ class _ActivityCardState extends State<ActivityCard> {
     return GestureDetector(
       onTap: widget.onTap,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(2.0),
         child: Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(

@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_shopping/main.dart';
 
 class Fridge extends StatefulWidget {
   const Fridge({super.key});
@@ -14,7 +15,7 @@ class Fridge extends StatefulWidget {
   State<Fridge> createState() => _FridgeState();
 }
 
-class _FridgeState extends State<Fridge> {
+class _FridgeState extends State<Fridge> with RouteAware{
   String? email;
   String? id;
   String? name;
@@ -24,6 +25,8 @@ class _FridgeState extends State<Fridge> {
   String? adminName;
   String URL = dotenv.env['ROOT_URL']!;
   List<dynamic> listcategory = [];
+  List<dynamic> listitem = [];
+  List<dynamic> listUnavailablefood = [];
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   Future<void> _loadSecureValues() async {
     try{
@@ -46,22 +49,120 @@ class _FridgeState extends State<Fridge> {
       final response = await http.get(
         Uri.parse('$URL/category/admin/category/$groupId')
       );
-      final reponseData = jsonDecode(response.body);
-      if(reponseData['code'] == 707){
+      final responseData = jsonDecode(response.body);
+      if(responseData['code'] == 707){
         setState(() {
-          listcategory = reponseData['data'];
-          print(listcategory.length);
+          listcategory = responseData['data'];
         });
       }else{
-        print("${reponseData["message"]}");
+        print("${responseData["message"]}");
       }
     }catch(e){
       print("Error: $e");
     }
   }
-  void initState() {
-    super.initState();
+
+  Future<void> _fetchUnavailable() async{
+    try{
+      print(groupId);
+      final response = await http.get(
+          Uri.parse('$URL/food/getUnavailableFoods/$groupId')
+      );
+      final responseData = jsonDecode(response.body);
+      if(responseData['code'] == 600){
+        setState(() {
+          listUnavailablefood = responseData['data'];
+        });
+      }else{
+        print("${responseData["message"]}");
+      }
+    }catch(e){
+      print("Error: $e");
+    }
+  }
+
+  Future<void> _addNewCategory(categoryName, groupId) async{
+    try{
+      Map<String, String> body = {
+        'categoryName': categoryName,
+        'groupId': groupId,
+      };
+      final response = await http.post(
+        Uri.parse(URL + "/category/admin/category"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+      final responseData = jsonDecode(response.body);
+      if(responseData["code"] == 700){
+        _fetchCategories();
+      }else{
+        print("${responseData["message"]}");
+      }
+    }catch(e){
+      print("Error: $e");
+    }
+  }
+
+  Future<void> _searchItem(keyword) async{
+    try{
+      Map<String, String> body = {
+        'groupId': groupId!,
+        'keyword': keyword
+      };
+      final response = await http.post(
+        Uri.parse(URL + "/groups/searchItemsInRefrigerator"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+      final responseData = jsonDecode(response.body);
+      if(responseData["code"] == 700){
+        setState(() {
+          listitem = responseData['data'];
+        });
+      }else{
+        print("${responseData["message"]}");
+      }
+    }catch(e){
+      print("Error: $e");
+    }
+  }
+
+  Future<void> _fetchItem() async{
+    try{
+      final response = await http.get(
+          Uri.parse('$URL/groups/getAvailableItems/$groupId')
+      );
+      final responseData = jsonDecode(response.body);
+      if(responseData['code'] == 700){
+        setState(() {
+          listitem = responseData['data'];
+        });
+      }else{
+        print("${responseData["message"]}");
+      }
+    }catch(e){
+      print("Error: $e");
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (ModalRoute.of(context) != null) {
+      routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>); // Subscribe to route observer
+    }
     _initializeData();
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this); // Unsubscribe from route observer
+    super.dispose();
+  }
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    _initializeData(); // Re-fetch data when the screen comes back
   }
 
   Future<void> _initializeData() async {
@@ -70,169 +171,181 @@ class _FridgeState extends State<Fridge> {
 
     // Sau khi _loadSecureValues hoàn tất, gọi _fetchCategories
     await _fetchCategories();
+    await _fetchItem();
+    await _fetchUnavailable();
   }
 
 
   @override
   Widget build(BuildContext context) {
-    print(listcategory.length);
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-          },
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () {
+            },
+          ),
+          title: Text(
+            "Tủ lạnh",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
         ),
-        title: Text(
-          "Tủ lạnh",
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Thanh tìm kiếm
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: "Nguyên liệu, thành phần",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: InputBorder.none,
+                    suffixIcon: Icon(Icons.search, color: Colors.grey),
+                  ),
+                  onChanged: (value){
+                    _searchItem(value);
+                  },
+                ),
+              ),
+              SizedBox(height: 16),
+
+              // Danh sách danh mục nguyên liệu (cuộn ngang)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildCategoryItem(icon: Icons.add, label: "Thẻ mới"),
+                    if (listcategory.isEmpty)
+                      CircularProgressIndicator(),
+                    ...listcategory.map((category) {
+                      return _buildCategoryItem(
+                        imagePath: "images/fish.png",
+                        label: category["name"],
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+
+              // Gợi ý nguyên liệu cần mua (cuộn ngang)
+              Text(
+                "Gợi ý nguyên liệu cần mua",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              SizedBox(
+                height: listUnavailablefood.length == 0 ? 40 : 150,
+                child: listUnavailablefood.length == 0 ? Text("Không có gợi ý nào cần mua") : ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: listUnavailablefood.map((food) {
+                    return _buildSuggestionCard(food["name"], food["unitName"], "images/fish.png");
+                  }).toList(),
+                ),
+              ),
+              SizedBox(height: 20),
+
+              // Danh sách nguyên liệu (cuộn dọc)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Danh sách nguyên liệu",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      // Xử lý khi bấm "Chỉnh sửa"
+                    },
+                    child: Text(
+                      "Chỉnh sửa",
+                      style: TextStyle(color: Colors.blue),
+                    ),
+                  ),
+                ],
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: listitem.length, // Số lượng phần tử trong listitem
+                itemBuilder: (context, index) {
+                  final item = listitem[index]; // Lấy từng phần tử của listitem
+                  return _buildIngredientItem(
+                      item['foodName'], // Tên thực phẩm
+                      item['amount'].toString(), // Số lượng, chuyển sang String nếu cần
+                      item['unitName'], // Đơn vị
+                      item['expireDate'].split('T')[0], // Ngày hết hạn (loại bỏ phần giờ)
+                      item['note'] ?? "Không có ghi chú", // Ghi chú, nếu null thì thay thế
+                      "images/fish.png" // Đường dẫn ảnh (tạm thời dùng ảnh mặc định)
+                  );
+                },
+              ),
+            ],
           ),
         ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thanh tìm kiếm
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BuyFood(categoryName: ""),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: "Nguyên liệu, thành phần",
-                  hintStyle: TextStyle(color: Colors.grey),
-                  border: InputBorder.none,
-                  suffixIcon: Icon(Icons.search, color: Colors.grey),
-                ),
-              ),
+            );
+          },
+          backgroundColor: Colors.green[700],
+          child: Icon(Icons.add, color: Colors.white),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: 0,
+          onTap: (index) {
+            // Xử lý khi chuyển đổi tab
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: "",
             ),
-            SizedBox(height: 16),
-
-            // Danh sách danh mục nguyên liệu (cuộn ngang)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildCategoryItem(icon: Icons.add, label: "Thẻ mới"),
-                  if (listcategory.isEmpty)
-                    CircularProgressIndicator(),
-                  ...listcategory.map((category) {
-                    return _buildCategoryItem(
-                      imagePath: "images/fish.png",
-                      label: category["name"],
-                    );
-                  }).toList(),
-                ],
-              ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.kitchen),
+              label: "",
             ),
-            SizedBox(height: 20),
-
-            // Gợi ý nguyên liệu cần mua (cuộn ngang)
-            Text(
-              "Gợi ý nguyên liệu cần mua",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.notifications),
+              label: "",
             ),
-            SizedBox(height: 8),
-            SizedBox(
-              height: 150,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _buildSuggestionCard("Thịt bò", "0 Kg", "images/fish.png"),
-                  _buildSuggestionCard("Thịt gà", "0 Kg", "images/fish.png"),
-                  _buildSuggestionCard("Ới", "0 Kg", "images/fish.png"),
-                ],
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // Danh sách nguyên liệu (cuộn dọc)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Danh sách nguyên liệu",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Xử lý khi bấm "Chỉnh sửa"
-                  },
-                  child: Text(
-                    "Chỉnh sửa",
-                    style: TextStyle(color: Colors.blue),
-                  ),
-                ),
-              ],
-            ),
-            ListView(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              children: [
-                _buildIngredientItem("Nước mắm", "1 L", "images/fish.png"),
-                _buildIngredientItem("Gạo trắng", "5 KG", "images/fish.png"),
-              ],
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: "",
             ),
           ],
+          selectedItemColor: Colors.green[700],
+          unselectedItemColor: Colors.grey,
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BuyFood(),
-            ),
-          );
-        },
-        backgroundColor: Colors.green[700],
-        child: Icon(Icons.add, color: Colors.white),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          // Xử lý khi chuyển đổi tab
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.kitchen),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "",
-          ),
-        ],
-        selectedItemColor: Colors.green[700],
-        unselectedItemColor: Colors.grey,
-      ),
-    );
+      );
   }
   void _showCreateCategoryDialog() {
+    TextEditingController categoryNameController = TextEditingController();
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Tạo loại thực phẩm mới"),
           content: TextField(
+            controller: categoryNameController,
             decoration: InputDecoration(
               hintText: "Tên loại thực phẩm mới",
               border: OutlineInputBorder(),
@@ -247,7 +360,7 @@ class _FridgeState extends State<Fridge> {
             ),
             ElevatedButton(
               onPressed: () {
-                // Thêm đại lượng mới
+                _addNewCategory(categoryNameController.text, groupId);
                 Navigator.of(context).pop();
               },
               child: Text("Tạo mới"),
@@ -266,7 +379,7 @@ class _FridgeState extends State<Fridge> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => FoodListScreen(),
+              builder: (context) => FoodListScreen(categoryName: label),
             ),
           );
         }
@@ -304,13 +417,13 @@ class _FridgeState extends State<Fridge> {
     );
   }
 
-  Widget _buildSuggestionCard(String name, String quantity, String imagePath) {
+  Widget _buildSuggestionCard(String name, String unitName, String imagePath) {
     return GestureDetector(
       onTap: (){
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => BuyOldFood(),
+            builder: (context) => BuyOldFood(name: name, unitName: unitName),
           ),
         );
       },
@@ -389,7 +502,7 @@ class _FridgeState extends State<Fridge> {
                       Icon(Icons.shopping_basket, size: 12, color: Colors.grey),
                       SizedBox(width: 4),
                       Text(
-                        quantity,
+                        "0 $unitName",
                         style: TextStyle(fontSize: 12, color: Colors.red),
                       ),
                       Spacer(),
@@ -405,7 +518,7 @@ class _FridgeState extends State<Fridge> {
     );
   }
 
-  Widget _buildIngredientItem(String name, String quantity, String imagePath) {
+  Widget _buildIngredientItem(String foodName, String amount, String unitName, String expireDate, String note, String imagePath) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8),
       padding: EdgeInsets.all(8),
@@ -436,9 +549,13 @@ class _FridgeState extends State<Fridge> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name,
+              Text(foodName,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              Text(quantity,
+              Text(amount + " " + unitName,
+                  style: TextStyle(fontSize: 14, color: Colors.grey)),
+              Text("Note: " + note,
+                  style: TextStyle(fontSize: 14, color: Colors.grey)),
+              Text("Ngày hết hạn: " + expireDate,
                   style: TextStyle(fontSize: 14, color: Colors.grey)),
             ],
           ),
