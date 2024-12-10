@@ -1,175 +1,317 @@
 import 'package:flutter/material.dart';
 
-class MealDetailScreen extends StatelessWidget {
+class MealDetailScreen extends StatefulWidget {
+  final String groupId;
+  final String email;
+
+  MealDetailScreen({
+    required this.groupId,
+    required this.email,
+  });
+
+  @override
+  _MealDetailScreenState createState() => _MealDetailScreenState();
+}
+
+class _MealDetailScreenState extends State<MealDetailScreen> {
+  // Danh sách recipe mẫu (sau này sẽ lấy từ API)
+  final List<Map<String, dynamic>> recipes = [
+    {
+      'name': 'Canh rau ngót',
+      'description': 'Rau ngót, thịt băm, hành, hạt nêm...',
+    },
+    {
+      'name': 'Đậu hũ sốt cà',
+      'description': 'Đậu hũ, thịt băm, hành, hạt nêm...',
+    },
+    {
+      'name': 'Bún thịt nướng',
+      'description': 'Bún, thịt băm, hành, hạt nêm...',
+    },
+  ];
+
+  // Danh sách recipe đã chọn
+  final List<Map<String, dynamic>> selectedRecipes = [];
+
+  void _saveMealPlan() {
+    // TODO: Implement save meal plan
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đã lưu danh sách món ăn'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green[700],
+        backgroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          '',
-          style: TextStyle(color: Colors.white),
+          'Chi tiết bữa ăn',
+          style: TextStyle(color: Colors.green[700], fontSize: 18),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {},
+          icon: Icon(Icons.arrow_back, color: Colors.green[700]),
+          onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.home, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Thanh tìm kiếm
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Tìm trong danh sách món ăn',
-                  prefixIcon: Icon(Icons.search, color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+      body: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: 80, // Thêm padding bottom để không bị che bởi nút lưu
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Tiêu đề "Bữa sáng" và nút chỉnh sửa
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Bữa sáng',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[700],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.grey),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                  // Thông tin thời gian và ngày
-                  Container(
-                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.green[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Thông tin bữa ăn và ngày
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Icon(Icons.access_time, color: Colors.green),
-                            SizedBox(width: 8),
-                            Text('7:30 - 8:30 AM'),
-                            Spacer(),
-                            Icon(Icons.calendar_today, color: Colors.green),
-                            SizedBox(width: 8),
-                            Text('20 Tháng 10, 2024'),
-                          ],
+                        Text(
+                          'Bữa sáng',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[700],
+                          ),
                         ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(Icons.group, color: Colors.green),
-                            SizedBox(width: 8),
-                            Wrap(
-                              spacing: 8,
-                              children: [
-                                Chip(
-                                  label: Text('Hùng'),
-                                  backgroundColor: Colors.green[200],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20), // Điều chỉnh góc bo tròn ở đây
-                                    side: BorderSide(color: Colors.green[700]!), // Đặt màu viền nếu muốn
-                                  ),
-                                ),
-                                Chip(
-                                  label: Text('Hương'),
-                                  backgroundColor: Colors.green[200],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20), // Điều chỉnh góc bo tròn ở đây
-                                    side: BorderSide(color: Colors.green[700]!), // Đặt màu viền nếu muốn
-                                  ),
-                                ),
-                                Chip(
-                                  label: Text('Hoàng'),
-                                  backgroundColor: Colors.green[200],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20), // Điều chỉnh góc bo tròn ở đây
-                                    side: BorderSide(color: Colors.green[700]!), // Đặt màu viền nếu muốn
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        SizedBox(height: 4),
+                        Text(
+                          'Thứ 2, 20/11/2023',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  SizedBox(height: 16),
-                  // Danh sách món ăn đã chọn
+                    IconButton(
+                      icon: Icon(Icons.calendar_today, color: Colors.green[700]),
+                      onPressed: () {
+                        // TODO: Implement calendar
+                      },
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24),
+
+                // 2. Danh sách món ăn đã chọn
+                if (selectedRecipes.isNotEmpty) ...[
                   Text(
-                    'Danh sách món ăn đã chọn',
+                    'Món ăn đã chọn',
                     style: TextStyle(
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
+                      color: Colors.green[700],
                     ),
                   ),
                   SizedBox(height: 8),
                   Container(
-                    height: 100,
-                    width: double.infinity,
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[400]!),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Center(
-                      child: Icon(
-                        Icons.add,
-                        color: Colors.grey[400],
-                        size: 30,
+                    child: Column(
+                      children: selectedRecipes.map((recipe) => Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.green[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(Icons.restaurant_menu, color: Colors.green[700]),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    recipe['name'],
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    recipe['description'],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.remove_circle, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  selectedRecipes.remove(recipe);
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      )).toList(),
+                    ),
+                  ),
+                  Divider(height: 32, thickness: 1),
+                ],
+
+                // 3. Thanh tìm kiếm
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search, color: Colors.grey),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Tìm kiếm món ăn',
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16),
+
+                // 4. Danh sách recipe có trong nhóm
+                Text(
+                  'Danh sách món ăn',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    // Chỉ hiển thị những recipe chưa được chọn
+                    itemCount: recipes.where((recipe) => !selectedRecipes.contains(recipe)).length,
+                    itemBuilder: (context, index) {
+                      // Lọc danh sách recipe chưa được chọn
+                      final unselectedRecipes = recipes.where((recipe) => !selectedRecipes.contains(recipe)).toList();
+                      final recipe = unselectedRecipes[index];
+                      
+                      return Card(
+                        margin: EdgeInsets.only(bottom: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.all(12),
+                          leading: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.orange[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.restaurant_menu, color: Colors.orange[700]),
+                          ),
+                          title: Text(
+                            recipe['name'],
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            recipe['description'],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(Icons.add_circle, color: Colors.green[700]),
+                            onPressed: () {
+                              setState(() {
+                                selectedRecipes.add(recipe);
+                              });
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Nút lưu cố định ở dưới cùng
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Hiển thị số lượng món đã chọn
+                  Expanded(
+                    child: Text(
+                      '${selectedRecipes.length} món đã chọn',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[700],
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
-                  // Danh sách các món ăn
-                  MealItemCard(
-                    imagePath: 'images/group.png',
-                    title: 'Canh rau ngót',
-                    description: 'Rau ngót, thịt băm, hành, hạt nêm...',
-                  ),
-                  MealItemCard(
-                    imagePath: 'images/group.png',
-                    title: 'Đậu hũ sốt cà',
-                    description: 'Đậu hũ, thịt băm, hành, hạt nêm...',
-                  ),
-                  MealItemCard(
-                    imagePath: 'images/group.png',
-                    title: 'Bún thịt nướng',
-                    description: 'Bún, thịt băm, hành, hạt nêm...',
+                  // Nút lưu
+                  ElevatedButton(
+                    onPressed: selectedRecipes.isEmpty ? null : _saveMealPlan,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[700],
+                      disabledBackgroundColor: Colors.grey[400],
+                      minimumSize: Size(120, 45),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      'Lưu',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

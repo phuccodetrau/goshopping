@@ -139,15 +139,19 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
                     },
                   ),
                   FoodCard(
-                    title: "Món ăn theo ngày",
-                    description: "Quản lí từng bữa ăn dễ dàng, có công thức kèm theo.",
+                    title: "Danh sách món ăn",
+                    description: "Quản lí danh sách thực đơn, có công thức kèm theo.",
                     color: Colors.orange[700]!,
                     iconPath: 'images/group.png',
-                    onTap: (){
+                    onTap: () async {
+                      final emailUser = await _secureStorage.read(key: "email") ?? '';
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => RecipeListScreen(),
+                          builder: (context) => RecipeListScreen(
+                            groupId: widget.groupId,
+                            email: emailUser,
+                          ),
                         ),
                       );
                     },
@@ -164,7 +168,12 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
               onTap: (){
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => MealPlanScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => MealPlanScreen(
+                      groupId: widget.groupId,
+                      email: email ?? '',
+                    ),
+                  ),
                 );
               },
             ),
@@ -188,7 +197,12 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
               onTap: (){
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => MealPlanScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => MealPlanScreen(
+                      groupId: widget.groupId,
+                      email: email ?? '',
+                    ),
+                  ),
                 );
               },
             ),

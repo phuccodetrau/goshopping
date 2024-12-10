@@ -146,6 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
   void _handleMenuSelection(String value, String groupId) {
     switch (value) {
       case 'delete':
@@ -273,11 +274,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase();
     setState(() {
-      filteredGroups = userGroups.where((groupName) {
-        return groupName.toLowerCase().contains(query);
-      }).toList();
+      // Lọc các nhóm theo tên và ID nhóm
+      filteredGroups = userGroups.where((group) {
+        return group['name'].toLowerCase().contains(query);  // Tìm kiếm theo tên nhóm
+      }).map((group) => group['name']).toList();
+
+      // Lọc ID nhóm tương ứng với tên nhóm tìm được
+      filteredGroupsId = userGroups.where((group) {
+        return group['name'].toLowerCase().contains(query);
+      }).map((group) => group['id']).toList();
     });
   }
+
 
   void _onItemTapped(int index) {
     setState(() {

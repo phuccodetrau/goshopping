@@ -9,21 +9,21 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  bool _hasNavigated = false; // Biến kiểm soát để tránh chuyển tiếp lại
+  final bool _hasNavigated = false; // Biến kiểm soát để tránh chuyển tiếp lại
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 5), () {
+    Future.delayed(const Duration(seconds: 5), () {
       Navigator.push(context, MaterialPageRoute(builder: (context){
-        return OnBoardingScreen();
+        return const OnBoardingScreen();
       }));
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Stack(
         children: [
           Center(
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
 Route _createRoute() {
   return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => OnBoardingScreen(),
+    pageBuilder: (context, animation, secondaryAnimation) => const OnBoardingScreen(),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       const begin = Offset(0.0, 1.0);
       const end = Offset.zero;

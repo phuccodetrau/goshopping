@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'meal_detail.dart';
 
 class MealPlanScreen extends StatefulWidget {
+  final String groupId;
+  final String email;
+
+  MealPlanScreen({
+    required this.groupId,
+    required this.email,
+  });
+
   @override
   _MealPlanScreenState createState() => _MealPlanScreenState();
 }
@@ -58,7 +66,12 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => MealDetailScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => MealDetailScreen(
+                            groupId: widget.groupId,
+                            email: widget.email,
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -74,7 +87,12 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => MealDetailScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => MealDetailScreen(
+                            groupId: widget.groupId,
+                            email: widget.email,
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -89,7 +107,12 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => MealDetailScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => MealDetailScreen(
+                            groupId: widget.groupId,
+                            email: widget.email,
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -104,7 +127,12 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => MealDetailScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => MealDetailScreen(
+                            groupId: widget.groupId,
+                            email: widget.email,
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -114,63 +142,6 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class DateSelector extends StatefulWidget {
-  @override
-  _DateSelectorState createState() => _DateSelectorState();
-}
-
-class _DateSelectorState extends State<DateSelector> {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Icon(Icons.arrow_back_ios, color: Colors.green[700]),
-        Column(
-          children: [
-            Text(
-              'Tháng 12, 2024',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-            ),
-            SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(7, (index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index],
-                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                      ),
-                      CircleAvatar(
-                        radius: 15,
-                        backgroundColor: index == 0 ? Colors.green[700] : Colors.transparent,
-                        child: Text(
-                          '${index + 5}',
-                          style: TextStyle(
-                            color: index == 0 ? Colors.white : Colors.black87,
-                            fontWeight: index == 0 ? FontWeight.bold : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ),
-          ],
-        ),
-        Icon(Icons.arrow_forward_ios, color: Colors.green[700]),
-      ],
     );
   }
 }
@@ -233,13 +204,13 @@ class _MealCardState extends State<MealCard> {
                 spacing: 8,
                 children: widget.items
                     .map((item) => Chip(
-                  label: Text(item),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(color: Colors.green[700]!),
-                  ),
-                  backgroundColor: Colors.green[200],
-                ))
+                          label: Text(item),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(color: Colors.green[700]!),
+                          ),
+                          backgroundColor: Colors.green[200],
+                        ))
                     .toList(),
               ),
               SizedBox(height: 8),
@@ -254,6 +225,63 @@ class _MealCardState extends State<MealCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class DateSelector extends StatefulWidget {
+  @override
+  _DateSelectorState createState() => _DateSelectorState();
+}
+
+class _DateSelectorState extends State<DateSelector> {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Icon(Icons.arrow_back_ios, color: Colors.green[700]),
+        Column(
+          children: [
+            Text(
+              'Tháng 12, 2024',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(7, (index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index],
+                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      ),
+                      CircleAvatar(
+                        radius: 15,
+                        backgroundColor: index == 0 ? Colors.green[700] : Colors.transparent,
+                        child: Text(
+                          '${index + 5}',
+                          style: TextStyle(
+                            color: index == 0 ? Colors.white : Colors.black87,
+                            fontWeight: index == 0 ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+        Icon(Icons.arrow_forward_ios, color: Colors.green[700]),
+      ],
     );
   }
 }
