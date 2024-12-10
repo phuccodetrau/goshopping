@@ -40,4 +40,14 @@ const getRecipeByFood = async (req, res, next) => {
     }
 };
 
-export default { createRecipe, updateRecipe, deleteRecipe, getRecipeByFood };
+const getAllRecipe = async (req, res, next) => {
+    try {
+        const { group } = req.body;
+        const result = await RecipeService.getAllRecipe(group);
+        res.json(result);
+    } catch (error) {
+        return res.json({code: 101, message: "Server error!", data: ""})
+    }
+};
+
+export default { createRecipe, updateRecipe, deleteRecipe, getRecipeByFood, getAllRecipe };

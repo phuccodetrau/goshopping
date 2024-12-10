@@ -74,18 +74,24 @@ class FoodService {
         }
     }
 
-    static async getAllFood(group) {
+    static async getAllFood(groupId) {
         try {
-            const foods = await Food.find({ group: group });
+            const foods = await Food.find({ group: groupId })
+                .select('name categoryName unitName -_id');
 
             if (foods.length === 0) {
-                return { code: 606, message: "Không có thực phẩm nào", data: "" };
+                return { code: 606, message: "Không có thực phẩm nào", data: [] };
             } else {
-                return { code: 607, message: "Lấy danh sách thực phẩm thành công", data: foods };
+                const foodList = foods.map(food => ({
+                    name: food.name,
+                    categoryName: food.categoryName,
+                    unitName: food.unitName
+                }));
+                return { code: 607, message: "Lấy danh sách thực phẩm thành công", data: foodList };
             }
         } catch (error) {
             console.error("Error fetching foods:", error);
-            throw error;
+            throw { code: 101, message: "Server error!", data: [] };
         }
     }
 
