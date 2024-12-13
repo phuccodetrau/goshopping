@@ -162,7 +162,11 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => RecipeDetail(),
+                              builder: (context) => RecipeDetail(
+                                recipeName: recipe['name'],
+                                groupId: widget.groupId,
+                                email: widget.email,
+                              ),
                             ),
                           );
                         },
