@@ -84,7 +84,44 @@ class ItemService {
             throw error;
         }
     }
-    
+
+    static async getItemDetail(foodName, group) {
+        try {
+            // Tìm tất cả items với foodName và group tương ứng
+            const items = await Item.find({ foodName: foodName, group: group })
+                .select('foodName amount unitName');
+
+            // Nếu không tìm thấy item, trả về với totalAmount = 0
+            if (!items || items.length === 0) {
+                return { 
+                    code: 800, 
+                    message: "Lấy thông tin item thành công", 
+                    data: {
+                        foodName,
+                        totalAmount: 0,
+                        unitName: null
+                    }
+                };
+            }
+
+            // Tính tổng số lượng và lấy unitName từ item đầu tiên
+            const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+            const unitName = items[0].unitName;
+
+            return {
+                code: 800,
+                message: "Lấy thông tin item thành công",
+                data: {
+                    foodName,
+                    totalAmount,
+                    unitName
+                }
+            };
+        } catch (error) {
+            console.error("Lỗi khi lấy thông tin chi tiết item:", error);
+            throw error;
+        }
+    }
 }
 
 export default ItemService;
