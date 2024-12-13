@@ -231,15 +231,6 @@ class _RecipeDetailState extends State<RecipeDetail> {
                   SizedBox(height: 8),
                   _buildIngredientsList(),
                   SizedBox(height: 8),
-                  Center(
-                    child: Text(
-                      'Xem tất cả',
-                      style: TextStyle(
-                        color: Colors.green[700],
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
                   SizedBox(height: 16),
                   // Hướng dẫn cách làm
                   Text(

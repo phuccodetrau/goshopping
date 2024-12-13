@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:convert';
 
 class MealDetailScreen extends StatefulWidget {
   final String groupId;
   final String email;
+  final DateTime selectedDate;
+  final String selectedMealTime;
 
   MealDetailScreen({
     required this.groupId,
     required this.email,
+    required this.selectedDate,
+    required this.selectedMealTime,
   });
 
   @override
@@ -14,33 +22,166 @@ class MealDetailScreen extends StatefulWidget {
 }
 
 class _MealDetailScreenState extends State<MealDetailScreen> {
-  // Danh sách recipe mẫu (sau này sẽ lấy từ API)
-  final List<Map<String, dynamic>> recipes = [
-    {
-      'name': 'Canh rau ngót',
-      'description': 'Rau ngót, thịt băm, hành, hạt nêm...',
-    },
-    {
-      'name': 'Đậu hũ sốt cà',
-      'description': 'Đậu hũ, thịt băm, hành, hạt nêm...',
-    },
-    {
-      'name': 'Bún thịt nướng',
-      'description': 'Bún, thịt băm, hành, hạt nêm...',
-    },
-  ];
+  final _secureStorage = FlutterSecureStorage();
+  final String _url = dotenv.env['ROOT_URL']!;
+  List<Map<String, dynamic>> recipes = [];
+  List<Map<String, dynamic>> selectedRecipes = [];
+  bool isLoading = true;
+  late DateTime selectedDate;
+  late String selectedMealTime;
+  String? existingMealPlanId;
 
-  // Danh sách recipe đã chọn
-  final List<Map<String, dynamic>> selectedRecipes = [];
+  @override
+  void initState() {
+    super.initState();
+    selectedDate = widget.selectedDate;
+    selectedMealTime = widget.selectedMealTime;
+    _fetchMealPlan();
+    _fetchAllRecipes();
+  }
 
-  void _saveMealPlan() {
-    // TODO: Implement save meal plan
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đã lưu danh sách món ăn'),
-        backgroundColor: Colors.green,
-      ),
-    );
+  Future<void> _fetchMealPlan() async {
+    try {
+      final String? token = await _secureStorage.read(key: "auth_token");
+      final formattedDate = "${selectedDate.toLocal()}".split(' ')[0];
+      
+      print("Fetching meal plan for date: $formattedDate");
+      
+      final response = await http.post(
+        Uri.parse('$_url/meal/getMealPlanByDate'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "group": widget.groupId,
+          "date": formattedDate,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['code'] == 700 && data['data'] != null) {
+          // Tìm meal plan cho bữa ăn đã chọn
+          final mealPlan = data['data'].firstWhere(
+            (meal) => meal['course'] == selectedMealTime,
+            orElse: () => null,
+          );
+
+          if (mealPlan != null) {
+            existingMealPlanId = mealPlan['_id'];
+            if (mealPlan['listRecipe'] != null) {
+              setState(() {
+                selectedRecipes = List<Map<String, dynamic>>.from(
+                  mealPlan['listRecipe'].map((recipe) => {
+                    '_id': recipe['_id'],
+                    'name': recipe['name'] ?? 'Không có tên',
+                    'description': recipe['description'] ?? '',
+                  }),
+                );
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      print("Error fetching meal plan: $error");
+    }
+  }
+
+  Future<void> _fetchAllRecipes() async {
+    try {
+      final String? token = await _secureStorage.read(key: "auth_token");
+      
+      final response = await http.post(
+        Uri.parse('$_url/recipe/getAllRecipe'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "group": widget.groupId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['code'] == 709) {
+          setState(() {
+            recipes = List<Map<String, dynamic>>.from(data['data']);
+            isLoading = false;
+          });
+        }
+      }
+    } catch (error) {
+      print("Error fetching recipes: $error");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveMealPlan() async {
+    try {
+      final String? token = await _secureStorage.read(key: "auth_token");
+      final formattedDate = "${selectedDate.toLocal()}".split(' ')[0];
+      
+      // Lấy danh sách ID của các công thức đã chọn
+      final recipeIds = selectedRecipes.map((recipe) => recipe['_id'].toString()).toList();
+      
+      print("Saving meal plan with recipe IDs: $recipeIds");
+      
+      final String endpoint = existingMealPlanId != null 
+          ? '$_url/meal/updateMealPlan'
+          : '$_url/meal/createMealPlan';
+
+      final Map<String, dynamic> requestBody = {
+        "date": formattedDate,
+        "course": selectedMealTime,
+        "recipe_ids": recipeIds,
+        "group_id": widget.groupId,
+      };
+
+      if (existingMealPlanId != null) {
+        requestBody["mealplan_id"] = existingMealPlanId;
+      }
+
+      final response = await http.post(
+        Uri.parse(endpoint),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      print("Save response: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['code'] == 700) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Đã lưu danh sách món ăn'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true);
+        } else {
+          throw Exception(data['message'] ?? 'Lỗi khi lưu meal plan');
+        }
+      } else {
+        throw Exception('Lỗi kết nối server');
+      }
+    } catch (error) {
+      print("Error saving meal plan: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Có lỗi xảy ra khi lưu: ${error.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -78,7 +219,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Bữa sáng',
+                          selectedMealTime,
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -87,19 +228,13 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'Thứ 2, 20/11/2023',
+                          '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey[600],
                           ),
                         ),
                       ],
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.calendar_today, color: Colors.green[700]),
-                      onPressed: () {
-                        // TODO: Implement calendar
-                      },
                     ),
                   ],
                 ),
