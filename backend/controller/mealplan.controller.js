@@ -1,5 +1,6 @@
 import MealPlanService from "../services/mealplan.service.js";
 
+
 const createMealPlan = async (req, res, next) => {
     try {
         const { date, course, recipe_ids, group_id } = req.body;

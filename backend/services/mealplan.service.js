@@ -175,7 +175,7 @@ class MealPlanService {
             const mealPlans = await MealPlan.find({ 
                 group: group, 
                 date: date
-            });
+            }).populate('listRecipe', 'name description');
 
             if (!mealPlans || mealPlans.length === 0) {
                 return { code: 608, message: "Không tìm thấy MealPlan nào cho ngày và nhóm này", data: [] };
@@ -184,7 +184,7 @@ class MealPlanService {
             return { code: 700, message: "Lấy MealPlan thành công", data: mealPlans };
         } catch (error) {
             console.error("Lỗi khi lấy MealPlans theo ngày:", error);
-            throw { code: 601, message: "Lỗi khi l���y MealPlans", data: "" };
+            throw { code: 601, message: "Lỗi khi lấy MealPlans", data: "" };
         }
     }
 }
