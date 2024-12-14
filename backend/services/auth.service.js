@@ -28,7 +28,7 @@ class AuthService{
             return { code: 401, message: "Mật khẩu không đúng", data: "" };
         }
 
-        // C���p nhật device token
+        // Cập nhật device token
         if (deviceToken && deviceToken !== user.deviceToken) {
             console.log('Updating device token:', {
                 userId: user._id,
@@ -42,6 +42,11 @@ class AuthService{
             console.log('Device token updated successfully');
         }
 
+        // Kiểm tra JWT_SECRET
+        if (!process.env.JWT_SECRET) {
+            throw new Error('JWT_SECRET is not configured');
+        }
+
         const token = jwt.sign(
             { userId: user._id, email: user.email },
             process.env.JWT_SECRET,
@@ -52,18 +57,22 @@ class AuthService{
             code: 200,
             message: "Đăng nhập thành công",
             data: {
-                token,
+                token: token || '',
                 user: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    deviceToken: user.deviceToken // Trả về device token trong response
+                    id: user._id ? user._id.toString() : '',
+                    name: user.name || '',
+                    email: user.email || '',
+                    deviceToken: user.deviceToken || ''
                 }
             }
         };
     } catch (error) {
         console.error('Login error:', error);
-        throw { code: 500, message: "Lỗi server", data: "" };
+        throw { 
+            code: 500, 
+            message: error.message || "Lỗi server", 
+            data: "" 
+        };
     }
    }
 

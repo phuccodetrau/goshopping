@@ -18,6 +18,15 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Kiểm tra các biến môi trường quan trọng khi khởi động server
+const requiredEnvVars = ['JWT_SECRET', 'ONESIGNAL_APP_ID', 'ONESIGNAL_REST_API_KEY'];
+for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+        console.error(`Error: ${envVar} is not set in environment variables`);
+        process.exit(1);
+    }
+}
+
 app.use("/todo", ToDoRoute);
 app.use("/food", FoodRoute);
 app.use("/recipe", RecipeRoute);
