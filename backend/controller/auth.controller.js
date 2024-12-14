@@ -4,34 +4,40 @@ import jwt from 'jsonwebtoken';
 
 const login=async(req,res,next)=>{
     try {
-        const{email,password}=req.body;
-        if(!email ||!password){
-            return res.status(400).json({ status:false,message: 'Email and password are required' });
-        }else{
-            const result=await AuthService.login(email,password);
-            console.log(result);
-            if(result.user){
-                const token = jwt.sign(
-                    { userId: result.user._id, email: result.user.email },
-                    process.env.JWT_SECRET_KEY, 
-                    { expiresIn: '7d' } 
-                );
-                
-                res.setHeader('Authorization', `Bearer ${token}`);
-                res.cookie('auth_token', token, {
-                    httpOnly: true,  
-                    secure: process.env.NODE_ENV === 'production', 
-                    maxAge: 180, 
-                    sameSite: 'Strict', 
-                });
-                return  res.status(201).json({ status: true, message: 'User logined successfully',user:result.user,token:token });
+        const { email, password, deviceToken } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ 
+                status: false, 
+                message: 'Email and password are required' 
+            });
+        }
 
-            }else{
-                return res.status(401).json({status:false, message: 'Invalid email or password' });
-            }
+        console.log("Login attempt:", { 
+            email, 
+            deviceToken: deviceToken ? 'provided' : 'not provided' 
+        });
+
+        const result = await AuthService.login(email, password, deviceToken);
+        
+        if (result.code === 200) {
+            res.status(200).json({
+                status: true,
+                message: result.message,
+                data: result.data
+            });
+        } else {
+            res.status(result.code).json({
+                status: false,
+                message: result.message
+            });
         }
     } catch (error) {
-        return res.status(500).json({ status:false,message: error.message });
+        console.error("Login error:", error);
+        res.status(500).json({ 
+            status: false, 
+            message: error.message || 'Internal server error' 
+        });
     }
 }
 const register=async(req,res,next)=>{

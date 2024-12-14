@@ -14,7 +14,8 @@ const userSchema = new Schema({
   timezone: { type: String },
   device: { type: String },
   verificationCodeExpires: { type: Date },
-  verificationCode: { type: String }
+  verificationCode: { type: String },
+  deviceToken: { type: String },
 }, {
   timestamps: true,
   toJSON: {

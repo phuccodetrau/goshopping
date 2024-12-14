@@ -25,7 +25,7 @@ app.use("/item", ItemRoute);
 app.use("/meal", MealPlanRoute);
 app.use("/category",CategoryRoute);
 app.use("/unit",UnitRoute);
-app.use("/auth",AuthRoute);
+app.use("/auth", AuthRoute);
 app.use('/groups', GroupRouter);
 app.use("/listtask", ListTaskRouter);
 app.use('/api', notificationRouter);

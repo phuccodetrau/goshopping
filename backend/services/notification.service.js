@@ -1,7 +1,85 @@
 import { Notification, User, Group } from "../models/schema.js";
 import mongoose from "mongoose";
+import axios from 'axios';
 
 class NotificationService {
+    // Thêm hàm gửi thông báo push qua OneSignal
+    static async sendPushNotification(userIds, title, content) {
+        try {
+            const users = await User.find({ _id: { $in: userIds } });
+            console.log('Found users:', users.map(u => ({
+                email: u.email,
+                deviceToken: u.deviceToken
+            })));
+
+            const playerIds = users
+                .map(user => user.deviceToken)
+                .filter(token => token != null && token !== '');
+
+            console.log('Valid player IDs:', playerIds);
+
+            if (playerIds.length > 0) {
+                try {
+                    const payload = {
+                        app_id: process.env.ONESIGNAL_APP_ID,
+                        include_player_ids: playerIds,
+                        contents: { en: content },
+                        headings: { en: title },
+                        priority: 10,
+                        // Thêm các thông số để debug
+                        data: {
+                            type: "notification",
+                            timestamp: new Date().toISOString()
+                        }
+                    };
+
+                    console.log('Sending notification with payload:', {
+                        ...payload,
+                        include_player_ids: playerIds
+                    });
+
+                    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+                    const response = await axios.post(
+                        'https://onesignal.com/api/v1/notifications',
+                        payload,
+                        {
+                            headers: {
+                                'Authorization': `Basic ${apiKey}`,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        }
+                    );
+
+                    console.log('OneSignal API Response:', response.data);
+                    return response.data;
+                } catch (error) {
+                    if (error.response) {
+                        console.error('OneSignal Error Response:', {
+                            status: error.response.status,
+                            data: error.response.data
+                        });
+                        
+                        // Xử lý các loại lỗi cụ thể
+                        if (error.response.status === 400) {
+                            console.error('Bad request. Please check the payload format.');
+                        } else if (error.response.status === 403) {
+                            console.error('Authentication failed. Please check your OneSignal API key configuration.');
+                        }
+                    }
+                    console.error('Error sending OneSignal notification:', error.message);
+                    return null;
+                }
+            } else {
+                console.log('No valid device tokens found for users:', userIds);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error in sendPushNotification:', error);
+            return null;
+        }
+    }
+
     // Tạo thông báo cho một user
     static async createNotification(userId, type, content) {
         try {
@@ -22,8 +100,7 @@ class NotificationService {
     // Tạo thông báo cho nhiều user (ví dụ: thông báo cho cả nhóm)
     static async createNotificationForMany(userIds, type, content) {
         try {
-            console.log("Creating notifications for users:", userIds, "type:", type); // Debug log
-            
+            // Tạo notifications trong database
             const notifications = userIds.map(userId => ({
                 user: userId,
                 type,
@@ -32,16 +109,46 @@ class NotificationService {
             }));
             
             const createdNotifications = await Notification.insertMany(notifications);
-            console.log("Created notifications:", createdNotifications); // Debug log
+
+            // Bỏ comment phần gửi push notification
+            try {
+                await this.sendPushNotification(
+                    userIds,
+                    this.getNotificationTitle(type),
+                    content
+                );
+            } catch (error) {
+                console.error("Push notification failed but continuing:", error);
+            }
 
             return { 
                 code: 800, 
-                message: "Tạo thông báo cho nhiều người dùng thành công", 
+                message: "Tạo thông báo thành công", 
                 data: createdNotifications 
             };
         } catch (error) {
-            console.error("Lỗi khi tạo thông báo cho nhiều người:", error);
+            console.error("Error in createNotificationForMany:", error);
             throw error;
+        }
+    }
+    
+    // Hàm helper để lấy tiêu đề thông báo dựa vào type
+    static getNotificationTitle(type) {
+        switch (type) {
+            case 'expiration_alert':
+                return 'Cảnh báo hết hạn';
+            case 'member_left':
+                return 'Thành viên rời nhóm';
+            case 'group_created':
+                return 'Tạo nhóm mới';
+            case 'group_joined':
+                return 'Tham gia nhóm';
+            case 'group_deleted':
+                return 'Xóa nhóm';
+            case 'members_added':
+                return 'Thêm thành viên mới';
+            default:
+                return 'Thông báo m���i';
         }
     }
 
@@ -119,7 +226,7 @@ class NotificationService {
             }
 
             const userIds = group.listUser.map(user => user._id);
-            const content = `Sản phẩm ${itemName} trong nhóm ${group.name} sẽ hết hạn vào ngày ${expirationDate}`;
+            const content = `Sản phẩm ${itemName} trong nhóm ${group.name} sắp hết hạn vào ngày ${expirationDate}`;
             
             return await this.createNotificationForMany(userIds, "expiration_alert", content);
         } catch (error) {
@@ -142,6 +249,45 @@ class NotificationService {
             return await this.createNotificationForMany(userIds, "member_left", content);
         } catch (error) {
             console.error("Lỗi khi tạo thông báo rời nhóm:", error);
+            throw error;
+        }
+    }
+
+    // Thêm log cho hàm deleteGroup trong GroupService
+    static async deleteGroup(groupId, userEmail) {
+        try {
+            const group = await Group.findById(groupId);
+            if (!group) {
+                return { code: 404, message: "Không tìm thấy nhóm", data: "" };
+            }
+
+            // Lấy danh sách user IDs trước khi xóa nhóm
+            const users = await User.find({ 
+                email: { $in: group.listUser.map(u => u.email) } 
+            });
+            const userIds = users.map(user => user._id);
+
+            console.log("Users to notify:", users);
+            console.log("UserIds for notification:", userIds);
+
+            // Gửi thông báo cho tất cả thành viên
+            try {
+                await NotificationService.createNotificationForMany(
+                    userIds,
+                    'group_deleted',
+                    `Nhóm "${group.name}" đã bị xóa bởi admin ${userEmail}`
+                );
+                console.log("Notification sent successfully");
+            } catch (error) {
+                console.error("Error sending delete notification:", error);
+            }
+
+            // Xóa nhóm
+            await Group.findByIdAndDelete(groupId);
+
+            return { code: 700, message: "Xóa nhóm thành công", data: group };
+        } catch (error) {
+            console.error('Error deleting group:', error);
             throw error;
         }
     }

@@ -16,22 +16,55 @@ function generateRandomPassword(length) {
   }
 
 class AuthService{
-   static async login(email,password){
-       const user=await User.findOne({email:email});
-       if(!user){
-         return {message: "invalid email or password"};
-       }
-       const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return  {message:'Invalid email or password'};
+   static async login(email, password, deviceToken) {
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return { code: 404, message: "Email không tồn tại", data: "" };
         }
-        const return_user={
-            email:user.email,
-            _id:user._id,
-            name: user.name
-        }
-        return {message:'User logined successfully',user:return_user}
 
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return { code: 401, message: "Mật khẩu không đúng", data: "" };
+        }
+
+        // C���p nhật device token
+        if (deviceToken && deviceToken !== user.deviceToken) {
+            console.log('Updating device token:', {
+                userId: user._id,
+                oldToken: user.deviceToken,
+                newToken: deviceToken
+            });
+            
+            user.deviceToken = deviceToken;
+            await user.save();
+            
+            console.log('Device token updated successfully');
+        }
+
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '30d' }
+        );
+
+        return {
+            code: 200,
+            message: "Đăng nhập thành công",
+            data: {
+                token,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    deviceToken: user.deviceToken // Trả về device token trong response
+                }
+            }
+        };
+    } catch (error) {
+        console.error('Login error:', error);
+        throw { code: 500, message: "Lỗi server", data: "" };
+    }
    }
 
    static async generateAccessToken(user) {
@@ -175,10 +208,11 @@ class AuthService{
 
    static async getUserByEmail(email) {
         try {
-            return await User.findOne({ email });
-        } catch (err) {
-            console.log(err);
-            throw err;
+            const user = await User.findOne({ email });
+            return user;
+        } catch (error) {
+            console.error('Error in getUserByEmail:', error);
+            throw error;
         }
     }
 
