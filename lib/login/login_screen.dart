@@ -54,8 +54,8 @@ class _LoginScreenState extends State<LoginScreen> {
     
     try {
       // Lấy device token từ OneSignal
-      final deviceState = await OneSignal.User.pushSubscription.id;
-      print("Device token to be sent: $deviceState");
+      final deviceToken = await OneSignal.User.pushSubscription.id;
+      print("Device token to be sent: $deviceToken");
 
       final response = await http.post(
         Uri.parse(URL),
@@ -63,27 +63,48 @@ class _LoginScreenState extends State<LoginScreen> {
         body: jsonEncode({
           'email': email,
           'password': password,
-          'deviceToken': deviceState,
+          'deviceToken': deviceToken,
         }),
       );
 
       print("Login response: ${response.body}");
 
-      final responseData = jsonDecode(response.body);
-      if (responseData['status'] == true) {
-        final String token = responseData['token'];
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        
+        if (responseData['status'] == true && responseData['data'] != null) {
+          final data = responseData['data'];
+          final String? token = data['token']?.toString();
+          final Map<String, dynamic> user = data['user'] ?? {};
+          
+          if (token != null && token.isNotEmpty) {
+            // Lưu thông tin đăng nhập
+            await _secureStorage.write(key: 'auth_token', value: token);
+            await _secureStorage.write(
+              key: 'email', 
+              value: user['email']?.toString() ?? ''
+            );
+            await _secureStorage.write(
+              key: 'id', 
+              value: user['id']?.toString() ?? ''
+            );
+            await _secureStorage.write(
+              key: 'name', 
+              value: user['name']?.toString() ?? ''
+            );
 
-        await _secureStorage.write(key: 'auth_token', value: token);
-        await _secureStorage.write(key: 'email', value: responseData['user']['email'].toString());
-        await _secureStorage.write(key: 'id', value: responseData['user']['_id'].toString());
-        await _secureStorage.write(key: "name", value: responseData['user']['name'].toString());
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(),
-          ),
-        );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+            );
+          } else {
+            throw Exception('Token không hợp lệ');
+          }
+        } else {
+          setState(() {
+            isError = true;
+          });
+        }
       } else {
         setState(() {
           isError = true;

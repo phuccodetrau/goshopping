@@ -7,6 +7,7 @@ import 'package:go_shopping/group/group_main_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_shopping/notification/notification_screen.dart';
+import '../statistics/statistics_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -193,6 +194,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     SnackBar(content: Text('Admin không thể rời nhóm. Vui lòng chỉ định admin mới hoặc xóa nhóm'))
                 );
             }
+            break;
+        case 'stats':
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => StatisticsScreen(groupId: groupId),
+                ),
+            );
             break;
     }
   }
@@ -493,8 +502,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         onSelected: (value) => _handleMenuSelection(value, groupId),
                         itemBuilder: (BuildContext context) {
                             final isAdmin = _isAdmin(groupId);
-                            return isAdmin
-                                ? [
+                            return [
+                                PopupMenuItem(
+                                    value: 'stats',
+                                    child: Row(
+                                        children: [
+                                            Icon(Icons.bar_chart, color: Colors.blue),
+                                            SizedBox(width: 8),
+                                            Text('Xem thống kê'),
+                                        ],
+                                    ),
+                                ),
+                                if (isAdmin)
                                     PopupMenuItem(
                                         value: 'delete',
                                         child: Row(
@@ -504,9 +523,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 Text('Xóa nhóm'),
                                             ],
                                         ),
-                                    ),
-                                  ]
-                                : [
+                                    )
+                                else
                                     PopupMenuItem(
                                         value: 'leave',
                                         child: Row(
@@ -517,7 +535,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ],
                                         ),
                                     ),
-                                  ];
+                            ];
                         },
                         icon: Icon(Icons.more_vert),
                     ),
