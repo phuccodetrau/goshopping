@@ -103,14 +103,17 @@ class _AddMemberState extends State<AddMember> {
   Future<void> _addMembers() async {
     if (_selectedUsers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please select members to add to the group.")),
+        SnackBar(content: Text("Vui lòng chọn thành viên để thêm vào nhóm")),
       );
       return;
     }
 
-    final members = _selectedUsers
-        .map((user) => {"name": user['name'], "email": user['email'], "role": "user"})
-        .toList();
+    // Đảm bảo tất cả người dùng được thêm vào đều có role là "member"
+    final members = _selectedUsers.map((user) => {
+      "name": user['name'],
+      "email": user['email'],
+      "role": "user"  // Đặt role mặc định là user cho người được thêm vào
+    }).toList();
 
     final data = {
       "groupId": widget.groupId,
@@ -130,32 +133,28 @@ class _AddMemberState extends State<AddMember> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Members added successfully!")),
+          SnackBar(content: Text("Thêm thành viên thành công!")),
         );
-        setState(() {
-          _selectedUsers.clear();
-        });
-        // Navigate to GroupMainScreen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => GroupMainScreen(
               groupId: widget.groupId,
               groupName: widget.groupName,
-              adminName: "Admin", // Pass appropriate adminName if available
+              adminName: "Admin",
             ),
           ),
         );
       } else {
         print("Failed to add members. Status code: ${response.statusCode}");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to add members.")),
+          SnackBar(content: Text("Không thể thêm thành viên.")),
         );
       }
     } catch (error) {
       print("Error adding members: $error");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error adding members.")),
+        SnackBar(content: Text("Lỗi khi thêm thành viên.")),
       );
     }
   }

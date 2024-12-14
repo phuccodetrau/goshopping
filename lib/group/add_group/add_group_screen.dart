@@ -35,24 +35,25 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
     try {
       final String? token = await _secureStorage.read(key: "auth_token");
       final response = await http.get(
-        Uri.parse('$_url/user/get-user-name-by-email?email=$email'),
+        Uri.parse('$_url/auth/user/get-user-name?email=$email'),
         headers: {
           'Authorization': 'Bearer $token',
         },
       );
 
+      print("Get user name response: ${response.body}"); // Debug log
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("Fetched user data: $data"); // Debug print
-
         if (data['status'] == true && data['name'] != null) {
-          return data['name']; // Extract the name field correctly
+          return data['name'];
         }
       }
+      throw Exception('Failed to get user name');
     } catch (error) {
       print("Error fetching user name: $error");
+      return email; // Fallback to email if name fetch fails
     }
-    return email.substring(0, 15); // Default if fetching fails
   }
 
   Future<void> _initializeUserEmail() async {
@@ -61,15 +62,15 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
 
     // Await the user name fetching process
     final userName = await getUserNameByEmail(emailUser);
-    print("Fetched name for user: $userName"); // Debug print
+    print("Fetched name for user: $userName");
 
     setState(() {
       _email = emailUser;
-      _userEmails.add({
-        "name": userName, // Use the fetched name or fallback
+      _userEmails = [{
+        "name": userName,
         "email": _email,
         "role": "admin"
-      });
+      }];
     });
   }
 
@@ -77,11 +78,12 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
     final String groupName = _controller.text;
 
     try {
-
-      print("Payload being sent: ${jsonEncode({
+      final payload = {
         'name': groupName,
         'listUser': _userEmails,
-      })}");
+      };
+
+      print("Payload being sent: ${jsonEncode(payload)}");
 
       final String? token = await _secureStorage.read(key: "auth_token");
       final response = await http.post(
@@ -90,10 +92,7 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'name': groupName,
-          'listUser': _userEmails,
-        }),
+        body: jsonEncode(payload),
       );
 
       print("Response status: ${response.statusCode}");
@@ -102,11 +101,13 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         final String groupId = responseData['data']['_id'];
-        print("Group ID: $groupId");
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AddMember(groupName: groupName, groupId: groupId), // Pass groupName here
+            builder: (context) => AddMember(
+              groupName: groupName,
+              groupId: groupId
+            ),
           ),
         );
       } else {
