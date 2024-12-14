@@ -6,6 +6,7 @@ import 'fridge.dart';
 import 'meal_plan_screen.dart';
 import 'list_task.dart';
 import 'add_group/add_member.dart';
+import 'package:go_shopping/user/user_info.dart';
 
 class GroupMainScreen extends StatefulWidget {
   final String groupName;
@@ -28,6 +29,8 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
   String? id;
   String? name;
   String? token;
+  int _selectedIndex = 0;
+
   Future<void> _loadSecureValues() async {
     try{
       token = await _secureStorage.read(key: 'auth_token');
@@ -47,32 +50,66 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
     super.initState();
     _loadSecureValues();
   }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 0) {
+      Navigator.of(context).pop();
+    } else if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.green[900],
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           widget.groupName,
-          style: TextStyle(color: Colors.green[800], fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 24,
+            color: Colors.green[900],
+            fontWeight: FontWeight.bold
+          ),
         ),
         actions: [
-          IconButton(icon: Icon(Icons.person_add), onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AddMember(
-                  groupName: widget.groupName,
-                  groupId: widget.groupId,
-                ),
-              ),
-            );
-          }),
           IconButton(
-            icon: Icon(Icons.chat_bubble_outline),
+            icon: Icon(
+              Icons.person_add,
+              color: Colors.green[900],
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddMember(
+                    groupName: widget.groupName,
+                    groupId: widget.groupId,
+                  ),
+                ),
+              );
+            }
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.chat_bubble_outline,
+              color: Colors.green[900],
+            ),
             onPressed: () {
               print('email: $email');
               Navigator.push(
@@ -208,6 +245,17 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.green[700],
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+        ],
       ),
     );
   }

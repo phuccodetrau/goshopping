@@ -53,7 +53,7 @@ class _AddMemberState extends State<AddMember> {
     try {
       final String? token = await _secureStorage.read(key: "auth_token");
       final response = await http.get(
-        Uri.parse('$_url/user/get-user-name-by-email?email=$email'),
+        Uri.parse('$_url/auth/user/get-user-name?email=$email'),
         headers: {
           'Authorization': 'Bearer $token',
         },

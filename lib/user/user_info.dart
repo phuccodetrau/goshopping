@@ -1,6 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_shopping/begin/splashScreen.dart';
+import 'package:go_shopping/user/persion_infor_change.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
 
@@ -10,6 +15,46 @@ class PersonalInfoScreen extends StatefulWidget {
 
 class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  final String _url = dotenv.env['ROOT_URL']!;
+  String email = "";
+  String name = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeUserInfo();
+  }
+
+  Future<void> _initializeUserInfo() async {
+    final emailUser = await _secureStorage.read(key: "email") ?? '';
+    setState(() {
+      email = emailUser;
+    });
+    await _fetchUserInfo(emailUser);
+  }
+
+  Future<void> _fetchUserInfo(String email) async {
+    try {
+      final String? token = await _secureStorage.read(key: "auth_token");
+      final response = await http.get(
+        Uri.parse('$_url/auth/user/get-user-info?email=$email'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == true && data['data'] != null) {
+          setState(() {
+            name = data['data']['name'] ?? 'Chưa cập nhật tên';
+          });
+        }
+      }
+    } catch (error) {
+      print("Error fetching user info: $error");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,13 +65,12 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            // Xử lý khi nhấn nút quay lại
+            Navigator.pop(context);
           },
         ),
       ),
       body: Column(
         children: [
-          // Phần thông tin người dùng
           Container(
             color: Colors.green[700],
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -34,11 +78,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundImage: AssetImage('images/group.png'), // Thay bằng đường dẫn ảnh của bạn
+                  backgroundImage: AssetImage('images/group.png'),
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'Hung Hoang Dinh',
+                  name.isNotEmpty ? name : 'Chưa cập nhật tên',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -46,7 +90,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                   ),
                 ),
                 Text(
-                  '@hoanghung',
+                  email,
                   style: TextStyle(color: Colors.white70),
                 ),
                 SizedBox(height: 16),
@@ -83,7 +127,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatisticCard('03', 'Nhóm đã tham gia', Colors.orange[300]!),
-                _buildStatisticCard('50+', 'Món mới', Colors.green[300]!),
+                _buildStatisticCard('5', 'Món mới', Colors.green[300]!),
               ],
             ),
           ),
@@ -175,8 +219,21 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       leading: Icon(icon, color: Colors.green[700]),
       title: Text(title),
       trailing: Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: () {
-        // Xử lý khi nhấn vào mục
+      onTap: () async {
+        if (title == 'Chỉnh sửa thông tin cá nhân') {
+          // Chờ kết quả từ màn hình cập nhật
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PersonalInformationChangeScreen(),
+            ),
+          );
+          
+          // Nếu cập nhật thành công, refresh lại thông tin
+          if (result == true) {
+            await _initializeUserInfo();
+          }
+        }
       },
     );
   }

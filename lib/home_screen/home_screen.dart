@@ -6,6 +6,7 @@ import 'package:go_shopping/group/add_group/add_group_screen.dart';
 import 'package:go_shopping/group/group_main_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:go_shopping/notification/notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -61,9 +62,11 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       );
 
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['status'] == true && data['name'] != null) {
+          print('Token: ' + token!);
           return data['name'];
         }
       }
@@ -75,88 +78,122 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchUserGroups() async {
     try {
-      final String? token = await _secureStorage.read(key: "auth_token");
-      final response = await http.get(
-        Uri.parse('$_url/groups/get-groups-by-member-email?email=$email'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['code'] == 700 && data['data'] != null) {
-          setState(() {
-            userGroups = data['data'];
-            filteredGroups = userGroups.map((group) => group['name']).toList();
-            filteredGroupsId = userGroups.map((group) => group['id']).toList();
-          });
-          _fetchAdminNamesForGroups();
-        }
-      }
-    } catch (error) {
-      print("Error fetching user groups: $error");
-    }
-  }
-
-  Future<void> _fetchAdminNamesForGroups() async {
-    for (var groupId in filteredGroupsId) {
-      try {
         final String? token = await _secureStorage.read(key: "auth_token");
         final response = await http.get(
-          Uri.parse('$_url/groups/get-admins-by-group-id?groupId=$groupId'),
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
+            Uri.parse('$_url/groups/get-groups-by-member-email?email=$email'),
+            headers: {
+                'Authorization': 'Bearer $token',
+            },
         );
 
         if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          if (data['code'] == 700 && data['data'] != null && data['data'].isNotEmpty) {
-            setState(() {
-              adminNames[groupId.toString()] = data['data'][0]; // Giả sử API trả về admin name đầu tiên
-            });
-          } else {
-            setState(() {
-              adminNames[groupId.toString()] = "Chưa có admin";
-            });
-          }
-        } else {
-          setState(() {
-            adminNames[groupId.toString()] = "Chưa có admin";
-          });
+            final data = jsonDecode(response.body);
+            if (data['code'] == 700 && data['data'] != null) {
+                setState(() {
+                    // Lưu toàn bộ thông tin group, bao gồm cả listUser
+                    userGroups = data['data'].map((group) => {
+                        'id': group['id'],
+                        'name': group['name'],
+                        'listUser': group['listUser'] ?? []
+                    }).toList();
+                    
+                    filteredGroups = userGroups.map((group) => group['name']).toList();
+                    filteredGroupsId = userGroups.map((group) => group['id']).toList();
+                });
+
+                // Khởi tạo adminNames với giá trị mặc định
+                for (var group in userGroups) {
+                    adminNames[group['id']] = "Đang tải...";
+                }
+
+                // Fetch admin names cho từng nhóm
+                for (var group in userGroups) {
+                    await _fetchAdminsByGroupId(group['id']);
+                }
+            }
         }
-      } catch (error) {
+    } catch (error) {
+        print("Error fetching user groups: $error");
+    }
+  }
+
+  Future<void> _fetchAdminsByGroupId(String groupId) async {
+    try {
+        final String? token = await _secureStorage.read(key: "auth_token");
+        final response = await http.get(
+            Uri.parse('$_url/groups/get-admins-by-group-id/$groupId'),
+            headers: {
+                'Authorization': 'Bearer $token',
+            },
+        );
+
+        if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['code'] == 700 && data['data'] != null) {
+                final List<dynamic> admins = data['data'];
+                setState(() {
+                    if (admins.isNotEmpty) {
+                        // Join tên các admin với dấu phẩy nếu có nhiều admin
+                        adminNames[groupId] = admins.join(", ");
+                    } else {
+                        adminNames[groupId] = "Chưa có admin";
+                    }
+                });
+            }
+        }
+    } catch (error) {
         print("Error fetching admin for group $groupId: $error");
         setState(() {
-          adminNames[groupId.toString()] = "Chưa có admin";
+            adminNames[groupId] = "Lỗi khi tải thông tin admin";
         });
-      }
     }
-    print("Final adminNames: $adminNames");
   }
 
   bool _isAdmin(String groupId) {
-    final group = userGroups.firstWhere((group) => group['id'] == groupId, orElse: () => null);
-    if (group == null) return false;
+    try {
+        // Tìm group trong danh sách userGroups
+        final group = userGroups.firstWhere(
+            (group) => group['id'] == groupId,
+            orElse: () => null
+        );
+        
+        if (group == null) return false;
 
-    final userEmail = email;
-    return group['listUser'].any(
-          (user) => user['email'] == userEmail && user['role'] == 'admin',
-    );
+        // Kiểm tra listUser có tồn tại không
+        final listUser = group['listUser'];
+        if (listUser == null) return false;
+
+        // Tìm user trong listUser của group
+        return (listUser as List).any((user) => 
+            user['email'] == email && user['role'] == 'admin'
+        );
+    } catch (error) {
+        print("Error checking admin status for email $email in group $groupId: $error");
+        return false;
+    }
   }
 
 
   void _handleMenuSelection(String value, String groupId) {
     switch (value) {
-      case 'delete':
-        _confirmDeleteGroup(groupId); // Hiển thị hộp thoại xác nhận trước khi xóa nhóm
-        break;
-      case 'leave':
-        _confirmLeaveGroup(groupId); // Hiển thị hộp thoại xác nhận trước khi rời nhóm
-        break;
-      default:
-        break;
+        case 'delete':
+            if (_isAdmin(groupId)) {
+                _confirmDeleteGroup(groupId);
+            } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Bạn không có quyền xóa nhóm này'))
+                );
+            }
+            break;
+        case 'leave':
+            if (!_isAdmin(groupId)) {
+                _confirmLeaveGroup(groupId);
+            } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Admin không thể rời nhóm. Vui lòng chỉ định admin mới hoặc xóa nhóm'))
+                );
+            }
+            break;
     }
   }
 
@@ -212,26 +249,53 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _deleteGroup(String groupId) async {
     try {
-      final String? token = await _secureStorage.read(key: "auth_token");
-      final response = await http.delete(
-        Uri.parse('$_url/groups/delete-group'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'groupId': groupId}),
-      );
+        final String? token = await _secureStorage.read(key: "auth_token");
+        
+        print("Deleting group with ID: $groupId"); // Debug log
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['code'] == 700) {
-          setState(() {
-            userGroups.removeWhere((group) => group['id'] == groupId);
-            filteredGroups.removeWhere((group) => group['id'] == groupId);
-          });
+        final response = await http.delete(
+            Uri.parse('$_url/groups/delete-group'),
+            headers: {
+                'Authorization': 'Bearer $token',
+                'Content-Type': 'application/json', // Thêm header này
+            },
+            body: jsonEncode({
+                'groupId': groupId
+            }),
+        );
+
+        print("Delete response status: ${response.statusCode}"); // Debug log
+        print("Delete response body: ${response.body}"); // Debug log
+
+        if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            if (data['code'] == 700) {
+                setState(() {
+                    userGroups.removeWhere((group) => group['id'] == groupId);
+                    filteredGroups = userGroups.map((group) => group['name']).toList();
+                    filteredGroupsId = userGroups.map((group) => group['id']).toList();
+                });
+                // Hiển thị thông báo thành công
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Xóa nhóm thành công'))
+                );
+            } else {
+                // Hiển thị thông báo lỗi từ server
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(data['message'] ?? 'Có lỗi xảy ra'))
+                );
+            }
+        } else {
+            // Hiển thị thông báo lỗi HTTP
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Lỗi khi xóa nhóm: ${response.statusCode}'))
+            );
         }
-      }
     } catch (error) {
-      print("Error deleting group: $error");
+        print("Error deleting group: $error");
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Có lỗi xảy ra khi xóa nhóm'))
+        );
     }
   }
 
@@ -292,7 +356,12 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedIndex = index;
     });
 
-    if (index == 2) {
+    if (index == 1) {  // Notification tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => NotificationScreen()),
+      );
+    } else if (index == 2) {  // Profile tab
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
@@ -315,12 +384,8 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.transparent,
       elevation: 0,
       title: Text(
-        'Cộng đồng',
+        'Nhóm đã tham gia',
         style: TextStyle(fontSize: 24, color: Colors.green[900], fontWeight: FontWeight.bold),
-      ),
-      leading: IconButton(
-        icon: Icon(Icons.menu, color: Colors.grey[700]),
-        onPressed: () {},
       ),
     );
   }
@@ -333,29 +398,34 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildSearchBar(),
           SizedBox(height: 16),
           Expanded(
-            child: ListView.builder(
-              itemCount: filteredGroups.length,
-              itemBuilder: (context, index) {
-                final groupId = filteredGroupsId[index];
-                final groupName = filteredGroups[index];
-                final adminName = adminNames[groupId.toString()] ?? "Chưa có admin";
-
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => GroupMainScreen(
-                          groupId: groupId,
-                          groupName: groupName,
-                          adminName: adminName,
-                        ),
-                      ),
-                    );
-                  },
-                  child: _buildGroupCard(groupName, adminName),
-                );
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await _fetchUserGroups();
               },
+              child: ListView.builder(
+                itemCount: filteredGroups.length,
+                itemBuilder: (context, index) {
+                  final groupId = filteredGroupsId[index];
+                  final groupName = filteredGroups[index];
+                  final adminName = adminNames[groupId] ?? "Chưa có admin";
+
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GroupMainScreen(
+                            groupId: groupId,
+                            groupName: groupName,
+                            adminName: adminName,
+                          ),
+                        ),
+                      );
+                    },
+                    child: _buildGroupCard(groupName, adminName, groupId),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -384,49 +454,76 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildGroupCard(String groupName, String adminName) {
+  Widget _buildGroupCard(String groupName, String adminName, String groupId) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          children: [
-            CircleAvatar(radius: 30, backgroundImage: AssetImage('images/group.png')),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+        child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
                 children: [
-                  Text(groupName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 4),
-                  Row(children: [Text('Admin: $adminName')]),
+                    CircleAvatar(radius: 30, backgroundImage: AssetImage('images/group.png')),
+                    SizedBox(width: 12),
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                                Text(groupName, 
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                                ),
+                                SizedBox(height: 4),
+                                Row(
+                                    children: [
+                                        Text('Admin: '),
+                                        adminName == "Đang tải..." 
+                                            ? SizedBox(
+                                                width: 12,
+                                                height: 12,
+                                                child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                )
+                                              )
+                                            : Text(adminName),
+                                    ]
+                                ),
+                            ],
+                        ),
+                    ),
+                    PopupMenuButton<String>(
+                        onSelected: (value) => _handleMenuSelection(value, groupId),
+                        itemBuilder: (BuildContext context) {
+                            final isAdmin = _isAdmin(groupId);
+                            return isAdmin
+                                ? [
+                                    PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                            children: [
+                                                Icon(Icons.delete, color: Colors.red),
+                                                SizedBox(width: 8),
+                                                Text('Xóa nhóm'),
+                                            ],
+                                        ),
+                                    ),
+                                  ]
+                                : [
+                                    PopupMenuItem(
+                                        value: 'leave',
+                                        child: Row(
+                                            children: [
+                                                Icon(Icons.exit_to_app, color: Colors.orange),
+                                                SizedBox(width: 8),
+                                                Text('Rời nhóm'),
+                                            ],
+                                        ),
+                                    ),
+                                  ];
+                        },
+                        icon: Icon(Icons.more_vert),
+                    ),
                 ],
-              ),
             ),
-            PopupMenuButton<String>(
-              onSelected: (value) => _handleMenuSelection(value, groupName),
-              itemBuilder: (BuildContext context) {
-                final isAdmin = _isAdmin(groupName); // Kiểm tra quyền
-                return isAdmin
-                    ? [
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text('Xóa nhóm'),
-                  ),
-                ]
-                    : [
-                  PopupMenuItem(
-                    value: 'leave',
-                    child: Text('Rời nhóm'),
-                  ),
-                ];
-              },
-              icon: Icon(Icons.more_vert),
-            ),
-          ],
         ),
-      ),
     );
   }
 
