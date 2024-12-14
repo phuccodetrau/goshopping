@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import { Group } from "../models/schema.js";
 
 function generateRandomPassword(length) {
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
@@ -171,5 +172,82 @@ class AuthService{
       return { status: false, message: 'Could not check verification code' };
   }
    }
+
+   static async getUserByEmail(email) {
+        try {
+            return await User.findOne({ email });
+        } catch (err) {
+            console.log(err);
+            throw err;
+        }
+    }
+
+    static async updateUser(userId, updateData) {
+        try {
+            const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+            return updatedUser;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateUserByEmail(email, updateData) {
+        try {
+            // Cập nhật thông tin user
+            const updatedUser = await User.findOneAndUpdate(
+                { email }, 
+                updateData, 
+                { new: true }
+            ).select('-password');
+
+            // Nếu có cập nhật tên
+            if (updateData.name) {
+                // Cập nhật tên trong tất cả các nhóm mà user là thành viên
+                await Group.updateMany(
+                    { "listUser.email": email },
+                    { $set: { "listUser.$.name": updateData.name } }
+                );
+            }
+
+            return updatedUser;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getUserInfo(email) {
+        try {
+            const user = await User.findOne({ email })
+                .select('-password');
+            
+            if (!user) {
+                return null;
+            }
+            return user;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateUserAvatar(email, avatarData) {
+        try {
+            const updatedUser = await User.findOneAndUpdate(
+                { email },
+                { 
+                    avatar: {
+                        data: avatarData.data,
+                        contentType: avatarData.contentType
+                    }
+                },
+                { 
+                    new: true,
+                    select: '-password'
+                }
+            );
+            return updatedUser;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 export default AuthService;

@@ -36,8 +36,7 @@ const getGroupsByMemberEmail = async (req, res) => {
 
 const getAdminsByGroupId = async (req, res) => {
     try {
-        const { groupId } = req.query; // Nhận groupId từ query
-        console.log("Received group ID:", groupId); // Debug
+        const { groupId } = req.params;
         const result = await GroupService.getAdminsByGroupId(groupId);
         return res.status(result.code === 700 ? 200 : 404).json(result);
     } catch (error) {
@@ -46,23 +45,45 @@ const getAdminsByGroupId = async (req, res) => {
 };
 const leaveGroup = async (req, res) => {
     try {
-        // In ra request body để xem có groupId hay không
-        console.log("Request body:", req.body);
-
-        const { groupId } = req.body;  // Lấy groupId từ body
-        const userEmail = req.user.email;  // Lấy email từ token
-
-        console.log("User email:", userEmail, "Leave Group ID:", groupId);  // Kiểm tra giá trị
+        const { groupId } = req.body;
+        const userEmail = req.user.email;  // Lấy email từ token auth
 
         if (!groupId) {
-            return res.status(400).json({ message: "groupId is required" });
+            return res.status(400).json({ 
+                code: 401, 
+                message: "Thiếu groupId", 
+                data: "" 
+            });
+        }
+
+        // Kiểm tra xem người dùng có phải là admin cuối cùng không
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(404).json({
+                code: 404,
+                message: "Không tìm thấy nhóm",
+                data: ""
+            });
+        }
+
+        const admins = group.listUser.filter(user => user.role === 'admin');
+        if (admins.length === 1 && admins[0].email === userEmail) {
+            return res.status(400).json({
+                code: 402,
+                message: "Bạn là admin duy nhất của nhóm. Vui lòng chỉ định admin mới hoặc xóa nhóm",
+                data: ""
+            });
         }
 
         const result = await GroupService.leaveGroup(groupId, userEmail);
-        return res.status(result.code === 700 ? 200 : 404).json(result);
+        return res.status(result.code === 700 ? 200 : 400).json(result);
     } catch (error) {
-        console.error("Error:", error);  // In ra lỗi nếu có
-        return res.status(500).json(error);
+        console.error("Error in leaveGroup:", error);
+        return res.status(500).json({ 
+            code: 500, 
+            message: "Lỗi server", 
+            data: "" 
+        });
     }
 };
 
@@ -99,11 +120,34 @@ const getUsersByGroupId = async (req, res) => {
 
 const deleteGroup = async (req, res) => {
     try {
-        const { groupName } = req.body;
-        const result = await GroupService.deleteGroup(groupName);
-        return res.status(result.code === 700 ? 200 : 404).json(result);
+        const { groupId } = req.body;
+        const userEmail = req.user.email;
+
+        console.log("Delete group request:", { groupId, userEmail }); // Debug log
+
+        if (!groupId) {
+            return res.status(400).json({ 
+                code: 401, 
+                message: "Thiếu groupId", 
+                data: "" 
+            });
+        }
+
+        const result = await GroupService.deleteGroup(groupId, userEmail);
+        console.log("Delete group result:", result); // Debug log
+        
+        if (result.code === 403) {
+            return res.status(403).json(result);
+        }
+        
+        return res.status(result.code === 700 ? 200 : 400).json(result);
     } catch (error) {
-        return res.status(500).json(error);
+        console.error("Error in deleteGroup:", error);
+        return res.status(500).json({ 
+            code: 500, 
+            message: "Lỗi server", 
+            data: "" 
+        });
     }
 };
 

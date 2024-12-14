@@ -13,7 +13,7 @@ router.get('/get-users-by-group-id/:groupId', groupController.getUsersByGroupId)
 router.post('/addItemToRefrigerator', groupController.addItemToRefrigerator);
 router.get('/getAvailableItems/:groupId', groupController.getAvailableItems);
 router.post('/searchItemsInRefrigerator/', groupController.searchItemsInRefrigerator);
-router.get('/get-admins-by-group-id', authMiddleware, groupController.getAdminsByGroupId);
+router.get('/get-admins-by-group-id/:groupId', authMiddleware, groupController.getAdminsByGroupId);
 router.delete('/leave-group', authMiddleware, groupController.leaveGroup);
 
 

@@ -121,4 +121,163 @@ const check_login=async(req,res)=>{
     }
 }
 
-export default {login,register,logout,refreshToken,sendVerificationCode,check_login,checkVerificationCode};
+const getUserNameByEmail = async (req, res, next) => {
+    try {
+        const email = req.query.email || req.user.email;
+
+        if (!email) {
+            return res.status(400).json({ status: false, message: 'Email is required' });
+        }
+
+        const user = await AuthService.getUserByEmail(email);
+        if (user) {
+            return res.status(200).json({ status: true, name: user.name });
+        } else {
+            return res.status(404).json({ status: false, message: 'User not found' });
+        }
+    } catch (error) {
+        return res.status(500).json({ status: false, message: 'Internal server error' });
+    }
+};
+
+const updateUser = async (req, res, next) => {
+    try {
+        const { name, phoneNumber } = req.body;
+        const email = req.user.email;
+
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (phoneNumber) updateData.phoneNumber = phoneNumber;
+
+        const updatedUser = await AuthService.updateUserByEmail(email, updateData);
+
+        if (updatedUser) {
+            res.json({ 
+                status: true, 
+                message: 'User information updated successfully', 
+                user: updatedUser 
+            });
+        } else {
+            res.status(404).json({ 
+                status: false, 
+                message: 'User not found' 
+            });
+        }
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getUserInfo = async (req, res, next) => {
+    try {
+        const email = req.query.email;
+        
+        if (!email) {
+            return res.status(400).json({ 
+                status: false, 
+                message: 'Email is required' 
+            });
+        }
+
+        const userInfo = await AuthService.getUserInfo(email);
+        
+        if (!userInfo) {
+            return res.status(404).json({ 
+                status: false, 
+                message: 'User not found' 
+            });
+        }
+
+        res.status(200).json({
+            status: true,
+            data: userInfo
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const uploadAvatar = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ 
+                status: false, 
+                message: 'No file uploaded' 
+            });
+        }
+
+        const email = req.user.email;
+        
+        const mimeType = req.file.mimetype.toLowerCase();
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/octet-stream'];
+        
+        const fileName = req.file.originalname.toLowerCase();
+        const isValidExtension = fileName.match(/\.(jpg|jpeg|png|gif)$/);
+        
+        if (!allowedTypes.includes(mimeType) || !isValidExtension) {
+            return res.status(400).json({
+                status: false,
+                message: 'Invalid file type. Only JPEG, PNG and GIF are allowed'
+            });
+        }
+
+        let actualMimeType = 'image/jpeg';
+        if (fileName.endsWith('.png')) actualMimeType = 'image/png';
+        if (fileName.endsWith('.gif')) actualMimeType = 'image/gif';
+
+        const updatedUser = await AuthService.updateUserAvatar(email, {
+            data: req.file.buffer,
+            contentType: actualMimeType
+        });
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                status: false,
+                message: 'User not found'
+            });
+        }
+
+        const avatarUrl = `/auth/get-avatar/${email}`;
+
+        res.json({
+            status: true,
+            message: 'Avatar updated successfully',
+            data: {
+                avatarUrl: avatarUrl
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getAvatar = async (req, res, next) => {
+    try {
+        const email = req.params.email;
+        const user = await AuthService.getUserByEmail(email);
+        
+        if (!user || !user.avatar || !user.avatar.data) {
+            return res.status(404).send('Avatar not found');
+        }
+
+        res.set('Content-Type', user.avatar.contentType);
+        res.send(user.avatar.data);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export default {
+    login,
+    register,
+    logout,
+    refreshToken,
+    sendVerificationCode,
+    check_login,
+    checkVerificationCode,
+    getUserNameByEmail,
+    updateUser,
+    getUserInfo,
+    uploadAvatar,
+    getAvatar
+};
