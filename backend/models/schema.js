@@ -78,7 +78,8 @@ const listTaskSchema = new Schema({
   amount: { type: Number, required: true },
   unitName: { type: String, required: true },
   state: { type: Boolean, default: false },
-  group: { type: Schema.Types.ObjectId, ref: 'Group', required: true }
+  group: { type: Schema.Types.ObjectId, ref: 'Group', required: true },
+  price: { type: Number, default: 0 },
 });
 
 const recipeItemSchema = new Schema({

@@ -1,5 +1,6 @@
 import ListTaskService from "../services/listtask.service.js";
 import { ListTask } from "../models/schema.js";
+import mongoose from 'mongoose';
 
 const createListTask = async (req, res) => {
     try {
@@ -15,31 +16,52 @@ const getTaskStats = async (req, res) => {
   try {
     const { groupId, month, year } = req.body;
     
-    // Tạo ngày đầu và cuối tháng
-    const startDate = new Date(year, month - 1, 1); // month - 1 vì tháng trong JS bắt đầu từ 0
-    const endDate = new Date(year, month, 0); // ngày 0 của tháng tiếp theo = ngày cuối tháng hiện tại
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+    
+    const groupObjectId = new mongoose.Types.ObjectId(groupId);
     
     const stats = await ListTask.aggregate([
       {
         $match: {
-          group: groupId,
+          group: groupObjectId,
           startDate: { 
             $gte: startDate,
             $lte: endDate
-          }
+          },
+          state: true
         }
       },
       {
         $group: {
-          _id: "$foodName",
+          _id: {
+            foodName: "$foodName",
+            unitName: "$unitName"
+          },
           totalAmount: { $sum: "$amount" },
-          unitName: { $first: "$unitName" },
           purchaseCount: { $sum: 1 },
-          totalCost: { $sum: { $multiply: ["$amount", "$price"] } } // Nếu có trường price
+          purchases: {
+            $push: {
+              memberEmail: "$memberEmail",
+              amount: "$amount",
+              date: "$startDate",
+              note: "$note"
+            }
+          }
         }
       },
       {
-        $sort: { totalAmount: -1 } // Sắp xếp giảm dần theo số lượng
+        $project: {
+          _id: 0,
+          foodName: "$_id.foodName",
+          unitName: "$_id.unitName",
+          totalAmount: 1,
+          purchaseCount: 1,
+          purchases: 1
+        }
+      },
+      {
+        $sort: { totalAmount: -1 }
       }
     ]);
 
@@ -47,18 +69,13 @@ const getTaskStats = async (req, res) => {
       code: 700,
       message: "Success",
       data: {
-        month: month,
-        year: year,
-        stats: stats.map(item => ({
-          foodName: item._id,
-          totalAmount: item.totalAmount,
-          unitName: item.unitName,
-          purchaseCount: item.purchaseCount,
-          totalCost: item.totalCost || 0
-        }))
+        month,
+        year,
+        stats
       }
     });
   } catch (error) {
+    console.error('Error in getTaskStats:', error);
     res.status(500).json({
       code: 500,
       message: error.message

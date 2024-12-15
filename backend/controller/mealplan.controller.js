@@ -1,5 +1,6 @@
 import MealPlanService from "../services/mealplan.service.js";
 import { MealPlan } from "../models/schema.js";
+import mongoose from 'mongoose';
 
 const createMealPlan = async (req, res, next) => {
     try {
@@ -72,14 +73,13 @@ const getMealPlanStats = async (req, res) => {
   try {
     const { groupId, month, year } = req.body;
     
-    // Tạo ngày đầu và cuối tháng
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
     
     const stats = await MealPlan.aggregate([
       {
         $match: {
-          group: groupId,
+          group: new mongoose.Types.ObjectId(groupId),
           date: { 
             $gte: startDate,
             $lte: endDate
@@ -87,16 +87,25 @@ const getMealPlanStats = async (req, res) => {
         }
       },
       {
-        $unwind: "$listRecipe"
+        $lookup: {
+          from: 'recipes',
+          localField: 'listRecipe',
+          foreignField: '_id',
+          as: 'recipes'
+        }
+      },
+      {
+        $unwind: "$recipes"
       },
       {
         $group: {
           _id: {
-            recipeName: "$listRecipe.name",
-            week: { $week: "$date" } // Nhóm theo tuần trong tháng
+            recipeName: "$recipes.name",
+            week: { $week: "$date" }
           },
           useCount: { $sum: 1 },
-          ingredients: { $first: "$listRecipe.ingredients" }
+          ingredients: { $first: "$recipes.list_item" },
+          description: { $first: "$recipes.description" }
         }
       },
       {
@@ -109,7 +118,8 @@ const getMealPlanStats = async (req, res) => {
             }
           },
           totalUseCount: { $sum: "$useCount" },
-          ingredients: { $first: "$ingredients" }
+          ingredients: { $first: "$ingredients" },
+          description: { $first: "$description" }
         }
       },
       {
@@ -117,21 +127,50 @@ const getMealPlanStats = async (req, res) => {
       }
     ]);
 
+    const foodConsumption = {};
+    stats.forEach(recipe => {
+      recipe.ingredients.forEach(ingredient => {
+        const foodName = ingredient.foodName;
+        const amountPerUse = ingredient.amount;
+        const totalAmount = amountPerUse * recipe.totalUseCount;
+
+        if (!foodConsumption[foodName]) {
+          foodConsumption[foodName] = {
+            totalAmount: 0,
+            usedInRecipes: []
+          };
+        }
+        foodConsumption[foodName].totalAmount += totalAmount;
+        foodConsumption[foodName].usedInRecipes.push({
+          recipeName: recipe._id,
+          amountPerUse: amountPerUse,
+          useCount: recipe.totalUseCount
+        });
+      });
+    });
+
     res.status(200).json({
       code: 700,
       message: "Success",
       data: {
-        month: month,
-        year: year,
-        stats: stats.map(item => ({
+        month,
+        year,
+        recipeStats: stats.map(item => ({
           recipeName: item._id,
+          description: item.description,
           totalUseCount: item.totalUseCount,
           weeklyStats: item.weeklyStats,
           ingredients: item.ingredients
+        })),
+        foodConsumption: Object.entries(foodConsumption).map(([foodName, data]) => ({
+          foodName,
+          totalAmount: data.totalAmount,
+          usedInRecipes: data.usedInRecipes
         }))
       }
     });
   } catch (error) {
+    console.error('Error in getMealPlanStats:', error);
     res.status(500).json({
       code: 500,
       message: error.message
