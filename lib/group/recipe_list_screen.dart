@@ -2,13 +2,76 @@ import 'package:flutter/material.dart';
 import 'meal_plan_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'add_recipe.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class RecipeListScreen extends StatefulWidget {
+  final String groupId;
+  final String email;
+
+  RecipeListScreen({
+    required this.groupId,
+    required this.email,
+  });
+
   @override
   _RecipeListScreenState createState() => _RecipeListScreenState();
 }
 
 class _RecipeListScreenState extends State<RecipeListScreen> {
+  final _secureStorage = FlutterSecureStorage();
+  final String _url = dotenv.env['ROOT_URL']!;
+  List<dynamic> recipes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecipes();
+  }
+
+  Future<void> _fetchRecipes() async {
+    try {
+      final String? token = await _secureStorage.read(key: "auth_token");
+      print("Fetching recipes for groupId: ${widget.groupId}");
+      
+      final response = await http.post(
+        Uri.parse('$_url/recipe/getAllRecipe'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "group": widget.groupId
+        }),
+      );
+
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("Decoded data: $data");
+        
+        setState(() {
+          if (data['code'] == 709 && data['data'] != null) {
+            recipes = data['data'];
+          } else if (data['code'] == 708) {
+            recipes = [];
+            print("No recipes found for group: ${widget.groupId}");
+          }
+        });
+        print("Updated recipes list: $recipes");
+      }
+    } catch (error) {
+      print("Error fetching recipes: $error");
+      setState(() {
+        recipes = [];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +84,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
         ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.green[700]),
-          onPressed: () {},
+          onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
@@ -30,14 +93,13 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => MealPlanScreen(),
+                  builder: (context) => MealPlanScreen(
+                    groupId: widget.groupId,
+                    email: widget.email,
+                  ),
                 ),
               );
             },
-          ),
-          IconButton(
-            icon: Icon(Icons.notifications, color: Colors.green[700]),
-            onPressed: () {},
           ),
         ],
       ),
@@ -46,7 +108,6 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thanh tìm kiếm
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
@@ -69,37 +130,6 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
               ),
             ),
             SizedBox(height: 20),
-            // Gợi ý món ăn hôm nay
-            Text(
-              'Gợi ý món ăn hôm nay',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.green[700],
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Bạn có muốn ăn nhẹ nhàng?',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[700],
-              ),
-            ),
-            SizedBox(height: 16),
-            // Hình ảnh gợi ý món ăn
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  RecipeSuggestionImage('images/group.png'),
-                  RecipeSuggestionImage('images/group.png'),
-                  RecipeSuggestionImage('images/group.png'),
-                ],
-              ),
-            ),
-            SizedBox(height: 20),
-            // Danh sách món ăn
             Text(
               'Danh sách món ăn',
               style: TextStyle(
@@ -108,107 +138,64 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            // Bọc ListView trong Expanded để đảm bảo chiều cao giới hạn
+            SizedBox(height: 16),
             Expanded(
-              child: ListView(
-                children: [
-                  RecipeItemCard(
-                    imagePath: 'images/group.png',
-                    title: 'Canh rau ngót',
-                    description: 'Rau ngót, thịt băm, hành, hạt nêm...',
-                    onTap: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecipeDetail(),
-                        ),
+              child: recipes.isEmpty 
+                ? Center(
+                    child: Text(
+                      'Không có công thức nào',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: recipes.length,
+                    itemBuilder: (context, index) {
+                      final recipe = recipes[index];
+                      return RecipeItemCard(
+                        imagePath: 'images/group.png',
+                        title: recipe['name'] ?? 'Không có tên',
+                        description: recipe['description'] ?? 'Không có mô tả',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RecipeDetail(
+                                recipeName: recipe['name'],
+                                groupId: widget.groupId,
+                                email: widget.email,
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),
-                  RecipeItemCard(
-                    imagePath: 'images/group.png',
-                    title: 'Đậu hũ sốt cà',
-                    description: 'Đậu hũ, thịt băm, hành, hạt nêm...',
-                    onTap: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecipeDetail(),
-                        ),
-                      );
-                    },
-                  ),
-                  RecipeItemCard(
-                    imagePath: 'images/group.png',
-                    title: 'Bún thịt nướng',
-                    description: 'Bún, thịt băm, hành, hạt nêm...',
-                    onTap: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecipeDetail(),
-                        ),
-                      );
-                    },
-                  ),
-                  RecipeItemCard(
-                    imagePath: 'images/group.png',
-                    title: 'Nem rán',
-                    description: 'Thịt băm, hành, nấm, cà rốt...',
-                    onTap: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecipeDetail(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final shouldRefresh = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddRecipeScreen(),
+              builder: (context) => AddRecipeScreen(
+                groupId: widget.groupId,
+                email: widget.email,
+              ),
             ),
           );
+          
+          // Nếu nhận được tín hiệu refresh từ màn hình thêm recipe
+          if (shouldRefresh == true) {
+            _fetchRecipes(); // Gọi lại API để lấy danh sách mới
+          }
         },
         backgroundColor: Colors.green,
         child: Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-// Widget cho phần gợi ý hình ảnh món ăn
-class RecipeSuggestionImage extends StatefulWidget {
-  final String imagePath;
-
-  RecipeSuggestionImage(this.imagePath);
-
-  @override
-  _RecipeSuggestionImageState createState() => _RecipeSuggestionImageState();
-}
-
-class _RecipeSuggestionImageState extends State<RecipeSuggestionImage> {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Image.asset(
-          widget.imagePath,
-          width: 80,
-          height: 80,
-          fit: BoxFit.cover,
-        ),
       ),
     );
   }
@@ -233,6 +220,8 @@ class RecipeItemCard extends StatefulWidget {
 }
 
 class _RecipeItemCardState extends State<RecipeItemCard> {
+  String selectedMeal = '';
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -254,15 +243,18 @@ class _RecipeItemCardState extends State<RecipeItemCard> {
           ),
           title: Text(widget.title, style: TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(widget.description),
-          trailing: DropdownButton<String>(
-            underline: SizedBox(),
-            icon: Icon(Icons.more_vert, color: Colors.green[700]),
-            items: [
-              DropdownMenuItem(value: 'Bữa sáng', child: Text('Bữa sáng')),
-              DropdownMenuItem(value: 'Bữa trưa', child: Text('Bữa trưa')),
-              DropdownMenuItem(value: 'Bữa tối', child: Text('Bữa tối')),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (selectedMeal.isNotEmpty)
+                Text(
+                  selectedMeal,
+                  style: TextStyle(
+                    color: Colors.green[700],
+                    fontSize: 12,
+                  ),
+                ),
             ],
-            onChanged: (value) {},
           ),
         ),
       ),

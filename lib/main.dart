@@ -1,21 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'begin/splashScreen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:month_year_picker/month_year_picker.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'begin/splashScreen.dart';
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
-Future<void> main() async {
-  // Ensure that the dotenv file is loaded before running the app
-  await dotenv.load();
-  runApp(const MyApp());
 
-  // Noti
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await dotenv.load(fileName: ".env");
+  
+  // Cấu hình chi tiết cho OneSignal
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
-  OneSignal.initialize("a4c8fa0a-a521-4c77-8ac2-76a788f8d146");
-  OneSignal.Notifications.requestPermission(true);
+  OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID'] ?? '');
+  
+  // Xóa các thông báo cũ
+  OneSignal.Notifications.clearAll();
+  
+  // Cấu hình thêm
+  await OneSignal.Notifications.requestPermission(true);
+  
+  // Theo dõi trạng thái subscription
+  OneSignal.User.pushSubscription.addObserver((state) {
+    print('Push subscription changed:');
+    print('Opted in: ${state.current.optedIn}');
+    print('Token: ${state.current.id}');
+    print('Status: ${state.current.jsonRepresentation()}');
+  });
+  
+  // Xử lý notification
+  OneSignal.Notifications.addClickListener((event) {
+    print("Clicked notification: ${event.notification.additionalData}");
+  });
 
+  OneSignal.Notifications.addForegroundWillDisplayListener((event) {
+    print("Received notification: ${event.notification.additionalData}");
+    event.notification.display();
+  });
+
+  runApp(MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -23,9 +49,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        navigatorObservers: [routeObserver],
-      debugShowCheckedModeBanner: false, // Tắt banner debug
-      home:SplashScreen()// Sử dụng Begin() làm widget chính của app
+      navigatorObservers: [routeObserver],
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        MonthYearPickerLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('en', 'US'),
+        const Locale('vi', 'VN'),
+      ],
+      home: SplashScreen()
     );
   }
 }

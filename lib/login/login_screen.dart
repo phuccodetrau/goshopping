@@ -5,6 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_shopping/home_screen/home_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'forgot_password_screen.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -13,7 +15,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  String URL=dotenv.env['ROOT_URL']!+"/auth/user/login";
+  String URL = dotenv.env['ROOT_URL']! + "/auth/user/login";
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -46,48 +48,74 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future<void> _onLoginPressed() async{
-    final String email=emailController.text;
-    final String password=passwordController.text;
-    print(email);
-    print(password);
+  Future<void> _onLoginPressed() async {
+    final String email = emailController.text;
+    final String password = passwordController.text;
+    
     try {
+      // Lấy device token từ OneSignal
+      final deviceToken = await OneSignal.User.pushSubscription.id;
+      print("Device token to be sent: $deviceToken");
+
       final response = await http.post(
         Uri.parse(URL),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email,'password':password}),
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+          'deviceToken': deviceToken,
+        }),
       );
 
-      final responseData = jsonDecode(response.body);
-      print(responseData);
-      if(responseData['status']==true){
-        final String token = responseData['token'];
+      print("Login response: ${response.body}");
 
-        await _secureStorage.write(key: 'auth_token', value: token);
-        await _secureStorage.write(key: 'email', value: responseData['user']['email'].toString());
-        await _secureStorage.write(key: 'id', value:  responseData['user']['_id'].toString());
-        await _secureStorage.write(key:"name",value:responseData['user']['name'].toString());
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        
+        if (responseData['status'] == true && responseData['data'] != null) {
+          final data = responseData['data'];
+          final String? token = data['token']?.toString();
+          final Map<String, dynamic> user = data['user'] ?? {};
+          
+          if (token != null && token.isNotEmpty) {
+            // Lưu thông tin đăng nhập
+            await _secureStorage.write(key: 'auth_token', value: token);
+            await _secureStorage.write(
+              key: 'email', 
+              value: user['email']?.toString() ?? ''
+            );
+            await _secureStorage.write(
+              key: 'id', 
+              value: user['id']?.toString() ?? ''
+            );
+            await _secureStorage.write(
+              key: 'name', 
+              value: user['name']?.toString() ?? ''
+            );
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(),
-          ),
-        );
-      }else{
-        //TODO
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+            );
+          } else {
+            throw Exception('Token không hợp lệ');
+          }
+        } else {
+          setState(() {
+            isError = true;
+          });
+        }
+      } else {
         setState(() {
-          isError=true;
+          isError = true;
         });
       }
-
     } catch (e) {
-      print(e);
+      print("Login error: $e");
       setState(() {
-          isError=true;
+        isError = true;
       });
     }
-
   }
 
   @override

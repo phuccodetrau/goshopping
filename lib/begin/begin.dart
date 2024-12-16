@@ -15,8 +15,8 @@ class OnBoardingScreen extends StatefulWidget {
 }
 
 class _OnBoardingScreenState extends State<OnBoardingScreen> {
-  String URL = dotenv.env['ROOT_URL']!+ "/auth/user/check_login";
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  String URL = "${dotenv.env['ROOT_URL']!}/auth/user/check_login";
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeScreen(),
+            builder: (context) => const HomeScreen(),
           ),
         );
       }
@@ -62,7 +62,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
       return false;
     }
   }
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
   int _currentPage = 0;
 
   List<Map<String, String>> onboardingData = [
@@ -87,23 +87,23 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
     // Chuyển đến trang cuối cùng
     _pageController.animateToPage(
       onboardingData.length - 1,
-      duration: Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 500),
       curve: Curves.ease,
     );
     Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return LoginRegisterScreen();
+      return const LoginRegisterScreen();
     }));
   }
 
   void _onNext() {
     if (_currentPage < onboardingData.length - 1) {
       _pageController.nextPage(
-        duration: Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 500),
         curve: Curves.ease,
       );
     } else {
       Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return LoginRegisterScreen();
+        return const LoginRegisterScreen();
       }));
     }
   }
@@ -134,7 +134,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
             right: 20,
             child: TextButton(
               onPressed: _onSkip,
-              child: Text(
+              child: const Text(
                 "Bỏ qua",
                 style: TextStyle(color: Colors.green, fontSize: 16),
               ),
@@ -160,14 +160,14 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 ),
                 onPressed: _onNext,
                 child: Text(
                   _currentPage == onboardingData.length - 1
                       ? "Tiếp tục"
                       : "Tiếp theo",
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
             ),
@@ -181,7 +181,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
     return Container(
       height: 10,
       width: 10,
-      margin: EdgeInsets.symmetric(horizontal: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 5),
       decoration: BoxDecoration(
         color: _currentPage == index ? Colors.green : Colors.grey,
         shape: BoxShape.circle,
