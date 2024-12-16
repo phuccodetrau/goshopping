@@ -1,5 +1,5 @@
 import GroupService from '../services/group.service.js';
-
+import FoodService from '../services/food.service.js';
 const createGroup = async (req, res) => {
     try {
         const { name, listUser } = req.body;
@@ -128,24 +128,31 @@ const addItemToRefrigerator = async (req, res) => {
     }
 }
 
-const getAvailableItems = async (req, res) => {
+const filterItemsWithPagination = async (req, res) => {
     try{
-        const {groupId} = req.params;
-        const result = await GroupService.getAvailableItems(groupId);
-        return res.status(result.code === 700 ? 200 : 404).json(result);
+        const {groupId, keyword, page, limit} = req.body;
+        const result = await GroupService.filterItemsWithPagination(groupId, keyword, page, limit);
+        const itemsWithImage = await Promise.all(
+            result.data.map(async (item) => {
+                const imageResult = await FoodService.getFoodImageByName(groupId, item.foodName);
+                const image = imageResult.code === 700 ? imageResult.data : "";
+                
+                // Bổ sung trường totalAmount vào food
+                return {
+                    ...item.toObject(), // Chuyển mongoose document thành object
+                    image
+                };
+            })
+        );
+        return res.status(200).json({
+            code: 700,
+            message: "Lấy danh sách item thành công",
+            data: itemsWithImage
+        });
     }catch(error){
         return res.status(500).json(error);
     }
 }
 
-const searchItemsInRefrigerator = async (req, res) => {
-    try{
-        const {groupId, keyword} = req.body;
-        const result = await GroupService.searchItemsInRefrigerator(groupId, keyword);
-        return res.status(result.code === 700 ? 200 : 404).json(result);
-    }catch(error){
-        return res.status(500).json(error);
-    }
-}
 
-export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupId, getUsersByGroupId, deleteGroup, removeMember, leaveGroup, getUsersByGroupName, addItemToRefrigerator, getAvailableItems, searchItemsInRefrigerator}; 
+export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupId, getUsersByGroupId, deleteGroup, removeMember, leaveGroup, getUsersByGroupName, addItemToRefrigerator, filterItemsWithPagination}; 

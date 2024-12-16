@@ -15,8 +15,8 @@ import ListTaskRouter from './routes/listtask.router.js';
 
 dotenv.config();
 const app = express();
-app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(bodyParser.json({ limit: '50mb' }))
 
 app.use("/user", UserRoute);
 app.use("/todo", ToDoRoute);

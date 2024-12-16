@@ -2,6 +2,8 @@ import { Food, Item, ListTask, Group } from "../models/schema.js";
 
 class FoodService {
     static async createFood(name, categoryName, unitName, image, group) {
+        console.log("Nhận req");
+        
         try {
             const existingFood = await Food.findOne({ name, group });
             if (existingFood) {
@@ -121,7 +123,7 @@ class FoodService {
             const availableFoods = await Food.find({
                 group: groupId,
                 name: { $nin: refrigeratorFoodNames },
-            }).select("name unitName");
+            }).select("name unitName image");
     
             if (!availableFoods || availableFoods.length === 0) {
                 return { code: 702, message: "Không có thực phẩm khả dụng", data: "" };
@@ -131,6 +133,37 @@ class FoodService {
         } catch (error) {
             console.error("Error fetching available foods:", error);
             throw { code: 101, message: "Server error!", data: "" };
+        }
+    }
+
+    static async getFoodImageByName(groupId, foodName) {
+        // Kiểm tra đầu vào
+        if (!groupId || !foodName) {
+            return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: null };
+        }
+
+        try {
+            // Tìm Group theo groupId
+            const group = await Group.findById(groupId);
+            if (!group) {
+                return { code: 702, message: "Nhóm không tồn tại", data: null };
+            }
+
+            // Tìm Food dựa trên name
+            const food = await Food.findOne({ name: foodName });
+            if (!food) {
+                return { code: 703, message: "Không tìm thấy món ăn với tên cung cấp", data: null };
+            }
+
+            // Trả về thông tin hình ảnh
+            return {
+                code: 700,
+                message: "Lấy hình ảnh thành công",
+                data: food.image,
+            };
+        } catch (error) {
+            console.error("Lỗi khi lấy hình ảnh của food:", error);
+            return { code: 101, message: "Server error!", data: null };
         }
     }
 }

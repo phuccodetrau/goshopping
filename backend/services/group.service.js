@@ -1,4 +1,4 @@
-import { Group } from '../models/schema.js';
+import { Group, Food } from '../models/schema.js';
 
 class GroupService {
     static async createGroup(name, listUser) {
@@ -204,6 +204,8 @@ class GroupService {
     
     static async addItemToRefrigerator(groupId, item) {
         try {
+            console.log("Nhận api add item vào fridge");
+            
             // Tìm group theo groupId
             const group = await Group.findById(groupId);
             if (!group) {
@@ -215,6 +217,7 @@ class GroupService {
     
             // Lưu group sau khi cập nhật
             const updatedGroup = await group.save();
+            console.log("Thêm thành công");
     
             return { code: 700, message: "Thêm item vào tủ lạnh thành công", data: updatedGroup };
         } catch (error) {
@@ -223,35 +226,7 @@ class GroupService {
         }
     }
 
-    static async getAvailableItems(groupId) {
-        if (!groupId) {
-            return { code: 701, message: "Vui lòng cung cấp ID nhóm", data: "" };
-        }
-
-        try {
-            const group = await Group.findById(groupId).populate('refrigerator');
-            if (!group) {
-                return { code: 702, message: "Nhóm không tồn tại", data: "" };
-            }
-
-            // Lọc các item thỏa mãn điều kiện
-            const today = new Date();
-            const availableItems = group.refrigerator.filter(item => 
-                item.amount > 0 && item.expireDate > today
-            );
-
-            return {
-                code: 700,
-                message: "Lấy danh sách item thành công",
-                data: availableItems
-            };
-        } catch (error) {
-            console.error("Lỗi khi lấy danh sách item:", error);
-            throw { code: 101, message: "Server error!", data: "" };
-        }
-    }
-
-    static async searchItemsInRefrigerator(groupId, keyword) {
+    static async filterItemsWithPagination(groupId, keyword = "", page = 1, limit = 3) {
         if (!groupId) {
             return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" };
         }
@@ -261,28 +236,23 @@ class GroupService {
             if (!group) {
                 return { code: 702, message: "Nhóm không tồn tại", data: "" };
             }
-    
-            // Chuyển từ khóa và tên item sang chữ thường để tìm kiếm không phân biệt hoa/thường
             const lowerKeyword = keyword.toLowerCase();
-            const matchedItems = group.refrigerator.filter(item => 
-                item.foodName.toLowerCase().includes(lowerKeyword)
+            const matchedItems = group.refrigerator.filter(item =>
+                lowerKeyword === "" || item.foodName.toLowerCase().includes(lowerKeyword)
             );
-    
-            if (matchedItems.length === 0) {
-                return {
-                    code: 703,
-                    message: "Không tìm thấy item nào khớp với từ khóa",
-                    data: []
-                };
-            }
+            const totalItems = matchedItems.length;
+            const totalPages = Math.ceil(totalItems / limit);
+            const startIndex = (page - 1) * limit;
+            const paginatedItems = matchedItems.slice(startIndex, startIndex + limit)
+                     
     
             return {
                 code: 700,
-                message: "Tìm kiếm item thành công",
-                data: matchedItems
+                message: "Lấy danh sách item thành công",
+                data: paginatedItems,
             };
         } catch (error) {
-            console.error("Lỗi khi tìm kiếm item trong refrigerator:", error);
+            console.error("Lỗi khi lấy item trong refrigerator:", error);
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
