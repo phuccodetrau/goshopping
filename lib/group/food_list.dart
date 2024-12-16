@@ -61,6 +61,7 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
       if (responseData["code"] == 600) {
         setState(() {
           listfood = responseData["data"];
+          print(listfood);
           // listfoodbackup = responseData["data"];
         });
       } else {
@@ -160,7 +161,7 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
                 child: ListView(
                   children: listfood.map((food) {
                     return FoodCard(
-                      imagePath: 'images/group.png',
+                      imagePath: food["image"],
                       name: food['name'],
                       amount: food['totalAmount'].toString(),
                       unitName: food['unitName'],
@@ -211,6 +212,7 @@ class FoodCard extends StatefulWidget {
 class _FoodCardState extends State<FoodCard> {
   bool isDropdownOpen = false;
 
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -221,8 +223,13 @@ class _FoodCardState extends State<FoodCard> {
       child: ListTile(
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: Image.asset(
-            widget.imagePath,
+          child:
+          widget.imagePath != "" ? Image.memory(base64Decode(widget.imagePath),
+            width: 50,
+            height: 50,
+            fit: BoxFit.cover,) :
+          Image.asset(
+            "images/fish.png",
             width: 50,
             height: 50,
             fit: BoxFit.cover,
@@ -261,7 +268,7 @@ class _FoodCardState extends State<FoodCard> {
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
-                      BuyOldFood(name: widget.name, unitName: widget.unitName),
+                      BuyOldFood(foodName: widget.name, unitName: widget.unitName, amount: null, startDate: null, endDate: null, memberName: null, memberEmail: null, note: "", id: null,),
                 ),
               );
             }

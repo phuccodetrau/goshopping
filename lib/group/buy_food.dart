@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'fridge.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class BuyFood extends StatefulWidget {
   final String categoryName;
@@ -35,6 +37,9 @@ class _BuyFoodState extends State<BuyFood> {
   String note = "";
   ValueNotifier<bool> isFoodName = ValueNotifier<bool>(false);
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  File? _selectedImage;
+  String _imageBase64 = "";
+  final ImagePicker _picker = ImagePicker();
   Future<void> _loadSecureValues() async {
     try {
       token = await _secureStorage.read(key: 'auth_token');
@@ -146,7 +151,8 @@ class _BuyFoodState extends State<BuyFood> {
     }
   }
 
-  Future<void> _addNewFood(foodName, categoryName, unitName, group) async{
+  Future<void> _addNewFood(foodName, categoryName, unitName, group, image) async{
+    print("Gọi đến hàm");
     final String apiUrl = URL + "/food/createFood";
 
     try {
@@ -155,7 +161,7 @@ class _BuyFoodState extends State<BuyFood> {
         "name": foodName,
         "categoryName": categoryName,
         "unitName": unitName,
-        "image": "abc",
+        "image": image,
         "group": group,
       };
 
@@ -164,6 +170,7 @@ class _BuyFoodState extends State<BuyFood> {
         headers: {"Content-Type": "application/json"},
         body: json.encode(requestBody),
       );
+      print("Gọi đến api");
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         print(responseData);
@@ -217,68 +224,20 @@ class _BuyFoodState extends State<BuyFood> {
     }
   }
 
-  Future<void> _addNewItem(foodName, expireDate, amount, unitName, note, group) async{
-    final String createItemUrl = URL + "/item/createItem";
-    final String addItemToRefrigeratorUrl = URL + "/groups/addItemToRefrigerator";
-
-    try {
-      final createItemBody = jsonEncode({
-        "foodName": foodName,
-        "expireDate": expireDate,
-        "amount": amount,
-        'unitName': unitName,
-        "note": note,
-        "group": group,
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+        _imageBase64 = base64Encode(File(image.path).readAsBytesSync()); // Chuyển ảnh thành base64
       });
-
-      final createItemResponse = await http.post(
-        Uri.parse(createItemUrl),
-        headers: {"Content-Type": "application/json"},
-        body: createItemBody,
-      );
-
-      if (createItemResponse.statusCode == 200) {
-        final createItemData = jsonDecode(createItemResponse.body);
-
-        if (createItemData['code'] == 700) {
-          print(createItemData['message']);
-          final item = createItemData['data'];
-          final addItemBody = jsonEncode({
-            "groupId": group,
-            "item": item,
-          });
-
-          final addItemResponse = await http.post(
-            Uri.parse(addItemToRefrigeratorUrl),
-            headers: {"Content-Type": "application/json"},
-            body: addItemBody,
-          );
-
-          if (addItemResponse.statusCode == 200) {
-            final addItemData = jsonDecode(addItemResponse.body);
-            if (addItemData['code'] == 700) {
-              print(addItemData['message']);
-            } else {
-              print("Error: ${addItemData['message']}");
-            }
-          } else {
-            print("HTTP Error (addItemToRefrigerator): ${addItemResponse.statusCode}");
-          }
-        } else {
-          print("Error: ${createItemData['message']}");
-        }
-      } else {
-        print("HTTP Error (createItem): ${createItemResponse.statusCode}");
-      }
-    } catch (e) {
-      print("Error: $e");
     }
   }
 
+
   Future<void> _postData(foodName, categoryName, unitName, memberName, memberEmail, note, start, end, amount, state, group, expireDate) async {
-    await _addNewFood(foodName, categoryName, unitName, group);
+    await _addNewFood(foodName, categoryName, unitName, group, _imageBase64);
     await _addNewTask(memberName, memberEmail, note, start, end, foodName, amount, unitName, state, group);
-    await _addNewItem(foodName, expireDate, amount, unitName, note, group);
   }
 
   void initState() {
@@ -292,9 +251,9 @@ class _BuyFoodState extends State<BuyFood> {
     await _loadSecureValues();
 
     // Sau khi _loadSecureValues hoàn tất, gọi _fetchCategories
-    await _fetchCategories();
-    await _fetchUnits();
-    await _fetchUsers();
+    _fetchCategories();
+    _fetchUnits();
+    _fetchUsers();
 
   }
 
@@ -318,15 +277,28 @@ class _BuyFoodState extends State<BuyFood> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Biểu ngữ trên cùng
-              Container(
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: AssetImage('images/fish.png'),
-                    fit: BoxFit.cover,
+              GestureDetector(
+                onTap: _pickImage, // Chọn ảnh khi nhấn vào container
+                child: Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: _selectedImage != null
+                          ? FileImage(_selectedImage!) // Hiển thị ảnh đã chọn
+                          : AssetImage('images/fish.png') as ImageProvider, // Placeholder
+                      fit: BoxFit.cover,
+                    ),
                   ),
+                  child: _selectedImage == null
+                      ? Center(
+                    child: Icon(
+                      Icons.add_a_photo,
+                      color: Colors.grey,
+                    ),
+                  )
+                      : null,
                 ),
               ),
               SizedBox(height: 16),

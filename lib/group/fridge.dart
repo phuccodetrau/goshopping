@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_shopping/main.dart';
+import 'dart:typed_data';
 
 class Fridge extends StatefulWidget {
   const Fridge({super.key});
@@ -15,7 +16,7 @@ class Fridge extends StatefulWidget {
   State<Fridge> createState() => _FridgeState();
 }
 
-class _FridgeState extends State<Fridge> with RouteAware{
+class _FridgeState extends State<Fridge> with RouteAware {
   String? email;
   String? id;
   String? name;
@@ -27,9 +28,13 @@ class _FridgeState extends State<Fridge> with RouteAware{
   List<dynamic> listcategory = [];
   List<dynamic> listitem = [];
   List<dynamic> listUnavailablefood = [];
+  String keyword = "";
+  ScrollController _scrollController = ScrollController();
+  int currentPage = 1;
+  bool isLoadingMore = false;
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   Future<void> _loadSecureValues() async {
-    try{
+    try {
       token = await _secureStorage.read(key: 'auth_token');
       email = await _secureStorage.read(key: 'email');
       id = await _secureStorage.read(key: 'id');
@@ -37,52 +42,50 @@ class _FridgeState extends State<Fridge> with RouteAware{
       groupName = await _secureStorage.read(key: 'groupName');
       groupId = await _secureStorage.read(key: 'groupId');
       adminName = await _secureStorage.read(key: 'adminName');
-
-    }catch(e){
+    } catch (e) {
       print('Error loading secure values: $e');
     }
   }
 
-  Future<void> _fetchCategories() async{
-    try{
+  Future<void> _fetchCategories() async {
+    try {
       print(groupId);
-      final response = await http.get(
-        Uri.parse('$URL/category/admin/category/$groupId')
-      );
+      final response =
+          await http.get(Uri.parse('$URL/category/admin/category/$groupId'));
       final responseData = jsonDecode(response.body);
-      if(responseData['code'] == 707){
+      if (responseData['code'] == 707) {
         setState(() {
           listcategory = responseData['data'];
         });
-      }else{
+      } else {
         print("${responseData["message"]}");
       }
-    }catch(e){
+    } catch (e) {
       print("Error: $e");
     }
   }
 
-  Future<void> _fetchUnavailable() async{
-    try{
+  Future<void> _fetchUnavailable() async {
+    try {
       print(groupId);
-      final response = await http.get(
-          Uri.parse('$URL/food/getUnavailableFoods/$groupId')
-      );
+      final response =
+          await http.get(Uri.parse('$URL/food/getUnavailableFoods/$groupId'));
       final responseData = jsonDecode(response.body);
-      if(responseData['code'] == 600){
+      if (responseData['code'] == 600) {
         setState(() {
           listUnavailablefood = responseData['data'];
+          print(listUnavailablefood);
         });
-      }else{
+      } else {
         print("${responseData["message"]}");
       }
-    }catch(e){
+    } catch (e) {
       print("Error: $e");
     }
   }
 
-  Future<void> _addNewCategory(categoryName, groupId) async{
-    try{
+  Future<void> _addNewCategory(categoryName, groupId) async {
+    try {
       Map<String, String> body = {
         'categoryName': categoryName,
         'groupId': groupId,
@@ -93,54 +96,43 @@ class _FridgeState extends State<Fridge> with RouteAware{
         body: jsonEncode(body),
       );
       final responseData = jsonDecode(response.body);
-      if(responseData["code"] == 700){
+      if (responseData["code"] == 700) {
         _fetchCategories();
-      }else{
+      } else {
         print("${responseData["message"]}");
       }
-    }catch(e){
+    } catch (e) {
       print("Error: $e");
     }
   }
 
-  Future<void> _searchItem(keyword) async{
-    try{
-      Map<String, String> body = {
+  Future<void> _getItem({bool append = false}) async {
+    try {
+      Map<String, dynamic> body = {
         'groupId': groupId!,
-        'keyword': keyword
+        'keyword': keyword,
+        "page": currentPage,
+        "limit": 3,
       };
       final response = await http.post(
-        Uri.parse(URL + "/groups/searchItemsInRefrigerator"),
+        Uri.parse(URL + "/groups/filterItemsWithPagination"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(body),
       );
       final responseData = jsonDecode(response.body);
-      if(responseData["code"] == 700){
+      if (responseData["code"] == 700) {
         setState(() {
-          listitem = responseData['data'];
+          if (append) {
+            listitem.addAll(responseData['data']);
+          } else {
+            listitem = responseData['data'];
+          }
+          // print(listitem);
         });
-      }else{
+      } else {
         print("${responseData["message"]}");
       }
-    }catch(e){
-      print("Error: $e");
-    }
-  }
-
-  Future<void> _fetchItem() async{
-    try{
-      final response = await http.get(
-          Uri.parse('$URL/groups/getAvailableItems/$groupId')
-      );
-      final responseData = jsonDecode(response.body);
-      if(responseData['code'] == 700){
-        setState(() {
-          listitem = responseData['data'];
-        });
-      }else{
-        print("${responseData["message"]}");
-      }
-    }catch(e){
+    } catch (e) {
       print("Error: $e");
     }
   }
@@ -149,7 +141,10 @@ class _FridgeState extends State<Fridge> with RouteAware{
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (ModalRoute.of(context) != null) {
-      routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>); // Subscribe to route observer
+      routeObserver.subscribe(
+          this,
+          ModalRoute.of(context)
+              as PageRoute<dynamic>); // Subscribe to route observer
     }
     _initializeData();
   }
@@ -157,8 +152,10 @@ class _FridgeState extends State<Fridge> with RouteAware{
   @override
   void dispose() {
     routeObserver.unsubscribe(this); // Unsubscribe from route observer
+    _scrollController.dispose();
     super.dispose();
   }
+
   @override
   void didPopNext() {
     super.didPopNext();
@@ -168,36 +165,68 @@ class _FridgeState extends State<Fridge> with RouteAware{
   Future<void> _initializeData() async {
     // Đợi _loadSecureValues hoàn tất
     await _loadSecureValues();
+    _fetchCategories();
+    _getItem();
+    _fetchUnavailable();
 
-    // Sau khi _loadSecureValues hoàn tất, gọi _fetchCategories
-    await _fetchCategories();
-    await _fetchItem();
-    await _fetchUnavailable();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent &&
+          !isLoadingMore) {
+        setState(() => isLoadingMore = true); // Đặt cờ để tránh cuộn nhiều lần
+        currentPage++; // Tăng trang hiện tại
+        _getItem(append: true)
+            .then((_) => setState(() => isLoadingMore = false));
+      }
+    });
   }
 
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _scrollController = ScrollController();
+  //
+  //   // Lắng nghe sự kiện cuộn
+  //   _scrollController.addListener(() {
+  //     if (_scrollController.position.pixels ==
+  //             _scrollController.position.maxScrollExtent &&
+  //         !isLoadingMore) {
+  //       setState(() => isLoadingMore = true); // Đặt cờ để tránh cuộn nhiều lần
+  //       currentPage++; // Tăng trang hiện tại
+  //       _getItem(append: true)
+  //           .then((_) => setState(() => isLoadingMore = false));
+  //     }
+  //   });
+  //   _initializeData();
+  // }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () {
-            },
-          ),
-          title: Text(
-            "Tủ lạnh",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          centerTitle: true,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {},
         ),
-        body: SingleChildScrollView(
+        title: Text(
+          "Tủ lạnh",
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          currentPage = 1; // Reset về trang đầu tiên
+          await _initializeData(); // Gọi hàm load lại dữ liệu
+        },
+        child: SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,8 +245,11 @@ class _FridgeState extends State<Fridge> with RouteAware{
                     border: InputBorder.none,
                     suffixIcon: Icon(Icons.search, color: Colors.grey),
                   ),
-                  onChanged: (value){
-                    _searchItem(value);
+                  onChanged: (value) {
+                    setState(() {
+                      keyword = value;
+                      _getItem();
+                    });
                   },
                 ),
               ),
@@ -229,8 +261,7 @@ class _FridgeState extends State<Fridge> with RouteAware{
                 child: Row(
                   children: [
                     _buildCategoryItem(icon: Icons.add, label: "Thẻ mới"),
-                    if (listcategory.isEmpty)
-                      CircularProgressIndicator(),
+                    if (listcategory.isEmpty) CircularProgressIndicator(),
                     ...listcategory.map((category) {
                       return _buildCategoryItem(
                         imagePath: "images/fish.png",
@@ -250,12 +281,15 @@ class _FridgeState extends State<Fridge> with RouteAware{
               SizedBox(height: 8),
               SizedBox(
                 height: listUnavailablefood.length == 0 ? 40 : 150,
-                child: listUnavailablefood.length == 0 ? Text("Không có gợi ý nào cần mua") : ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: listUnavailablefood.map((food) {
-                    return _buildSuggestionCard(food["name"], food["unitName"], "images/fish.png");
-                  }).toList(),
-                ),
+                child: listUnavailablefood.length == 0
+                    ? Text("Không có gợi ý nào cần mua")
+                    : ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: listUnavailablefood.map((food) {
+                          return _buildSuggestionCard(food["name"],
+                              food["unitName"], food["image"]);
+                        }).toList(),
+                      ),
               ),
               SizedBox(height: 20),
 
@@ -281,62 +315,69 @@ class _FridgeState extends State<Fridge> with RouteAware{
               ListView.builder(
                 shrinkWrap: true,
                 physics: NeverScrollableScrollPhysics(),
-                itemCount: listitem.length, // Số lượng phần tử trong listitem
+                itemCount: listitem.length + (isLoadingMore ? 1 : 0),
                 itemBuilder: (context, index) {
-                  final item = listitem[index]; // Lấy từng phần tử của listitem
+                  if (index == listitem.length) {
+                    return Center(
+                        child:
+                            CircularProgressIndicator()); // Hiển thị vòng tròn khi đang tải
+                  }
+                  final item = listitem[index];
                   return _buildIngredientItem(
-                      item['foodName'], // Tên thực phẩm
-                      item['amount'].toString(), // Số lượng, chuyển sang String nếu cần
-                      item['unitName'], // Đơn vị
-                      item['expireDate'].split('T')[0], // Ngày hết hạn (loại bỏ phần giờ)
-                      item['note'] ?? "Không có ghi chú", // Ghi chú, nếu null thì thay thế
-                      "images/fish.png" // Đường dẫn ảnh (tạm thời dùng ảnh mặc định)
+                    item['foodName'],
+                    item['amount'].toString(),
+                    item['unitName'],
+                    item['expireDate'].split('T')[0],
+                    item['note'] ?? "Không có ghi chú",
+                    item["image"],
                   );
                 },
               ),
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => BuyFood(categoryName: ""),
-              ),
-            );
-          },
-          backgroundColor: Colors.green[700],
-          child: Icon(Icons.add, color: Colors.white),
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 0,
-          onTap: (index) {
-            // Xử lý khi chuyển đổi tab
-          },
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "",
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BuyFood(categoryName: ""),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.kitchen),
-              label: "",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.notifications),
-              label: "",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: "",
-            ),
-          ],
-          selectedItemColor: Colors.green[700],
-          unselectedItemColor: Colors.grey,
-        ),
-      );
+          );
+        },
+        backgroundColor: Colors.green[700],
+        child: Icon(Icons.add, color: Colors.white),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        onTap: (index) {
+          // Xử lý khi chuyển đổi tab
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.kitchen),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "",
+          ),
+        ],
+        selectedItemColor: Colors.green[700],
+        unselectedItemColor: Colors.grey,
+      ),
+    );
   }
+
   void _showCreateCategoryDialog() {
     TextEditingController categoryNameController = TextEditingController();
     showDialog(
@@ -375,15 +416,14 @@ class _FridgeState extends State<Fridge> with RouteAware{
       {IconData? icon, String? imagePath, required String label}) {
     return GestureDetector(
       onTap: () {
-        if(label != "Thẻ mới"){
+        if (label != "Thẻ mới") {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => FoodListScreen(categoryName: label),
             ),
           );
-        }
-        else{
+        } else {
           _showCreateCategoryDialog();
         }
       },
@@ -417,13 +457,24 @@ class _FridgeState extends State<Fridge> with RouteAware{
     );
   }
 
-  Widget _buildSuggestionCard(String name, String unitName, String imagePath) {
+  Widget _buildSuggestionCard(String name, String unitName, String image) {
+    Uint8List imageBytes = base64Decode(image);
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => BuyOldFood(name: name, unitName: unitName),
+            builder: (context) => BuyOldFood(
+              foodName: name,
+              unitName: unitName,
+              amount: null,
+              startDate: null,
+              endDate: null,
+              memberName: null,
+              memberEmail: null,
+              note: "",
+              id: null,
+            ),
           ),
         );
       },
@@ -455,8 +506,15 @@ class _FridgeState extends State<Fridge> with RouteAware{
                       Colors.black.withOpacity(0.2), // Màu mờ phủ lên hình ảnh
                       BlendMode.darken,
                     ),
-                    child: Image.asset(
-                      imagePath,
+                    child:
+                    image != "" ? Image.memory(
+                      imageBytes,
+                      height: 80,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ) :
+                    Image.asset(
+                      "images/fish.png",
                       height: 80,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -475,7 +533,8 @@ class _FridgeState extends State<Fridge> with RouteAware{
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     ),
                     child: Text(
                       "Mua thêm",
@@ -518,7 +577,9 @@ class _FridgeState extends State<Fridge> with RouteAware{
     );
   }
 
-  Widget _buildIngredientItem(String foodName, String amount, String unitName, String expireDate, String note, String imagePath) {
+  Widget _buildIngredientItem(String foodName, String amount, String unitName,
+      String expireDate, String note, String image) {
+    Uint8List imageBytes = base64Decode(image);
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8),
       padding: EdgeInsets.all(8),
@@ -538,25 +599,33 @@ class _FridgeState extends State<Fridge> with RouteAware{
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              imagePath,
-              height: 50,
-              width: 50,
+            child:
+            image != "" ? Image.memory(
+              imageBytes,
+              height: 60, // Resize to 60px height
+              width: 60, // Resize to 60px width
+              fit: BoxFit.cover, // Crop and scale the image to cover the box
+              filterQuality: FilterQuality.high, // Ensure high-quality scaling
+            ) :
+            Image.asset(
+              "images/fish.png",
+              height: 60,
+              width: 60,
               fit: BoxFit.cover,
             ),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: 18),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(foodName,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               Text(amount + " " + unitName,
-                  style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  style: TextStyle(fontSize: 16, color: Colors.grey)),
               Text("Note: " + note,
-                  style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  style: TextStyle(fontSize: 16, color: Colors.grey)),
               Text("Ngày hết hạn: " + expireDate,
-                  style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  style: TextStyle(fontSize: 16, color: Colors.grey)),
             ],
           ),
         ],

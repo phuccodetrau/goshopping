@@ -6,10 +6,18 @@ import 'fridge.dart';
 import 'package:http/http.dart' as http;
 
 class BuyOldFood extends StatefulWidget {
-  final String name;
+  final String foodName;
   final String unitName;
+  int? amount;
+  DateTime? startDate;
+  DateTime? endDate;
+  String? memberName;
+  String? memberEmail;
+  String? note;
+  String? id;
 
-  BuyOldFood({required this.name, required this.unitName});
+
+  BuyOldFood({required this.foodName, required this.unitName, required this.amount, required this.startDate, required this.endDate, required this.memberName, required this.memberEmail, required this.note, required this.id});
 
   @override
   _BuyOldFoodState createState() => _BuyOldFoodState();
@@ -25,6 +33,8 @@ class _BuyOldFoodState extends State<BuyOldFood> {
   String? adminName;
   DateTime? startDate;
   DateTime? endDate;
+  late TextEditingController _amountcontroller;
+  late TextEditingController _notecontroller;
   String URL = dotenv.env['ROOT_URL']!;
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   List<dynamic> listuser = [];
@@ -42,6 +52,12 @@ class _BuyOldFoodState extends State<BuyOldFood> {
       groupName = await _secureStorage.read(key: 'groupName');
       groupId = await _secureStorage.read(key: 'groupId');
       adminName = await _secureStorage.read(key: 'adminName');
+      note = widget.note == null ? "" : widget.note!;
+      if(widget.amount != null){
+        amount = widget.amount;
+      }
+      startDate = widget.startDate;
+      endDate = widget.endDate;
     } catch (e) {
       print('Error loading secure values: $e');
     }
@@ -55,7 +71,16 @@ class _BuyOldFoodState extends State<BuyOldFood> {
       if (responseData['code'] == 700) {
         setState(() {
           listuser = responseData['data'];
-          print(listuser.length);
+          if(widget.memberName != null){
+            for(int i = 0; i < listuser.length; i++){
+              if(widget.memberName == listuser[i]["name"]){
+                setState(() {
+                  selectedUser = i;
+                });
+                break;
+              }
+            }
+          }
         });
       } else {
         print("${responseData["message"]}");
@@ -109,6 +134,44 @@ class _BuyOldFoodState extends State<BuyOldFood> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+        if (responseData['code'] == 200) {
+          print("Phân công mới được tạo thành công!");
+        } else {
+          print("Lỗi: ${responseData['message']}");
+        }
+      } else {
+        print("Lỗi từ server: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  Future<void> _editNewTask(memberName, memberEmail, note, start, end, foodName, amount, unitName, state, group) async{
+    final String url = URL + "/listtask/updateListTaskById";
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "listTaskId": widget.id,
+          'name': memberName,
+          'memberEmail': memberEmail,
+          'note': note,
+          'startDate': start,
+          'endDate': end,
+          'foodName': foodName,
+          'amount': amount,
+          'unitName': unitName,
+          'state': state,
+          'group': group,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
         if (responseData['code'] == 700) {
           print("Phân công mới được tạo thành công!");
         } else {
@@ -122,73 +185,21 @@ class _BuyOldFoodState extends State<BuyOldFood> {
     }
   }
 
-  Future<void> _addNewItem(foodName, expireDate, amount, unitName, note, group) async{
-    final String createItemUrl = URL + "/item/createItem";
-    final String addItemToRefrigeratorUrl = URL + "/groups/addItemToRefrigerator";
-
-    try {
-      final createItemBody = jsonEncode({
-        "foodName": foodName,
-        "expireDate": expireDate,
-        "amount": amount,
-        'unitName': unitName,
-        "note": note,
-        "group": group,
-      });
-
-      final createItemResponse = await http.post(
-        Uri.parse(createItemUrl),
-        headers: {"Content-Type": "application/json"},
-        body: createItemBody,
-      );
-
-      if (createItemResponse.statusCode == 200) {
-        final createItemData = jsonDecode(createItemResponse.body);
-
-        if (createItemData['code'] == 700) {
-          print(createItemData['message']);
-          final item = createItemData['data'];
-          final addItemBody = jsonEncode({
-            "groupId": group,
-            "item": item,
-          });
-
-          final addItemResponse = await http.post(
-            Uri.parse(addItemToRefrigeratorUrl),
-            headers: {"Content-Type": "application/json"},
-            body: addItemBody,
-          );
-
-          if (addItemResponse.statusCode == 200) {
-            final addItemData = jsonDecode(addItemResponse.body);
-            if (addItemData['code'] == 700) {
-              print(addItemData['message']);
-            } else {
-              print("Error: ${addItemData['message']}");
-            }
-          } else {
-            print("HTTP Error (addItemToRefrigerator): ${addItemResponse.statusCode}");
-          }
-        } else {
-          print("Error: ${createItemData['message']}");
-        }
-      } else {
-        print("HTTP Error (createItem): ${createItemResponse.statusCode}");
-      }
-    } catch (e) {
-      print("Error: $e");
-    }
-  }
-
   Future<void> _postData(memberName, memberEmail, note, start, end, amount, state, group, expireDate) async {
-    await _addNewTask(memberName, memberEmail, note, start, end, widget.name, amount, widget.unitName, state, group);
-    await _addNewItem(widget.name, expireDate, amount, widget.unitName, note, group);
+    if(widget.id == null){
+      await _addNewTask(memberName, memberEmail, note, start, end, widget.foodName, amount, widget.unitName, state, group);
+    }else{
+      await _editNewTask(memberName, memberEmail, note, start, end, widget.foodName, amount, widget.unitName, state, group);
+    }
+
   }
 
   @override
   void initState() {
     super.initState();
     _initializeData();
+    _amountcontroller = TextEditingController(text: widget.amount == null ? "" : widget.amount.toString());
+    _notecontroller = TextEditingController(text: widget.note);
   }
 
   Future<void> _initializeData() async {
@@ -235,7 +246,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
               SizedBox(height: 16),
               // Tên thực phẩm
               TextField(
-                controller: TextEditingController(text: widget.name),
+                controller: TextEditingController(text: widget.foodName),
                 decoration: InputDecoration(
                   labelText: "Tên thực phẩm",
                   labelStyle: TextStyle(color: Colors.grey),
@@ -247,18 +258,12 @@ class _BuyOldFoodState extends State<BuyOldFood> {
               ),
               SizedBox(height: 16),
 
-              // Loại thực phẩm
-              Text(
-                "Loại thực phẩm",
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
-              ),
-
-
               // Số lượng và phân công
               Row(
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: _amountcontroller,
                       decoration: InputDecoration(
                         labelText: "Số lượng",
                         border: OutlineInputBorder(
@@ -295,6 +300,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
+                      value: selectedUser != -1 ? listuser[selectedUser]["name"] : null,
                       items: listuser.map<DropdownMenuItem<String>>((user) {
                         return DropdownMenuItem<String>(
                           value: user['name'], // Giá trị sẽ là trường 'name'
@@ -362,7 +368,9 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                   ),
                 ],
               ),
+              SizedBox(height: 8),
               TextField(
+                controller: _notecontroller,
                 decoration: InputDecoration(
                   labelText: "Ghi chú",
                   labelStyle: TextStyle(color: Colors.grey),
@@ -420,7 +428,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                     ),
                   ),
                   child: Text(
-                    "Thêm",
+                    widget.id == null ? "Thêm" : "Lưu chỉnh sửa",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
