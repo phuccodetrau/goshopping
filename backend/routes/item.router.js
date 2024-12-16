@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import itemController from '../controller/item.controller.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = Router();
 
-router.post("/createItem", itemController.createItem);
-router.post('/getAllItem', itemController.getAllItem);
-router.post("/getSpecificItem", itemController.getSpecificItem);
-router.post("/deleteItem", itemController.deleteItem);
-router.post("/updateItem", itemController.updateItem);
+router.post("/createItem", authMiddleware, itemController.createItem);
+router.post('/getAllItem', authMiddleware, itemController.getAllItem);
+router.post("/getSpecificItem", authMiddleware, itemController.getSpecificItem);
+router.post("/deleteItem", authMiddleware, itemController.deleteItem);
+router.post("/updateItem", authMiddleware, itemController.updateItem);
+router.post("/getItemDetail", authMiddleware, itemController.getItemDetail);
 
 export default router;

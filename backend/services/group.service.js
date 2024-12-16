@@ -1,55 +1,113 @@
-import { Group, Food } from '../models/schema.js';
+import { Group, User } from '../models/schema.js';
+import NotificationService from './notification.service.js';
 
 class GroupService {
     static async createGroup(name, listUser) {
-        console.log("Name:", name);
-        console.log("ListUser:", listUser);
-
-
-        if (!name || !listUser || listUser.length === 0) {
-            return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" };
-        }
-
-        const newGroup = new Group({
-            name,
-            listUser,
-            refrigerator: []
-        });
-
         try {
+            // Validate đầu vào
+            if (!name || !listUser || !Array.isArray(listUser) || listUser.length === 0) {
+                return { 
+                    code: 400, 
+                    message: "Vui lòng cung cấp tên nhóm và danh sách thành viên hợp lệ", 
+                    data: "" 
+                };
+            }
+
+            const newGroup = new Group({
+                name,
+                listUser: listUser.map(user => ({
+                    ...user,
+                    role: user.role || 'member'
+                })),
+                refrigerator: []
+            });
+
             const savedGroup = await newGroup.save();
-            return { code: 700, message: "Tạo nhóm thành công", data: savedGroup };
+
+            // Tìm users và gửi thông báo trong try-catch riêng
+            try {
+                const emails = listUser.map(user => user.email);
+                const users = await User.find({ email: { $in: emails } });
+                
+                if (users.length > 0) {
+                    await NotificationService.createNotificationForMany(
+                        users.map(user => user._id),
+                        'group_created',
+                        `Bạn đã được thêm vào nhóm "${name}"`
+                    );
+                }
+            } catch (error) {
+                console.error('Lỗi khi gửi thông báo:', error);
+                // Không throw error ở đây để vẫn return group đã tạo
+            }
+
+            return { 
+                code: 700, 
+                message: "Tạo nhóm thành công", 
+                data: savedGroup 
+            };
         } catch (error) {
             console.error('Lỗi khi tạo nhóm:', error);
-            throw { code: 101, message: "Server error!", data: "" };
+            throw { 
+                code: 101, 
+                message: "Lỗi server khi tạo nhóm", 
+                data: "" 
+            };
         }
     }
 
-
     static async addMembers(groupId, members) {
         try {
-            // Find the group by ID
             const group = await Group.findById(groupId);
             if (!group) {
                 return { code: 703, message: "Không tìm thấy nhóm để thêm thành viên", data: "" };
             }
 
-            // Filter out members who are already in the group
             const newMembers = members.filter(member =>
                 !group.listUser.some(existingMember => existingMember.email === member.email)
             );
 
-            // If no new members to add, return a message
             if (newMembers.length === 0) {
                 return { code: 706, message: "Tất cả thành viên đã có trong nhóm", data: "" };
             }
 
-            // Add only the new members
             const updatedGroup = await Group.findByIdAndUpdate(
                 groupId,
                 { $addToSet: { listUser: { $each: newMembers } } },
                 { new: true }
             );
+
+            // Lấy danh sách email của thành viên mới
+            const newMemberEmails = newMembers.map(member => member.email);
+            
+            // Tìm users trong database
+            const newUsers = await User.find({ email: { $in: newMemberEmails } });
+            const existingUsers = await User.find({ 
+                email: { 
+                    $in: group.listUser
+                        .filter(user => !newMemberEmails.includes(user.email))
+                        .map(user => user.email) 
+                } 
+            });
+
+            // Tạo thông báo cho các thành viên mới
+            if (newUsers.length > 0) {
+                await NotificationService.createNotificationForMany(
+                    newUsers.map(user => user._id),
+                    'group_joined',
+                    `Bạn đã được thêm vào nhóm "${group.name}"`
+                );
+            }
+
+            // Tạo thông báo cho các thành viên hiện tại
+            if (existingUsers.length > 0) {
+                const newMemberNames = newMembers.map(member => member.name).join(', ');
+                await NotificationService.createNotificationForMany(
+                    existingUsers.map(user => user._id),
+                    'members_added',
+                    `${newMemberNames} đã được thêm vào nhóm "${group.name}"`
+                );
+            }
 
             return { code: 702, message: "Thêm thành viên thành công", data: updatedGroup };
         } catch (error) {
@@ -58,22 +116,23 @@ class GroupService {
         }
     }
 
-
-
     static async getGroupsByMemberEmail(email) {
         try {
-            // Tìm các nhóm mà listUser chứa một object có email khớp
-            const groups = await Group.find({ "listUser.email": email }, "name _id"); // Chỉ lấy trường `name` và `_id`
-            console.log("Filtered groups:", groups); // Log các nhóm tìm thấy
+            // Tìm các nhóm mà user là thành viên và lấy đầy đủ thông tin
+            const groups = await Group.find(
+                { "listUser.email": email },
+                { name: 1, listUser: 1 } // Lấy name và listUser
+            );
 
             if (groups.length === 0) {
                 return { code: 704, message: "Không tìm thấy nhóm nào với email này", data: [] };
             }
 
-            // Tạo danh sách chứa `name` và `_id` của các nhóm
+            // Tạo danh sách với đầy đủ thông tin cần thiết
             const groupDetails = groups.map(group => ({
                 id: group._id,
                 name: group.name,
+                listUser: group.listUser // Thêm listUser vào response
             }));
 
             return { code: 700, message: "Lấy danh sách nhóm thành công", data: groupDetails };
@@ -83,36 +142,38 @@ class GroupService {
         }
     }
 
-
-
-
     static async getAdminsByGroupId(groupId) {
         try {
-            // Tìm nhóm bằng `groupId`
-            const group = await Group.findById(groupId); // Sử dụng `_id` trong MongoDB
-    
+            const group = await Group.findById(groupId);
             if (!group) {
                 return { code: 704, message: "Không tìm thấy nhóm với ID này", data: [] };
             }
-    
-            // Lọc ra danh sách người dùng có role là "admin"
-            const admins = group.listUser
+
+            // Lấy danh sách email của admin
+            const adminEmails = group.listUser
                 .filter(user => user.role === "admin")
-                .map(admin => admin.name); // Chỉ lấy tên của admin
-    
-            if (admins.length === 0) {
+                .map(admin => admin.email);
+
+            // Lấy thông tin mới nhất của các admin từ User collection
+            const adminUsers = await User.find(
+                { email: { $in: adminEmails } },
+                { name: 1, email: 1 }
+            );
+
+            // Map email với tên mới nhất
+            const adminNames = adminUsers.map(user => user.name);
+
+            if (adminNames.length === 0) {
                 return { code: 705, message: "Không có admin trong nhóm này", data: [] };
             }
-    
-            return { code: 700, message: "Lấy danh sách admin thành công", data: admins };
+
+            return { code: 700, message: "Lấy danh sách admin thành công", data: adminNames };
         } catch (error) {
             console.error('Lỗi khi lấy danh sách admin:', error);
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
     
-
-
     static async getUsersByGroupName(groupName) {
         try {
             // Tìm nhóm theo tên
@@ -132,50 +193,70 @@ class GroupService {
         }
     }
 
-
-
     static async deleteGroup(groupId, userEmail) {
         try {
             const group = await Group.findById(groupId);
-    
             if (!group) {
-                return { code: 706, message: "Không tìm thấy nhóm để xóa", data: "" };
+                return { code: 404, message: "Không tìm thấy nhóm", data: "" };
             }
-    
-            // Kiểm tra nếu userEmail là admin
-            const isAdmin = group.listUser.some(
-                user => user.email === userEmail && user.role === "admin"
+
+            // Lấy danh sách user IDs trước khi xóa nhóm
+            const users = await User.find({ 
+                email: { $in: group.listUser.map(u => u.email) } 
+            });
+            const userIds = users.map(user => user._id);
+
+            // Gửi thông báo cho tất cả thành viên
+            await NotificationService.createNotificationForMany(
+                userIds,
+                'group_deleted',
+                `Nhóm "${group.name}" đã bị xóa bởi admin ${userEmail}`
             );
-    
-            if (!isAdmin) {
-                return { code: 403, message: "Bạn không có quyền xóa nhóm này", data: "" };
-            }
-    
-            const deletedGroup = await Group.findByIdAndDelete(groupId);
-            return { code: 700, message: "Xóa nhóm thành công", data: deletedGroup };
+
+            // Xóa nhóm
+            await Group.findByIdAndDelete(groupId);
+
+            return { code: 700, message: "Xóa nhóm thành công", data: group };
         } catch (error) {
-            console.error('Lỗi khi xóa nhóm:', error);
-            throw { code: 101, message: "Server error!", data: "" };
+            console.error('Error deleting group:', error);
+            throw error;
         }
     }
     
-
     static async leaveGroup(groupId, userEmail) {
         try {
-            const updatedGroup = await Group.findByIdAndUpdate(
-                groupId,
-                { $pull: { listUser: { email: userEmail } } },
-                { new: true }
-            );
-    
-            if (!updatedGroup) {
-                return { code: 706, message: "Không tìm thấy nhóm hoặc thành viên để xóa", data: "" };
+            const group = await Group.findById(groupId);
+            if (!group) {
+                return { code: 704, message: "Không tìm thấy nhóm", data: "" };
             }
-    
-            return { code: 700, message: "Rời nhóm thành công", data: updatedGroup };
+
+            // Lấy danh sách user IDs của các thành viên còn lại
+            const remainingUsers = await User.find({
+                email: { 
+                    $in: group.listUser
+                        .filter(u => u.email !== userEmail)
+                        .map(u => u.email)
+                }
+            });
+            const remainingUserIds = remainingUsers.map(user => user._id);
+
+            // Gửi thông báo cho các thành viên còn lại
+            if (remainingUserIds.length > 0) {
+                await NotificationService.createNotificationForMany(
+                    remainingUserIds,
+                    'member_left',
+                    `Thành viên ${userEmail} đã rời khỏi nhóm "${group.name}"`
+                );
+            }
+
+            // Cập nhật group
+            group.listUser = group.listUser.filter(user => user.email !== userEmail);
+            await group.save();
+
+            return { code: 700, message: "Rời nhóm thành công", data: group };
         } catch (error) {
-            console.error('Lỗi khi rời nhóm:', error);
-            throw { code: 101, message: "Server error!", data: "" };
+            console.error("Error in leaveGroup:", error);
+            throw error;
         }
     }
     

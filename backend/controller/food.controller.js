@@ -3,7 +3,6 @@ import GroupService from "../services/group.service.js";
 
 const createFood = async (req, res, next) => {
     try {
-        console.log("Nhận được")
         const { name, categoryName, unitName, image, group } = req.body;
         
 
@@ -25,9 +24,13 @@ const createFood = async (req, res, next) => {
 
 const getAllFood = async (req, res, next) => {
     try {
-        const { group } = req.body;
+        const { groupId } = req.body;
 
-        let foodData = await FoodService.getAllFood(group);
+        if (!groupId) {
+            return res.json({ code: 601, message: "Vui lòng cung cấp groupId", data: [] });
+        }
+
+        let foodData = await FoodService.getAllFood(groupId);
 
         return res.json({
             code: foodData.code,
@@ -36,7 +39,7 @@ const getAllFood = async (req, res, next) => {
         });
     } catch (error) {
         console.log(error, "err---->");
-        next(error);
+        return res.json({ code: 101, message: "Server error!", data: [] });
     }
 }
 

@@ -9,5 +9,8 @@ router.post("/getListTasksByNameAndGroup", listtaskController.getListTasksByName
 router.post("/createItemFromListTask", listtaskController.createItemFromListTask);
 router.post("/updateListTaskById", listtaskController.updateListTaskById);
 router.post("/deleteListTaskById", listtaskController.deleteListTaskById);
+router.post("/getTaskStats", listtaskController.getTaskStats);
+router.post("/getTaskStatsByFood", listtaskController.getTaskStatsByFood);
+router.post("/getTaskStatsByDate", listtaskController.getTaskStatsByDate);
 
 export default router;
