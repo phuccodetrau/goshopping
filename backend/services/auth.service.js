@@ -43,13 +43,13 @@ class AuthService{
         }
 
         // Kiểm tra JWT_SECRET__KEY
-        if (!process.env.JWT_SECRET__KEY) {
+        if (!process.env.JWT_SECRET_KEY) {
             throw new Error('JWT_SECRET__KEY is not configured');
         }
 
         const token = jwt.sign(
             { userId: user._id, email: user.email },
-            process.env.JWT_SECRET__KEY,
+            process.env.JWT_SECRET_KEY,
             { expiresIn: '30d' }
         );
 
@@ -78,7 +78,7 @@ class AuthService{
 
    static async generateAccessToken(user) {
     const payload = { email: user.email, id: user._id };
-    return jwt.sign(payload, process.env.JWT_SECRET__KEY_KEY, { expiresIn: '7d' });
+    return jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '7d' });
   }
 
    static async register(email, password,name){
@@ -115,7 +115,7 @@ class AuthService{
           if (!user) {
               return{ status: false, message: 'User not found' };
           }
-          const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET__KEY, { expiresIn: '15m' });
+          const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '15m' });
 
           return { status: true, accessToken };
       });

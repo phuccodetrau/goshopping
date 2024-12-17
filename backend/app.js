@@ -12,13 +12,15 @@ import GroupRouter from './routes/group.router.js';
 import ListTaskRouter from './routes/listtask.router.js';
 import notificationRouter from './routes/notification.router.js';
 import CronService from './services/cron.service.js';
+import bodyParser from "body-parser";
+// import UserRoute from 
 
 dotenv.config();
 const app = express();
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(bodyParser.json({ limit: '50mb' }))
 
-app.use("/user", UserRoute);
+// app.use("/user", UserRoute);
 
 // Kiểm tra các biến môi trường quan trọng khi khởi động server
 const requiredEnvVars = ['JWT_SECRET_KEY', 'ONESIGNAL_APP_ID', 'ONESIGNAL_REST_API_KEY'];
