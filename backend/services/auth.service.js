@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import { Group } from "../models/schema.js";
+
 function generateRandomPassword(length) {
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
     let password = '';
@@ -12,24 +14,73 @@ function generateRandomPassword(length) {
     }
     return password;
   }
-class AuthService{
-   static async login(email,password){
-       const user=await User.findOne({email:email});
-       if(!user){
-         return {message: "invalid email or password"};
-       }
-       const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return  {message:'Invalid email or password'};
-        }
-        const return_user={
-            email:user.email,
-            _id:user._id,
-            name: user.name
-        }
-        return {message:'User logined successfully',user:return_user}
 
+class AuthService{
+   static async login(email, password, deviceToken) {
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return { code: 404, message: "Email không tồn tại", data: "" };
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return { code: 401, message: "Mật khẩu không đúng", data: "" };
+        }
+
+        // Cập nhật device token
+        if (deviceToken && deviceToken !== user.deviceToken) {
+            console.log('Updating device token:', {
+                userId: user._id,
+                oldToken: user.deviceToken,
+                newToken: deviceToken
+            });
+            
+            user.deviceToken = deviceToken;
+            await user.save();
+            
+            console.log('Device token updated successfully');
+        }
+
+        // Kiểm tra JWT_SECRET__KEY
+        if (!process.env.JWT_SECRET__KEY) {
+            throw new Error('JWT_SECRET__KEY is not configured');
+        }
+
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            process.env.JWT_SECRET__KEY,
+            { expiresIn: '30d' }
+        );
+
+        return {
+            code: 200,
+            message: "Đăng nhập thành công",
+            data: {
+                token: token || '',
+                user: {
+                    id: user._id ? user._id.toString() : '',
+                    name: user.name || '',
+                    email: user.email || '',
+                    deviceToken: user.deviceToken || ''
+                }
+            }
+        };
+    } catch (error) {
+        console.error('Login error:', error);
+        throw { 
+            code: 500, 
+            message: error.message || "Lỗi server", 
+            data: "" 
+        };
+    }
    }
+
+   static async generateAccessToken(user) {
+    const payload = { email: user.email, id: user._id };
+    return jwt.sign(payload, process.env.JWT_SECRET__KEY_KEY, { expiresIn: '7d' });
+  }
+
    static async register(email, password,name){
       try {
         const existingUser = await User.findOne({ email });
@@ -64,7 +115,7 @@ class AuthService{
           if (!user) {
               return{ status: false, message: 'User not found' };
           }
-          const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
+          const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET__KEY, { expiresIn: '15m' });
 
           return { status: true, accessToken };
       });
@@ -163,5 +214,83 @@ class AuthService{
       return { status: false, message: 'Could not check verification code' };
   }
    }
+
+   static async getUserByEmail(email) {
+        try {
+            const user = await User.findOne({ email });
+            return user;
+        } catch (error) {
+            console.error('Error in getUserByEmail:', error);
+            throw error;
+        }
+    }
+
+    static async updateUser(userId, updateData) {
+        try {
+            const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+            return updatedUser;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateUserByEmail(email, updateData) {
+        try {
+            // Cập nhật thông tin user
+            const updatedUser = await User.findOneAndUpdate(
+                { email }, 
+                updateData, 
+                { new: true }
+            ).select('-password');
+
+            // Nếu có cập nhật tên
+            if (updateData.name) {
+                // Cập nhật tên trong tất cả các nhóm mà user là thành viên
+                await Group.updateMany(
+                    { "listUser.email": email },
+                    { $set: { "listUser.$.name": updateData.name } }
+                );
+            }
+
+            return updatedUser;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getUserInfo(email) {
+        try {
+            const user = await User.findOne({ email })
+                .select('-password');
+            
+            if (!user) {
+                return null;
+            }
+            return user;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateUserAvatar(email, avatarData) {
+        try {
+            const updatedUser = await User.findOneAndUpdate(
+                { email },
+                { 
+                    avatar: {
+                        data: avatarData.data,
+                        contentType: avatarData.contentType
+                    }
+                },
+                { 
+                    new: true,
+                    select: '-password'
+                }
+            );
+            return updatedUser;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 export default AuthService;

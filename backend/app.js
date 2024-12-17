@@ -22,6 +22,16 @@ app.use(bodyParser.json());
 
 
 app.use("/user", UserRoute);
+
+// Kiểm tra các biến môi trường quan trọng khi khởi động server
+const requiredEnvVars = ['JWT_SECRET_KEY', 'ONESIGNAL_APP_ID', 'ONESIGNAL_REST_API_KEY'];
+for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+        console.error(`Error: ${envVar} is not set in environment variables`);
+        process.exit(1);
+    }
+}
+
 app.use("/todo", ToDoRoute);
 app.use("/food", FoodRoute);
 app.use("/recipe", RecipeRoute);
@@ -29,7 +39,7 @@ app.use("/item", ItemRoute);
 app.use("/meal", MealPlanRoute);
 app.use("/category",CategoryRoute);
 app.use("/unit",UnitRoute);
-app.use("/auth",AuthRoute);
+app.use("/auth", AuthRoute);
 app.use('/groups', GroupRouter);
 app.use('/admin',AdminRouter);
 export default app;

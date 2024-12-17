@@ -80,6 +80,39 @@ class RecipeService {
             throw error;
         }
     }
+
+    static async getAllRecipe(group) {
+        try {
+            const recipes = await Recipe.find({ group: group }, 'name description');
+            if (!recipes || recipes.length === 0) {
+                return { code: 708, message: "Không tìm thấy recipe nào trong group này", data: "" };
+            }
+            return { code: 709, message: "Lấy danh sách recipe thành công", data: recipes };
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách recipe:", error);
+            throw error;
+        }
+    }
+
+    static async getAllFoodInReceipt(recipeName, group) {
+        try {
+            const recipe = await Recipe.findOne({ name: recipeName, group: group });
+            if (!recipe) {
+                return { code: 710, message: "Không tìm thấy recipe này", data: "" };
+            }
+            return { 
+                code: 711, 
+                message: "Lấy danh sách food trong recipe thành công", 
+                data: {
+                    list_item: recipe.list_item,
+                    description: recipe.description
+                }
+            };
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách food trong recipe:", error);
+            throw error;
+        }
+    }
 }
 
 export default RecipeService;
