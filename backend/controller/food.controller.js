@@ -131,4 +131,14 @@ const getFoodsByCategory = async (req, res) => {
         return res.status(500).json({ code: 101, message: "Server error!", data: "" });
     }
 };
-export default { createFood, getAllFood, getUnavailableFoods , deleteFood, updateFood, getFoodsByCategory };
+
+const getFoodImageByName = async (req, res) => {
+    try {
+        const { groupId, foodName } = req.body;
+        const result = await FoodService.getFoodImageByName(groupId, foodName);
+        return res.status(result.code === 700? 200 : 404).json(result);
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
+export default { createFood, getAllFood, getUnavailableFoods , deleteFood, updateFood, getFoodsByCategory, getFoodImageByName };

@@ -21,13 +21,9 @@ class FoodService {
     }
 
     static async updateFood(foodName, group, newData) {
+        console.log("Gọi đến api");
+        
         try {
-            if (newData.name) {
-                const existingFood = await Food.findOne({ name: newData.name, group });
-                if (existingFood) {
-                    return { code: 603, message: "Thực phẩm cần cập nhật đã tồn tại", data: "" };
-                }
-            }
 
             const updatedFood = await Food.findOneAndUpdate(
                 { name: foodName, group },
@@ -53,6 +49,7 @@ class FoodService {
                 { "refrigerator.foodName": foodName, _id: group },
                 { $set: { "refrigerator.$.foodName": newData.name || foodName, "refrigerator.$.unitName": newData.unitName || undefined } }
             );
+            console.log("Cập nhật thực phẩm và các phụ thuộc thành công");
 
             return { code: 600, message: "Cập nhật thực phẩm và các phụ thuộc thành công", data: updatedFood };
         } catch (error) {

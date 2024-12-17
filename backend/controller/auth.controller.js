@@ -148,12 +148,13 @@ const getUserNameByEmail = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
     try {
-        const { name, phoneNumber } = req.body;
+        const { name, phoneNumber, avatar } = req.body;
         const email = req.user.email;
 
         const updateData = {};
         if (name) updateData.name = name;
         if (phoneNumber) updateData.phoneNumber = phoneNumber;
+        if (avatar != "") updateData.avatar = avatar;
 
         const updatedUser = await AuthService.updateUserByEmail(email, updateData);
 
