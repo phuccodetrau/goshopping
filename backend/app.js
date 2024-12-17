@@ -1,7 +1,4 @@
 import express from "express";
-import bodyParser from "body-parser";
-import cors from 'cors';
-// import UserRoute from "./routes/user.routes.js";
 import ToDoRoute from "./routes/todo.router.js";
 import FoodRoute from "./routes/food.router.js";
 import RecipeRoute from "./routes/recipe.router.js";
@@ -12,14 +9,18 @@ import UnitRoute from './routes/unit.router.js'
 import dotenv from 'dotenv';
 import AuthRoute from './routes/auth.router.js'
 import GroupRouter from './routes/group.router.js';
-import AdminRouter from './routes/admin.router.js'
+import ListTaskRouter from './routes/listtask.router.js';
+import notificationRouter from './routes/notification.router.js';
+import CronService from './services/cron.service.js';
+import bodyParser from "body-parser";
+import cors from 'cors'
+// import UserRoute from 
 
 dotenv.config();
 const app = express();
 app.use(cors());
-app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(bodyParser.json({ limit: '50mb' }))
 
 // app.use("/user", UserRoute);
 
@@ -41,5 +42,10 @@ app.use("/category",CategoryRoute);
 app.use("/unit",UnitRoute);
 app.use("/auth", AuthRoute);
 app.use('/groups', GroupRouter);
-app.use('/admin',AdminRouter);
+app.use("/listtask", ListTaskRouter);
+app.use('/api', notificationRouter);
+
+// Initialize cron jobs
+CronService.initExpirationCheck();
+
 export default app;

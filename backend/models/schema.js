@@ -6,10 +6,7 @@ const userSchema = new Schema({
   password: { type: String, required: true },
   name: { type: String },
   phoneNumber: { type: String },
-  avatar: { 
-    data: Buffer,
-    contentType: String
-  },
+  avatar: { type: String},
   language: { type: String },
   timezone: { type: String },
   device: { type: String },
