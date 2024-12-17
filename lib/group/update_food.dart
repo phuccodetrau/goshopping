@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'food_list.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class UpdateFood extends StatefulWidget {
   final String name;
@@ -32,6 +34,9 @@ class _UpdateFoodState extends State<UpdateFood> {
   String foodName = "";
   ValueNotifier<bool> isFoodName = ValueNotifier<bool>(false);
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  File? _selectedImage;
+  String _imageBase64 = "";
+  final ImagePicker _picker = ImagePicker();
   Future<void> _loadSecureValues() async {
     try {
       token = await _secureStorage.read(key: 'auth_token');
@@ -49,7 +54,10 @@ class _UpdateFoodState extends State<UpdateFood> {
   Future<void> _fetchCategories() async {
     try {
       final response =
-          await http.get(Uri.parse('$URL/category/admin/category/$groupId'));
+          await http.get(Uri.parse('$URL/category/admin/category/$groupId'), headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 707) {
         setState(() {
@@ -67,12 +75,42 @@ class _UpdateFoodState extends State<UpdateFood> {
   Future<void> _fetchUnits() async {
     try {
       final response =
-          await http.get(Uri.parse('$URL/unit/admin/unit/$groupId'));
+          await http.get(Uri.parse('$URL/unit/admin/unit/$groupId'), headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 700) {
         setState(() {
           listunit = responseData['data'];
           print(listunit.length);
+        });
+      } else {
+        print("${responseData["message"]}");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  Future<void> _fetchFoodImage() async {
+    try {
+      Map<String, String> body = {
+        'groupId': groupId!,
+        'foodName': widget.name,
+      };
+      final response = await http.post(
+        Uri.parse(URL + "/food/getFoodImageByName"),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+      final responseData = jsonDecode(response.body);
+      if (responseData["code"] == 700) {
+        setState(() {
+          _imageBase64 = responseData["data"];
         });
       } else {
         print("${responseData["message"]}");
@@ -90,7 +128,10 @@ class _UpdateFoodState extends State<UpdateFood> {
       };
       final response = await http.post(
         Uri.parse(URL + "/unit/admin/unit"),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(body),
       );
       final responseData = jsonDecode(response.body);
@@ -105,6 +146,7 @@ class _UpdateFoodState extends State<UpdateFood> {
   }
 
   Future<void> _updateFood() async {
+    print("Nận hàm");
     final String apiUrl = URL + "/food/updateFood";
 
     try {
@@ -113,7 +155,7 @@ class _UpdateFoodState extends State<UpdateFood> {
         "name": foodName,
         "categoryName": chosenCategory,
         "unitName": selectedUnit,
-        "image": ""
+        "image": _imageBase64
 
       };
       Map<String, dynamic> requestBody = {
@@ -124,9 +166,13 @@ class _UpdateFoodState extends State<UpdateFood> {
 
       final response = await http.post(
         Uri.parse(apiUrl),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: json.encode(requestBody),
       );
+      print("Gọi api");
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         print(responseData);
@@ -143,6 +189,15 @@ class _UpdateFoodState extends State<UpdateFood> {
       print("Error: $e");
     }
   }
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+        _imageBase64 = base64Encode(File(image.path).readAsBytesSync()); // Chuyển ảnh thành base64
+      });
+    }
+  }
 
   Future<void> _postData() async {
     await _updateFood();
@@ -157,8 +212,9 @@ class _UpdateFoodState extends State<UpdateFood> {
   Future<void> _initializeData() async {
 
     await _loadSecureValues();
-    await _fetchCategories();
     await _fetchUnits();
+    _fetchCategories();
+    _fetchFoodImage();
     setState(() {
       chosenCategory = widget.categoryName;
       foodName = widget.name;
@@ -187,15 +243,28 @@ class _UpdateFoodState extends State<UpdateFood> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Biểu ngữ trên cùng
-              Container(
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: AssetImage('images/fish.png'),
-                    fit: BoxFit.cover,
+              GestureDetector(
+                onTap: _pickImage, // Chọn ảnh khi nhấn vào container
+                child: Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: _selectedImage != null
+                          ? FileImage(_selectedImage!) // Hiển thị ảnh đã chọn
+                          : _imageBase64 == "" ? AssetImage('images/fish.png') as ImageProvider : MemoryImage(base64Decode(_imageBase64!)), // Placeholder
+                      fit: BoxFit.cover,
+                    ),
                   ),
+                  child: _selectedImage == null
+                      ? Center(
+                    child: Icon(
+                      Icons.add_a_photo,
+                      color: Colors.grey,
+                    ),
+                  )
+                      : null,
                 ),
               ),
               SizedBox(height: 16),

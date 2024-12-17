@@ -18,6 +18,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   final String _url = dotenv.env['ROOT_URL']!;
   String email = "";
   String name = "";
+  String _imageBase64 = "";
+  String phoneNumber = "";
 
   @override
   void initState() {
@@ -37,7 +39,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     try {
       final String? token = await _secureStorage.read(key: "auth_token");
       final response = await http.get(
-        Uri.parse('$_url/auth/user/get-user-info?email=$email'),
+        Uri.parse('$_url/auth/user/info?email=$email'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -47,7 +49,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         final data = jsonDecode(response.body);
         if (data['status'] == true && data['data'] != null) {
           setState(() {
-            name = data['data']['name'] ?? 'Chưa cập nhật tên';
+            name = data['data']['name'] ?? '';
+            phoneNumber = data['data']['phoneNumber'] ?? '';
+            _imageBase64 = data['data']['avatar'] != null ? data['data']['avatar'] : "";
           });
         }
       }
@@ -78,7 +82,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundImage: AssetImage('images/group.png'),
+                  backgroundImage: (_imageBase64 == null || _imageBase64 == "") ? AssetImage('images/group.png') : MemoryImage(base64Decode(_imageBase64!)),
                 ),
                 SizedBox(height: 8),
                 Text(

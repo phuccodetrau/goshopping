@@ -51,7 +51,10 @@ class _FridgeState extends State<Fridge> with RouteAware {
     try {
       print(groupId);
       final response =
-          await http.get(Uri.parse('$URL/category/admin/category/$groupId'));
+          await http.get(Uri.parse('$URL/category/admin/category/$groupId'), headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 707) {
         setState(() {
@@ -69,7 +72,10 @@ class _FridgeState extends State<Fridge> with RouteAware {
     try {
       print(groupId);
       final response =
-          await http.get(Uri.parse('$URL/food/getUnavailableFoods/$groupId'));
+          await http.get(Uri.parse('$URL/food/getUnavailableFoods/$groupId'), headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 600) {
         setState(() {
@@ -92,7 +98,10 @@ class _FridgeState extends State<Fridge> with RouteAware {
       };
       final response = await http.post(
         Uri.parse(URL + "/category/admin/category"),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(body),
       );
       final responseData = jsonDecode(response.body);
@@ -116,7 +125,10 @@ class _FridgeState extends State<Fridge> with RouteAware {
       };
       final response = await http.post(
         Uri.parse(URL + "/groups/filterItemsWithPagination"),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(body),
       );
       final responseData = jsonDecode(response.body);

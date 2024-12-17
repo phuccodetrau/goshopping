@@ -132,27 +132,6 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
                   width: double.infinity,
                   fit: BoxFit.cover,
                 ),
-                Positioned(
-                  bottom: 16,
-                  child: Column(
-                    children: [
-                      Icon(Icons.camera_alt, color: Colors.white),
-                      Text(
-                        widget.groupName,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: Icon(Icons.edit, color: Colors.white),
-                ),
               ],
             ),
             SectionTitle(title: "Quản lí thực phẩm"),
