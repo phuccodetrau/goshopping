@@ -47,6 +47,20 @@ class UserServices {
             throw err;
         }
     }
+    static async getAllUser(){
+        try {
+            
+            const user = await UserModel.findOne({ email }); 
+            console.log("User found:", user);
+            if (user) {
+                return user; // Trả về tên nếu tìm thấy
+            }
+            return null; // Trả về null nếu không tìm thấy
+        } catch (err) {
+            console.error("Error fetching user:", err);
+            throw err;
+        }
+    }
     
 }
 

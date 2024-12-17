@@ -84,7 +84,10 @@ const groupSchema = new Schema({
   listUser: [groupUserSchema],
   refrigerator: [itemSchema]
 });
-
+const adminSchema=new Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+})
 export const User = mongoose.model('User', userSchema);
 export const Category = mongoose.model('Category', categorySchema);
 export const Unit = mongoose.model('Unit', unitSchema);
@@ -94,3 +97,4 @@ export const ListTask = mongoose.model('ListTask', listTaskSchema);
 export const Recipe = mongoose.model('Recipe', recipeSchema);
 export const MealPlan = mongoose.model('MealPlan', mealPlanSchema);
 export const Group = mongoose.model('Group', groupSchema);
+export const Admin=mongoose.model("Admin",adminSchema)
