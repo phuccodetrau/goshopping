@@ -1,7 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import cors from 'cors';
-import UserRoute from "./routes/user.routes.js";
+// import UserRoute from "./routes/user.routes.js";
 import ToDoRoute from "./routes/todo.router.js";
 import FoodRoute from "./routes/food.router.js";
 import RecipeRoute from "./routes/recipe.router.js";
@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 
-app.use("/user", UserRoute);
+// app.use("/user", UserRoute);
 
 // Kiểm tra các biến môi trường quan trọng khi khởi động server
 const requiredEnvVars = ['JWT_SECRET_KEY', 'ONESIGNAL_APP_ID', 'ONESIGNAL_REST_API_KEY'];
