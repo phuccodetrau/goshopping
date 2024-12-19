@@ -14,6 +14,7 @@ import notificationRouter from './routes/notification.router.js';
 import CronService from './services/cron.service.js';
 import bodyParser from "body-parser";
 import cors from 'cors'
+import AdminRoute from './routes/admin.router.js'
 // import UserRoute from 
 
 dotenv.config();
@@ -44,7 +45,7 @@ app.use("/auth", AuthRoute);
 app.use('/groups', GroupRouter);
 app.use("/listtask", ListTaskRouter);
 app.use('/api', notificationRouter);
-
+app.use("/admin",AdminRoute)
 // Initialize cron jobs
 CronService.initExpirationCheck();
 

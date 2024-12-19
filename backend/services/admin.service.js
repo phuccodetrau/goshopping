@@ -96,6 +96,7 @@ class AdminService{
         return {message:'get all user successfully',group:{
             user: listUser,
             refrigerator: refrigerator,
+            name:group.name
         }}
     }
     static async getAllUser(){
@@ -134,7 +135,10 @@ class AdminService{
                 }
             }
         }
-        return {message:'get user info successfully',user_info:return_group}
+        return {message:'get user info successfully',user_info:{
+            group:return_group,
+            name: email.name
+        }}
     }
  
     static async getAdminInfo() {
@@ -150,7 +154,7 @@ class AdminService{
             number_user_in_group += listUser.length;
         }
         number_user_in_group /= len_groups;
-    
+        number_user_in_group=number_user_in_group.toFixed(2);
         // Tính số thực phẩm trong mỗi nhóm
         var number_food_in_group = 0;
         for (var i = 0; i < len_groups; i++) {
@@ -158,7 +162,7 @@ class AdminService{
             number_food_in_group += refrigerator.length;
         }
         number_food_in_group /= len_groups;
-    
+        number_food_in_group=number_food_in_group.toFixed(2);
         // Lấy số người dùng mới trong 7 ngày qua theo từng ngày
         const today = new Date();
         const sevenDaysAgo = new Date(today);
