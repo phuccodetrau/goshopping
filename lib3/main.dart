@@ -6,7 +6,7 @@ import 'package:month_year_picker/month_year_picker.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'providers/user_provider.dart';
-import 'services/api_service.dart';
+import 'services/user_service.dart';
 import 'repositories/user_repository.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -51,12 +51,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<ApiService>(
-          create: (_) => ApiService(),
+        Provider<UserService>(
+          create: (_) => UserService(),
         ),
-        ProxyProvider<ApiService, UserRepository>(
+        ProxyProvider<UserService, UserRepository>(
           create: (_) => UserRepository(
-            apiService: _.read<ApiService>(),
+            apiService: _.read<UserService>(),
           ),
           update: (_, apiService, previous) => UserRepository(
             apiService: apiService,

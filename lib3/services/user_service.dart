@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class ApiService {
+class UserService {
   final String baseUrl = dotenv.env['ROOT_URL'] ?? '';
   final http.Client client;
 
-  ApiService({http.Client? client}) : this.client = client ?? http.Client();
+  UserService({http.Client? client}) : client = client ?? http.Client();
 
   // Auth APIs
   Future<Map<String, dynamic>> login(String email, String password, String? deviceToken) async {
@@ -62,7 +62,6 @@ class ApiService {
 
   Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
     try {
-      print('Verifying OTP - Email: $email, OTP: $otp');
 
       final response = await client.post(
         Uri.parse('$baseUrl/auth/user/checkverification-code'),

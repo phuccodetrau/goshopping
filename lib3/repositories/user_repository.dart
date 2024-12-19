@@ -1,9 +1,9 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user_model.dart';
-import '../services/api_service.dart';
+import '../services/user_service.dart';
 
 class UserRepository {
-  final ApiService apiService;
+  final UserService apiService;
   final FlutterSecureStorage storage;
 
   UserRepository({
