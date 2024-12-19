@@ -18,14 +18,14 @@ function UserDetail(){
    
     const { userID } = useParams();
     const [users, setUser] = useState({})
-   
+    const [name,setName]=useState("")
     useEffect (() => {
         const getUserDetail = async () => {
             try{
                 const res = await axios.post("http://localhost:3000/admin/get_one_user", {userID:userID});
                 
-                setUser(res.data.user_info);
-              
+                setUser(res.data.user_info.group);
+                setName(res.data.user_info.name)
                 
                
                 
@@ -42,7 +42,7 @@ function UserDetail(){
             <div id="content">
                 <SearchBoard></SearchBoard>
                 <div className="container-fluid">
-                <h3 className="text-dark mb-4">User Detail</h3>
+                <h3 className="text-dark mb-4">{name}</h3>
                 </div>
                 
                 { users.length > 0 &&
@@ -51,7 +51,7 @@ function UserDetail(){
         
                     <div className="card shadow">
                         <div className="card-header py-3">
-                            <p className="text-primary m-0 fw-bold">User Detail</p>
+                            <p className="text-primary m-0 fw-bold">Group Detail</p>
                         </div>
                         <PaginatedTable datas={users} title={["Group ID", "Group Name","Number Member", "Role"]} filter={"Group Name"} link={"managegroup"}></PaginatedTable>
 

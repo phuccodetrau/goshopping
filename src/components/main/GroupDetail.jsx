@@ -40,6 +40,7 @@ function GroupDetail(){
     const { groupID } = useParams();
     const [users, setUser] = useState({})
     const [foods, setFood] = useState([])
+    const [name,setName]=useState("")
     useEffect (() => {
         const getGroupDetail = async () => {
             try{
@@ -49,7 +50,7 @@ function GroupDetail(){
               
                 
                 setFood(res.data.group.refrigerator);
-                
+                setName(res.data.group.name)
             }catch(error){
                 console.log(error.message);
             }
@@ -63,7 +64,7 @@ function GroupDetail(){
             <div id="content">
                 <SearchBoard></SearchBoard>
                 <div className="container-fluid">
-                <h3 className="text-dark mb-4">Group Detail</h3>
+                <h3 className="text-dark mb-4">{name}</h3>
                 </div>
                 
                 { users.length > 0 &&
@@ -74,7 +75,7 @@ function GroupDetail(){
                         <div className="card-header py-3">
                             <p className="text-primary m-0 fw-bold">User Detail</p>
                         </div>
-                        <PaginatedTable datas={users} title={["User Id", "User Name","User Email","User Role"]} filter={"User Name"} link={"manageuser"}></PaginatedTable>
+                        <PaginatedTable datas={users} title={["User ID", "User Name","User Email","User Role"]} filter={"User Name"} link={"manageuser"}></PaginatedTable>
 
                     </div>
                 </div>
