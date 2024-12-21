@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'food_list.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import "package:go_shopping/main.dart";
 
 class UpdateFood extends StatefulWidget {
   final String name;
@@ -17,7 +18,7 @@ class UpdateFood extends StatefulWidget {
   _UpdateFoodState createState() => _UpdateFoodState();
 }
 
-class _UpdateFoodState extends State<UpdateFood> {
+class _UpdateFoodState extends State<UpdateFood> with RouteAware{
   String? email;
   String? id;
   String? name;
@@ -37,6 +38,7 @@ class _UpdateFoodState extends State<UpdateFood> {
   File? _selectedImage;
   String _imageBase64 = "";
   final ImagePicker _picker = ImagePicker();
+  bool isDidChange = false;
   Future<void> _loadSecureValues() async {
     try {
       token = await _secureStorage.read(key: 'auth_token');
@@ -189,6 +191,29 @@ class _UpdateFoodState extends State<UpdateFood> {
       print("Error: $e");
     }
   }
+
+  Future<String> _deleteUnit(String categoryName) async {
+    try {
+      Map<String, dynamic> body = {
+        "name": categoryName,
+        'groupId': groupId!,
+      };
+      final response = await http.delete(
+        Uri.parse(URL + "/unit/admin/unit"),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+      final responseData = jsonDecode(response.body);
+      return responseData["code"] == 700 ? "ok" : responseData["data"];
+    } catch (e) {
+      print("Error: $e");
+      return "";
+    }
+  }
+
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
@@ -203,24 +228,50 @@ class _UpdateFoodState extends State<UpdateFood> {
     await _updateFood();
   }
   late TextEditingController _controller;
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.name);
+
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (ModalRoute.of(context) != null) {
+      routeObserver.subscribe(
+          this,
+          ModalRoute.of(context)
+          as PageRoute<dynamic>); // Subscribe to route observer
+    }
+    if(isDidChange == false){
+      setState(() {
+        chosenCategory = widget.categoryName;
+        foodName = widget.name;
+        oldname = widget.name;
+      });
+      _controller = TextEditingController(text: widget.name);
+    }
     _initializeData();
   }
 
-  Future<void> _initializeData() async {
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this); // Unsubscribe from route observer
+    super.dispose();
+  }
 
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    _initializeData(); // Re-fetch data when the screen comes back
+  }
+  // void initState() {
+  //   super.initState();
+  //   _controller = TextEditingController(text: widget.name);
+  //   _initializeData();
+  // }
+
+  Future<void> _initializeData() async {
+    isDidChange = true;
     await _loadSecureValues();
     await _fetchUnits();
+    selectedUnit = widget.unitName;
     _fetchCategories();
     _fetchFoodImage();
-    setState(() {
-      chosenCategory = widget.categoryName;
-      foodName = widget.name;
-      oldname = widget.name;
-      selectedUnit = widget.unitName;
-    });
   }
 
   @override
@@ -333,7 +384,9 @@ class _UpdateFoodState extends State<UpdateFood> {
                     ...listunit.map<DropdownMenuItem<String>>((dynamic unit) {
                       return DropdownMenuItem<String>(
                         value: unit["name"], // Sử dụng trường "name" làm giá trị
-                        child: Text(unit["name"]),
+                        child: GestureDetector(onLongPress: (){
+                          _showDeleteDialog(unit["name"]);
+                        }, child: Text(unit["name"])),
                       );
                     }).toList(),
                     DropdownMenuItem<String>(
@@ -482,6 +535,47 @@ class _UpdateFoodState extends State<UpdateFood> {
                 Navigator.of(context).pop();
               },
               child: Text("Tạo mới"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteDialog(String unitName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Xóa đơn vị"),
+          content: Text("Bạn có muốn xóa đơn vị \"$unitName\" không?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text("Không"),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Call your delete function
+                String status = await _deleteUnit(unitName);
+                Navigator.of(context).pop(); // Close the dialog after action
+
+                if (status == "") {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Tồn tại thực phẩm sử dụng đơn vị này!")),
+                  );
+                } else {
+                  // Thực hiện hành động sau khi xóa thành công (nếu cần)
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Xóa đơn vị thành công")),
+                  );
+                }
+              },
+              child: Text("Có"),
             ),
           ],
         );

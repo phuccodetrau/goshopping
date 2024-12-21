@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'fridge.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 class BuyOldFood extends StatefulWidget {
@@ -17,15 +16,16 @@ class BuyOldFood extends StatefulWidget {
   String? memberEmail;
   String? note;
   String? id;
+  final String image;
 
 
-  BuyOldFood({required this.foodName, required this.unitName, required this.amount, required this.startDate, required this.endDate, required this.memberName, required this.memberEmail, required this.note, required this.id});
+  BuyOldFood({required this.foodName, required this.unitName, required this.amount, required this.startDate, required this.endDate, required this.memberName, required this.memberEmail, required this.note, required this.id, required this.image});
 
   @override
   _BuyOldFoodState createState() => _BuyOldFoodState();
 }
 
-class _BuyOldFoodState extends State<BuyOldFood> {
+class _BuyOldFoodState extends State<BuyOldFood>{
   String? email;
   String? id;
   String? name;
@@ -45,9 +45,6 @@ class _BuyOldFoodState extends State<BuyOldFood> {
   ValueNotifier<bool> isRight = ValueNotifier<bool>(false);
   String note = "";
   int? amount;
-  File? _selectedImage;
-  String _imageBase64 = "";
-  final ImagePicker _picker = ImagePicker();
 
   Future<void> _loadSecureValues() async {
     try {
@@ -196,15 +193,6 @@ class _BuyOldFoodState extends State<BuyOldFood> {
     }
   }
 
-  Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _selectedImage = File(image.path);
-        _imageBase64 = base64Encode(File(image.path).readAsBytesSync()); // Chuyển ảnh thành base64
-      });
-    }
-  }
 
   Future<void> _postData(memberName, memberEmail, note, start, end, amount, state, group, expireDate) async {
     if(widget.id == null){
@@ -248,30 +236,19 @@ class _BuyOldFoodState extends State<BuyOldFood> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Biểu ngữ trên cùng
-              GestureDetector(
-                onTap: _pickImage, // Chọn ảnh khi nhấn vào container
-                child: Container(
+              Container(
                   height: 100,
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(12),
                     image: DecorationImage(
-                      image: _selectedImage != null
-                          ? FileImage(_selectedImage!) // Hiển thị ảnh đã chọn
+                      image: widget.image != ""
+                          ? MemoryImage(base64Decode(widget.image!)) // Hiển thị ảnh đã chọn
                           : AssetImage('images/fish.png') as ImageProvider, // Placeholder
                       fit: BoxFit.cover,
                     ),
                   ),
-                  child: _selectedImage == null
-                      ? Center(
-                    child: Icon(
-                      Icons.add_a_photo,
-                      color: Colors.grey,
-                    ),
-                  )
-                      : null,
                 ),
-              ),
               SizedBox(height: 16),
               Text(
                 "Tên thực phẩm",
@@ -453,7 +430,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                     if(selectedUser == -1 ||
                         startDate == null ||
                         endDate == null ||
-                        amount == null
+                        amount == null || startDate!.isBefore(DateTime.now()) || endDate!.isBefore(DateTime.now())
                     )
                     {
                       isFoodName.value = true;

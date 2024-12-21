@@ -32,6 +32,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
   ScrollController _scrollController = ScrollController();
   int currentPage = 1;
   bool isLoadingMore = false;
+  bool isLoadedCategory = false;
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   Future<void> _loadSecureValues() async {
     try {
@@ -59,6 +60,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
       if (responseData['code'] == 707) {
         setState(() {
           listcategory = responseData['data'];
+          isLoadedCategory = true;
         });
       } else {
         print("${responseData["message"]}");
@@ -146,6 +148,28 @@ class _FridgeState extends State<Fridge> with RouteAware {
       }
     } catch (e) {
       print("Error: $e");
+    }
+  }
+
+  Future<String> _deleleCategory(String categoryName) async {
+    try {
+      Map<String, dynamic> body = {
+        "name": categoryName,
+        'groupId': groupId!,
+      };
+      final response = await http.delete(
+        Uri.parse(URL + "/category/admin/category"),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+      final responseData = jsonDecode(response.body);
+      return responseData["code"] == 704 ? "ok" : responseData["data"];
+    } catch (e) {
+      print("Error: $e");
+      return "";
     }
   }
 
@@ -273,7 +297,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
                 child: Row(
                   children: [
                     _buildCategoryItem(icon: Icons.add, label: "Thẻ mới"),
-                    if (listcategory.isEmpty) CircularProgressIndicator(),
+                    if (isLoadedCategory == false) CircularProgressIndicator(),
                     ...listcategory.map((category) {
                       return _buildCategoryItem(
                         imagePath: "images/fish.png",
@@ -439,6 +463,45 @@ class _FridgeState extends State<Fridge> with RouteAware {
           _showCreateCategoryDialog();
         }
       },
+      onLongPress: () {
+        // Hiển thị dialog khi người dùng nhấn giữ
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("Xóa phân loại"),
+              content: Text("Bạn có muốn xóa phân loại \"$label\" không?"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Đóng dialog
+                  },
+                  child: Text("Không"),
+                ),
+                TextButton(
+                  onPressed: () async{
+                    // Thực hiện xóa phân loại
+                    String status = await _deleleCategory(label);
+                    if (status == "") {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Tồn tại thực phẩm thuộc phân loại này!")),
+                      );
+                    } else {
+                      // Thực hiện hành động sau khi xóa thành công (nếu cần)
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Xóa phân loại thành công")),
+                      );
+                    }
+                  },
+                  child: Text("Có"),
+                ),
+              ],
+            );
+          },
+        );
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Column(
@@ -486,6 +549,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
               memberEmail: null,
               note: "",
               id: null,
+              image: image,
             ),
           ),
         );

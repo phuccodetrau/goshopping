@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'fridge.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:go_shopping/main.dart';
 
 class BuyFood extends StatefulWidget {
   final String categoryName;
@@ -15,7 +16,7 @@ class BuyFood extends StatefulWidget {
   _BuyFoodState createState() => _BuyFoodState();
 }
 
-class _BuyFoodState extends State<BuyFood> {
+class _BuyFoodState extends State<BuyFood> with RouteAware{
   String? email;
   String? id;
   String? name;
@@ -32,8 +33,8 @@ class _BuyFoodState extends State<BuyFood> {
   String chosenCategory = "";
   int? amount;
   String foodName = "";
-  DateTime startDate = DateTime.now().subtract(Duration(days: 2));
-  DateTime endDate = DateTime.now().subtract(Duration(days: 1));
+  DateTime? startDate;
+  DateTime? endDate;
   String note = "";
   ValueNotifier<bool> isFoodName = ValueNotifier<bool>(false);
   ValueNotifier<bool> isRight = ValueNotifier<bool>(false);
@@ -41,6 +42,7 @@ class _BuyFoodState extends State<BuyFood> {
   File? _selectedImage;
   String _imageBase64 = "";
   final ImagePicker _picker = ImagePicker();
+  bool isDidChange = false;
   Future<void> _loadSecureValues() async {
     try {
       token = await _secureStorage.read(key: 'auth_token');
@@ -66,7 +68,6 @@ class _BuyFoodState extends State<BuyFood> {
       if (responseData['code'] == 707) {
         setState(() {
           listcategory = responseData['data'];
-          print(listcategory.length);
         });
       } else {
         print("${responseData["message"]}");
@@ -87,7 +88,6 @@ class _BuyFoodState extends State<BuyFood> {
       if (responseData['code'] == 700) {
         setState(() {
           listunit = responseData['data'];
-          print(listunit.length);
         });
       } else {
         print("${responseData["message"]}");
@@ -108,7 +108,6 @@ class _BuyFoodState extends State<BuyFood> {
       if (responseData['code'] == 700) {
         setState(() {
           listuser = responseData['data'];
-          print(listuser.length);
         });
       } else {
         print("${responseData["message"]}");
@@ -187,6 +186,7 @@ class _BuyFoodState extends State<BuyFood> {
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         print(responseData);
+        print("end");
         if (responseData["code"] == 600) {
           print("Thực phẩm đã được thêm thành công: ${responseData["data"]}");
         } else if (responseData["code"] == 602) {
@@ -238,6 +238,28 @@ class _BuyFoodState extends State<BuyFood> {
     }
   }
 
+  Future<String> _deleteUnit(String categoryName) async {
+    try {
+      Map<String, dynamic> body = {
+        "name": categoryName,
+        'groupId': groupId!,
+      };
+      final response = await http.delete(
+        Uri.parse(URL + "/unit/admin/unit"),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+      final responseData = jsonDecode(response.body);
+      return responseData["code"] == 700 ? "ok" : responseData["data"];
+    } catch (e) {
+      print("Error: $e");
+      return "";
+    }
+  }
+
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
@@ -254,14 +276,34 @@ class _BuyFoodState extends State<BuyFood> {
     await _addNewTask(memberName, memberEmail, note, start, end, foodName, amount, unitName, state, group);
   }
 
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (ModalRoute.of(context) != null) {
+      routeObserver.subscribe(
+          this,
+          ModalRoute.of(context)
+          as PageRoute<dynamic>); // Subscribe to route observer
+    }
+    if(isDidChange == false){
+      chosenCategory = widget.categoryName;
+    }
     _initializeData();
   }
 
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this); // Unsubscribe from route observer
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    _initializeData(); // Re-fetch data when the screen comes back
+  }
+
   Future<void> _initializeData() async {
-    chosenCategory = widget.categoryName;
-    // Đợi _loadSecureValues hoàn tất
+    isDidChange = true;
     await _loadSecureValues();
 
     // Sau khi _loadSecureValues hoàn tất, gọi _fetchCategories
@@ -345,8 +387,7 @@ class _BuyFoodState extends State<BuyFood> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  if (listcategory.isEmpty)
-                    CircularProgressIndicator(),
+                  if (listcategory.isEmpty) CircularProgressIndicator(),
                   ...listcategory.map((category) {
                     return _buildChip(category["name"]!);
                   }).toList(),
@@ -372,35 +413,39 @@ class _BuyFoodState extends State<BuyFood> {
                     ),
                   ),
                   SizedBox(width: 8),
-                  DropdownButton<String>(
-                    value: selectedUnit,
-                    items: [
-                      DropdownMenuItem<String>(
-                        value: '', // Giá trị cho tùy chọn "Tạo mới"
-                        child: Text(''),
-                      ),
-                      ...listunit.map<DropdownMenuItem<String>>((dynamic unit) {
-                        return DropdownMenuItem<String>(
-                          value: unit["name"], // Sử dụng trường "name" làm giá trị
-                          child: Text(unit["name"]),
-                        );
-                      }).toList(),
-                      DropdownMenuItem<String>(
-                        value: 'Tạo mới', // Giá trị cho tùy chọn "Tạo mới"
-                        child: Text('Tạo mới'),
-                      ),
-                    ],
-                    onChanged: (newValue) {
+                  Text(selectedUnit),
+                  SizedBox(width: 3,),
+                  PopupMenuButton<dynamic>(
+                    onSelected: (newValue) {
                       if (newValue == 'Tạo mới') {
                         _showCreateUnitDialog();
                       } else {
                         setState(() {
-                          selectedUnit = newValue!;
+                          selectedUnit = newValue;
                         });
                       }
                     },
+                    itemBuilder: (context) {
+                      return [
+                        ...listunit.map<PopupMenuEntry<dynamic>>((dynamic unit) {
+                          return PopupMenuItem<dynamic>(
+                            value: unit["name"],
+                            child: GestureDetector(
+                              onLongPress: () {
+                                _showDeleteDialog(unit["name"]); // Show the delete dialog
+                              },
+                              child: Text(unit["name"]),
+                            ),
+                          );
+                        }).toList(),
+                        PopupMenuItem<dynamic>(
+                          value: 'Tạo mới',
+                          child: Text('Tạo mới'),
+                        ),
+                      ];
+                    },
                   ),
-                  SizedBox(width: 16),
+                  SizedBox(width: 6),
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       decoration: InputDecoration(
@@ -445,7 +490,7 @@ class _BuyFoodState extends State<BuyFood> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          startDate == DateTime.now().subtract(Duration(days: 1))
+                          startDate == null
                               ? "Chọn ngày bắt đầu"
                               : "${startDate!.day}/${startDate!.month}/${startDate!.year}",
                           style: const TextStyle(fontSize: 16),
@@ -464,7 +509,7 @@ class _BuyFoodState extends State<BuyFood> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          endDate == DateTime.now().subtract(Duration(days: 1))
+                          endDate == null
                               ? "Chọn ngày kết thúc"
                               : "${endDate!.day}/${endDate!.month}/${endDate!.year}",
                           style: const TextStyle(fontSize: 16),
@@ -531,24 +576,21 @@ class _BuyFoodState extends State<BuyFood> {
                         selectedUser == -1 ||
                         amount == null ||
                         selectedUnit == ""
-                        || startDate.isBefore(DateTime.now()) ||
-                        endDate.isBefore(DateTime.now())
+                        || startDate!.isBefore(DateTime.now()) ||
+                        endDate!.isBefore(DateTime.now()) || startDate == null || endDate == null
                       )
                     {
-                      print("Thiếu trường");
                       isFoodName.value = true;
                     }
                     else if(name != adminName && listuser[selectedUser]["name"] != name){
-                      print("Không có quền");
                       isRight.value = true;
                     }
                     else{
-                      print("ok bro");
                       String categoryName = chosenCategory;
                       String memberName = listuser[selectedUser]["name"];
                       String memberEmail = listuser[selectedUser]["email"];
-                      String formattedStartDate = "${startDate.toLocal()}".split(' ')[0];
-                      String formattedEndDate = "${endDate.toLocal()}".split(' ')[0];
+                      String formattedStartDate = "${startDate!.toLocal()}".split(' ')[0];
+                      String formattedEndDate = "${endDate!.toLocal()}".split(' ')[0];
                       String formattedExpiredDate = "${DateTime.now().add(Duration(days: 30))}".split(' ')[0];
                       _postData(foodName, categoryName, selectedUnit, memberName, memberEmail, note, formattedStartDate, formattedEndDate, amount, false, groupId, formattedExpiredDate);
                       _showReturnDialog();
@@ -599,12 +641,55 @@ class _BuyFoodState extends State<BuyFood> {
     );
   }
 
+  void _showDeleteDialog(String unitName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Xóa đơn vị"),
+          content: Text("Bạn có muốn xóa đơn vị \"$unitName\" không?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text("Không"),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Call your delete function
+                String status = await _deleteUnit(unitName);
+                Navigator.of(context).pop(); // Close the dialog after action
+
+                if (status == "") {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Tồn tại thực phẩm sử dụng đơn vị này!")),
+                  );
+                } else {
+                  // Thực hiện hành động sau khi xóa thành công (nếu cần)
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Xóa đơn vị thành công")),
+                  );
+                }
+              },
+              child: Text("Có"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   Widget _buildChip(String label) {
     final isSelected = label == chosenCategory;
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         setState(() {
           chosenCategory = label;
+          print(chosenCategory);
         });
       },
       child: Chip(
