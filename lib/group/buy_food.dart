@@ -412,9 +412,9 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
                       },
                     ),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: 1),
                   Text(selectedUnit),
-                  SizedBox(width: 3,),
+                  SizedBox(width: 1,),
                   PopupMenuButton<dynamic>(
                     onSelected: (newValue) {
                       if (newValue == 'Tạo mới') {
@@ -445,7 +445,7 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
                       ];
                     },
                   ),
-                  SizedBox(width: 6),
+                  SizedBox(width: 1),
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       decoration: InputDecoration(
