@@ -17,7 +17,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _isAgree = false;
-  
+
   bool get _isButtonEnabled =>
       _usernameController.text.isNotEmpty &&
       _emailController.text.isNotEmpty &&
@@ -26,17 +26,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _isAgree &&
       _passwordController.text == _confirmPasswordController.text;
 
-  bool get _isPasswordMatch =>
-      _confirmPasswordController.text.isEmpty ||
+  bool get _isUsernameValid => _usernameController.text.isNotEmpty;
+  bool get _isEmailValid => _emailController.text.isNotEmpty;
+  bool get _isPasswordValid => _passwordController.text.isNotEmpty;
+  bool get _isConfirmPasswordValid =>
+      _confirmPasswordController.text.isNotEmpty &&
       _passwordController.text == _confirmPasswordController.text;
 
   @override
   void initState() {
     super.initState();
+    _checkInitialLogin();
     _usernameController.addListener(_onFormChanged);
     _emailController.addListener(_onFormChanged);
     _passwordController.addListener(_onFormChanged);
     _confirmPasswordController.addListener(_onFormChanged);
+  }
+
+  Future<void> _checkInitialLogin() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final isLoggedIn = await userProvider.checkInitialLogin();
+    
+    if (isLoggedIn && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
   }
 
   @override
@@ -71,7 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (success && mounted) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomeScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     }
   }
@@ -79,139 +95,201 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.grey[700]),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Đăng ký',
-          style: TextStyle(color: Colors.black),
-        ),
-      ),
       body: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
           if (userProvider.isLoading) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           return SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: _usernameController,
-                  decoration: InputDecoration(
-                    labelText: 'Họ và tên',
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    prefixIcon: Icon(Icons.person, color: Colors.grey[600]),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 40),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.pop(context),
                   ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    prefixIcon: Icon(Icons.email, color: Colors.grey[600]),
-                  ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Mật khẩu',
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    prefixIcon: Icon(Icons.lock, color: Colors.grey[600]),
-                  ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Xác nhận mật khẩu',
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    prefixIcon: Icon(Icons.lock, color: Colors.grey[600]),
-                  ),
-                ),
-                if (!_isPasswordMatch)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      'Mật khẩu không khớp',
-                      style: TextStyle(color: Colors.red, fontSize: 12),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Chào mừng bạn đến với',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green[800],
                     ),
                   ),
-                SizedBox(height: 16),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _isAgree,
-                      onChanged: _onAgreeChanged,
+                  Text(
+                    'Đi Chợ Tiện Lợi!',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green[800],
                     ),
-                    Expanded(
-                      child: Text(
-                        'Tôi đồng ý với các điều khoản sử dụng của Đi Chợ Tiện Lợi',
-                        style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Username field
+                  TextField(
+                    controller: _usernameController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.person),
+                      hintText: 'Enter your username',
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
                       ),
                     ),
-                  ],
-                ),
-                if (userProvider.error != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      userProvider.error!,
-                      style: TextStyle(color: Colors.red, fontSize: 14),
-                    ),
+                    textInputAction: TextInputAction.next,
                   ),
-                SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
+                  if (!_isUsernameValid)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 5),
+                      child: Text(
+                        'Please enter your username',
+                        style: TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+
+                  // Email field
+                  TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.email),
+                      hintText: 'Enter your email',
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  if (!_isEmailValid)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 5),
+                      child: Text(
+                        'Please enter your email',
+                        style: TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+
+                  // Password field
+                  TextField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.lock),
+                      hintText: 'Enter your password',
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    obscureText: true,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  if (!_isPasswordValid)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 5),
+                      child: Text(
+                        'Please enter your password',
+                        style: TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+
+                  // Confirm Password field
+                  TextField(
+                    controller: _confirmPasswordController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.lock),
+                      hintText: 'Confirm your password',
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                  ),
+                  if (!_isConfirmPasswordValid)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Text(
+                        _confirmPasswordController.text.isEmpty
+                            ? 'Please confirm your password'
+                            : 'Passwords do not match',
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+
+                  // Terms and Conditions
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _isAgree,
+                        onChanged: _onAgreeChanged,
+                      ),
+                      Expanded(
+                        child: RichText(
+                          text: const TextSpan(
+                            text: 'Tôi đồng ý với các ',
+                            style: TextStyle(color: Colors.black),
+                            children: [
+                              TextSpan(
+                                text: 'Chính sách quyền riêng tư của Đi Chợ Tiện Lợi',
+                                style: TextStyle(color: Colors.blue),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Error message from provider
+                  if (userProvider.error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        userProvider.error!,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    ),
+
+                  // Register button
+                  ElevatedButton(
                     onPressed: _isButtonEnabled ? _register : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _isButtonEnabled ? Colors.green[700] : Colors.grey,
+                      backgroundColor: _isButtonEnabled ? Colors.green : Colors.grey,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: Text(
-                      'Đăng ký',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
+                    child: const Center(
+                      child: Text(
+                        'Tiếp tục với Email',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },

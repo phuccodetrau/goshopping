@@ -193,25 +193,6 @@ class _FridgeState extends State<Fridge> with RouteAware {
     });
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _scrollController = ScrollController();
-  //
-  //   // Lắng nghe sự kiện cuộn
-  //   _scrollController.addListener(() {
-  //     if (_scrollController.position.pixels ==
-  //             _scrollController.position.maxScrollExtent &&
-  //         !isLoadingMore) {
-  //       setState(() => isLoadingMore = true); // Đặt cờ để tránh cuộn nhiều lần
-  //       currentPage++; // Tăng trang hiện tại
-  //       _getItem(append: true)
-  //           .then((_) => setState(() => isLoadingMore = false));
-  //     }
-  //   });
-  //   _initializeData();
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

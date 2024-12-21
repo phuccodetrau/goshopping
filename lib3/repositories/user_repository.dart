@@ -22,11 +22,23 @@ class UserRepository {
           'token': userData['token'],
         });
 
-        await _saveUserData(user);
+        // Save all user data
+        await storage.write(key: 'auth_token', value: user.token);
+        await storage.write(key: 'email', value: user.email);
+        await storage.write(key: 'id', value: user.id);
+        await storage.write(key: 'name', value: user.name);
+        if (user.phoneNumber != null) {
+          await storage.write(key: 'phoneNumber', value: user.phoneNumber);
+        }
+        if (user.deviceToken != null) {
+          await storage.write(key: 'deviceToken', value: user.deviceToken);
+        }
+
         return user;
       }
       throw Exception(response['message'] ?? 'Login failed');
     } catch (e) {
+      print('Login repository error: $e');
       throw Exception('Login error: $e');
     }
   }
@@ -34,8 +46,27 @@ class UserRepository {
   Future<bool> register(String name, String email, String password) async {
     try {
       final response = await apiService.register(name, email, password);
-      return response['status'] == true;
+      
+      if (response['status'] == true) {
+        // Save user data after successful registration
+        if (response['token'] != null) {
+          await storage.write(key: 'auth_token', value: response['token']);
+        }
+        
+        final userData = response['user'];
+        if (userData != null) {
+          await storage.write(key: 'email', value: userData['email']?.toString());
+          await storage.write(key: 'id', value: userData['_id']?.toString());
+          await storage.write(key: 'name', value: userData['name']?.toString());
+          
+          print('Stored user name: ${await storage.read(key: 'name')}');
+        }
+        
+        return true;
+      }
+      return false;
     } catch (e) {
+      print('Register repository error: $e');
       throw Exception('Registration failed: $e');
     }
   }
@@ -85,18 +116,74 @@ class UserRepository {
     }
   }
 
-  Future<void> _saveUserData(User user) async {
-    await storage.write(key: 'auth_token', value: user.token);
-    await storage.write(key: 'email', value: user.email);
-    await storage.write(key: 'id', value: user.id);
-    await storage.write(key: 'name', value: user.name);
-  }
-
   Future<String?> getStoredEmail() async {
     return await storage.read(key: 'email');
   }
 
   Future<void> clearStoredData() async {
     await storage.deleteAll();
+  }
+
+  Future<Map<String, dynamic>> getUserInfo() async {
+    try {
+      final email = await storage.read(key: 'email');
+      final token = await storage.read(key: 'auth_token');
+      
+      if (email == null || token == null) {
+        throw Exception('User not logged in');
+      }
+
+      final response = await apiService.getUserInfo(email, token);
+      
+      if (response['status'] == true && response['data'] != null) {
+        final userData = response['data'];
+        // Update stored user data
+        if (userData['name'] != null) {
+          await storage.write(key: 'name', value: userData['name']);
+        }
+        if (userData['phoneNumber'] != null) {
+          await storage.write(key: 'phoneNumber', value: userData['phoneNumber']);
+        }
+        if (userData['avatar'] != null) {
+          await storage.write(key: 'avatar', value: userData['avatar']);
+        }
+        return userData;
+      }
+      throw Exception(response['message'] ?? 'Failed to get user info');
+    } catch (e) {
+      print('Get user info error: $e');
+      throw Exception('Failed to get user info: $e');
+    }
+  }
+
+  Future<bool> updateUserInfo(Map<String, dynamic> data) async {
+    try {
+      final email = await storage.read(key: 'email');
+      final token = await storage.read(key: 'auth_token');
+      
+      if (email == null || token == null) {
+        throw Exception('User not logged in');
+      }
+
+      final response = await apiService.updateUserInfo(email, token, data);
+      
+      if (response['status'] == true) {
+        // Update stored user data
+        if (data['name'] != null) {
+          await storage.write(key: 'name', value: data['name']);
+        }
+        if (data['phoneNumber'] != null) {
+          await storage.write(key: 'phoneNumber', value: data['phoneNumber']);
+        }
+        if (data['avatar'] != null) {
+          await storage.write(key: 'avatar', value: data['avatar']);
+        }
+        return true;
+      }
+      throw Exception(response['message'] ?? 'Failed to update user info');
+    } catch (e) {
+      print('Update user info error: $e');
+      throw Exception('Failed to update user info: $e');
+    }
   }
 }

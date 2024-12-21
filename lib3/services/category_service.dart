@@ -14,31 +14,6 @@ class CategoryService {
     return await _secureStorage.read(key: 'auth_token');
   }
 
-  Future<Map<String, dynamic>> createCategory(String groupId, String categoryName) async {
-    try {
-      final token = await _getToken();
-      final response = await client.post(
-        Uri.parse('$baseUrl/admin/category'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'groupId': groupId,
-          'categoryName': categoryName,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to create category: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error creating category: $e');
-    }
-  }
-
   Future<List<dynamic>> getAllCategories(String groupId) async {
     try {
       final token = await _getToken();
@@ -108,5 +83,30 @@ class CategoryService {
     } catch (e) {
       throw Exception('Error deleting category: $e');
     }
+  }
+    Future<Map<String, dynamic>> getCategories(String token, String groupId) async {
+    final response = await client.get(
+      Uri.parse('$baseUrl/category/admin/category/$groupId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    return jsonDecode(response.body);
+  }
+
+  Future<Map<String, dynamic>> createCategory(
+    String token,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await client.post(
+      Uri.parse('$baseUrl/category/admin/category'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+    return jsonDecode(response.body);
   }
 }

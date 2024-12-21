@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import 'login_screen.dart';
-import 'reset_password_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String email;
   final String type;
 
   const OtpScreen({
-    super.key, 
+    super.key,
     required this.email,
     required this.type,
   });
@@ -19,11 +18,13 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  List<TextEditingController> otpControllers =
+  final List<TextEditingController> otpControllers =
       List.generate(4, (index) => TextEditingController());
-  List<FocusNode> otpFocusNodes = List.generate(4, (index) => FocusNode());
+  final List<FocusNode> otpFocusNodes =
+      List.generate(4, (index) => FocusNode());
+      
   bool isCodeNotReceived = false;
-  String? errorText;
+  bool isError = false;
 
   @override
   void initState() {
@@ -33,11 +34,6 @@ class _OtpScreenState extends State<OtpScreen> {
         setState(() {});
       });
     }
-    
-    // Tự động hiện bàn phím cho ô đầu tiên
-    Future.delayed(Duration.zero, () {
-      FocusScope.of(context).requestFocus(otpFocusNodes[0]);
-    });
   }
 
   @override
@@ -47,255 +43,217 @@ class _OtpScreenState extends State<OtpScreen> {
     super.dispose();
   }
 
-  String get _otpCode {
-    return otpControllers.map((controller) => controller.text).join();
+  void _onOtpChanged(int index, String value) {
+    if (value.isNotEmpty) {
+      if (index < 3) {
+        otpControllers[index + 1].clear();
+        FocusScope.of(context).requestFocus(otpFocusNodes[index + 1]);
+      } else {
+        otpFocusNodes[index].unfocus();
+      }
+    } else if (index > 0) {
+      FocusScope.of(context).requestFocus(otpFocusNodes[index - 1]);
+    }
+    setState(() {});
+
+    if (otpControllers.every((controller) => controller.text.length == 1)) {
+      _verifyOtp();
+    }
   }
 
-  void _onOtpChanged(int index) {
+  Future<void> _onResendCode() async {
     setState(() {
-      errorText = null;
+      isCodeNotReceived = true;
     });
 
-    if (otpControllers[index].text.length == 1 && index < 3) {
-      FocusScope.of(context).requestFocus(otpFocusNodes[index + 1]);
-    }
-  }
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final success = await userProvider.sendVerificationCode(widget.email);
 
-  Future<void> _verifyOtp() async {
-    if (_otpCode.length != 4) {
-      setState(() {
-        errorText = 'Vui lòng nhập đủ 4 số';
-      });
-      return;
-    }
-
-    try {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      userProvider.clearError();
-
-      final success = await userProvider.verifyOtp(widget.email, _otpCode);
-
-      if (!mounted) return;
-
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('OTP xác minh thành công! Kiểm tra email để nhận mật khẩu mới'),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        // Chuyển về màn hình đăng nhập
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false, // Xóa tất cả các màn hình trong stack
-        );
-      } else {
-        setState(() {
-          errorText = userProvider.error ?? 'Mã OTP không hợp lệ';
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorText!),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        errorText = 'Có lỗi xảy ra: ${e.toString()}';
-      });
+    if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorText!),
+        const SnackBar(content: Text("Mã OTP đã được gửi lại!")),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Hệ thống đang bị lỗi, vui lòng thử lại sau!"),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
 
-  Future<void> _resendOtp() async {
+  Future<void> _verifyOtp() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    userProvider.clearError();
+    final String otp = otpControllers.map((controller) => controller.text).join();
 
-    final success = await userProvider.sendVerificationCode(widget.email);
+    try {
+      final success = await userProvider.verifyOtp(widget.email, otp);
 
-    if (!mounted) return;
-
-    if (success) {
-      setState(() {
-        isCodeNotReceived = false;
-        errorText = null;
-        // Reset các ô OTP
-        otpControllers.forEach((controller) => controller.clear());
-      });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mã xác thực đã được gửi lại'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // Focus vào ô đầu tiên
-      FocusScope.of(context).requestFocus(otpFocusNodes[0]);
-    } else {
-      setState(() {
-        errorText = userProvider.error ?? 'Không thể gửi lại mã';
-      });
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("OTP xác minh thành công! Kiểm tra email để nhận mật khẩu mới"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      } else {
+        setState(() {
+          isError = true;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Mã OTP không hợp lệ!"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Lỗi hệ thống, vui lòng thử lại sau!"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
+        title: const Text("Nhập mã OTP"),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.grey[700]),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Xác thực OTP',
-          style: TextStyle(color: Colors.black),
         ),
       ),
       body: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
-          if (userProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Nhập mã xác thực',
+                  "Nhập mã 4 chữ số được gửi đến",
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: Colors.green[700],
                   ),
                 ),
-                SizedBox(height: 8),
                 Text(
-                  'Mã xác thực đã được gửi đến email ${widget.email}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
+                  widget.email,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
-                SizedBox(height: 32),
+                const SizedBox(height: 20),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(
-                    4,
-                    (index) => SizedBox(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(4, (index) {
+                    return Container(
                       width: 50,
-                      child: TextField(
-                        controller: otpControllers[index],
-                        focusNode: otpFocusNodes[index],
-                        textAlign: TextAlign.center,
-                        keyboardType: TextInputType.number,
-                        maxLength: 1,
-                        style: const TextStyle(fontSize: 20),
-                        decoration: InputDecoration(
-                          counterText: '',
-                          filled: true,
-                          fillColor: otpFocusNodes[index].hasFocus
-                              ? Colors.green[50]
-                              : Colors.grey[200],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: otpFocusNodes[index].hasFocus
+                            ? Colors.white
+                            : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: Center(
+                        child: TextFormField(
+                          controller: otpControllers[index],
+                          focusNode: otpFocusNodes[index],
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          maxLength: 1,
+                          style: const TextStyle(fontSize: 24),
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Colors.black),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Colors.black),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Colors.black, width: 2),
+                            ),
+                            counterText: "",
+                            contentPadding: const EdgeInsets.symmetric(vertical: 0),
                           ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Colors.red),
+                          onChanged: (value) => _onOtpChanged(index, value),
+                          onTap: () {
+                            if (otpControllers[index].text.isNotEmpty) {
+                              otpControllers[index].clear();
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 20),
+                if (userProvider.isLoading) ...[
+                  const Center(child: CircularProgressIndicator()),
+                ] else ...[
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: isCodeNotReceived,
+                        onChanged: (value) {
+                          setState(() {
+                            isCodeNotReceived = value ?? false;
+                          });
+                        },
+                      ),
+                      const Expanded(
+                        child: Text(
+                          "I didn't receive a code",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (isError || userProvider.error != null)
+                    Text(
+                      userProvider.error ?? "Mã OTP bạn nhập không hợp lệ!",
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  if (isCodeNotReceived) ...[
+                    const SizedBox(height: 20),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _onResendCode,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green[700],
+                          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        onChanged: (value) => _onOtpChanged(index),
-                      ),
-                    ),
-                  ),
-                ),
-                if (errorText != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      errorText!,
-                      style: const TextStyle(color: Colors.red, fontSize: 14),
-                    ),
-                  ),
-                SizedBox(height: 24),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: isCodeNotReceived,
-                      onChanged: (value) {
-                        setState(() {
-                          isCodeNotReceived = value ?? false;
-                        });
-                      },
-                    ),
-                    Expanded(
-                      child: Text(
-                        "Tôi chưa nhận được mã",
-                        style: TextStyle(color: Colors.blue),
+                        child: const Text(
+                          "Gửi lại mã OTP",
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                       ),
                     ),
                   ],
-                ),
-                if (isCodeNotReceived) ...[
-                  SizedBox(height: 20),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _resendOtp,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[700],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
-                      ),
-                      child: Text(
-                        "Gửi lại mã OTP",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
-                SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _otpCode.length == 4 ? _verifyOtp : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          _otpCode.length == 4 ? Colors.green[700] : Colors.grey,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(
-                      'Xác nhận',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           );

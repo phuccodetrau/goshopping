@@ -4,42 +4,33 @@ import '../../providers/user_provider.dart';
 import 'otp_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
+
   @override
   _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  String? _errorText;
   bool _isEmailValid = false;
-  String? _error;
 
-  @override
-  void initState() {
-    super.initState();
-    _emailController.addListener(_validateEmail);
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  void _validateEmail() {
+  void _validateEmail(String value) {
     setState(() {
-      final email = _emailController.text;
-      _isEmailValid = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+      if (value.isEmpty) {
+        _errorText = 'Vui lòng nhập email.';
+        _isEmailValid = false;
+      } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
+        _errorText = 'Email không hợp lệ.';
+        _isEmailValid = false;
+      } else {
+        _errorText = null;
+        _isEmailValid = true;
+      }
     });
   }
 
-  Future<void> _sendVerificationCode() async {
-    if (!_isEmailValid) {
-      setState(() {
-        _error = 'Vui lòng nhập email hợp lệ';
-      });
-      return;
-    }
-
+  Future<void> _forgotPassword() async {
     try {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       userProvider.clearError();
@@ -47,44 +38,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final success = await userProvider.sendVerificationCode(_emailController.text);
 
       if (success && mounted) {
-        // Hiển thị thông báo thành công
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Mã xác thực đã được gửi đến email của bạn'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        // Chuyển sang màn hình OTP
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => OtpScreen(
+            builder: (context) => OtpScreen(
               email: _emailController.text,
-              type: 'forgot_password', // Thêm type để phân biệt với register
+              type: 'forgot_password',
             ),
           ),
         );
       } else {
-        // Hiển thị lỗi nếu có
-        if (mounted && userProvider.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(userProvider.error!),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        setState(() {
+          _errorText = "Kiểm tra lại email của bạn! Thử lại sau vài giây!";
+        });
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Có lỗi xảy ra: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    } catch (err) {
+      setState(() {
+        _errorText = "Kiểm tra lại email của bạn.";
+      });
     }
   }
 
@@ -92,83 +63,85 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.grey[700]),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Quên mật khẩu',
-          style: TextStyle(color: Colors.black),
-        ),
       ),
       body: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
           if (userProvider.isLoading) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(16),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Nhập email của bạn',
+                  'Bạn quên mật khẩu?',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: Colors.green[900],
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 20),
                 Text(
-                  'Chúng tôi sẽ gửi mã xác thực đến email của bạn',
+                  'Nhập tài khoản email đăng kí',
                   style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
+                    fontSize: 16,
+                    color: Colors.grey[700],
                   ),
                 ),
-                SizedBox(height: 32),
+                const SizedBox(height: 10),
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    labelText: 'Email',
+                    hintText: 'hung.hd210399@sis.hust.edu.vn',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: Colors.grey[300]!,
+                      ),
+                    ),
                     filled: true,
                     fillColor: Colors.grey[200],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    prefixIcon: Icon(Icons.email, color: Colors.grey[600]),
                   ),
+                  onChanged: _validateEmail,
                 ),
-                if (_error != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      _error!,
-                      style: TextStyle(color: Colors.red, fontSize: 14),
+                const SizedBox(height: 10),
+                if (_errorText != null || userProvider.error != null)
+                  Text(
+                    _errorText ?? userProvider.error!,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 14,
                     ),
                   ),
-                SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isEmailValid ? _sendVerificationCode : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _isEmailValid ? Colors.green[700] : Colors.grey,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                const SizedBox(height: 30),
+                Center(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isEmailValid ? _forgotPassword : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _isEmailValid ? Colors.green[800] : Colors.grey,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(
-                      'Tiếp tục',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
+                      child: const Text(
+                        'Tiếp theo',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),

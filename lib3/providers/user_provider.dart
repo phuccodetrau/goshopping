@@ -44,6 +44,7 @@ class UserProvider extends ChangeNotifier {
       
       _isLoading = false;
       notifyListeners();
+      
       return success;
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
@@ -150,5 +151,59 @@ class UserProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  Future<Map<String, dynamic>?> getUserInfo() async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      final data = await repository.getUserInfo();
+      
+      if (data != null) {
+        _user = User.fromJson({
+          'email': data['email'],
+          'name': data['name'],
+          'phoneNumber': data['phoneNumber'],
+          'avatar': data['avatar'],
+        });
+      }
+      
+      _isLoading = false;
+      notifyListeners();
+      return data;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> updateUserInfo(Map<String, dynamic> data) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      final success = await repository.updateUserInfo(data);
+      
+      if (success) {
+        _user = User.fromJson({
+          ..._user?.toJson() ?? {},
+          ...data,
+        });
+      }
+      
+      _isLoading = false;
+      notifyListeners();
+      return success;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 }

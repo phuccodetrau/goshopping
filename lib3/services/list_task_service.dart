@@ -1,216 +1,185 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ListTaskService {
   final String baseUrl = dotenv.env['ROOT_URL'] ?? '';
   final http.Client client;
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   ListTaskService({http.Client? client}) : client = client ?? http.Client();
 
-  Future<String?> _getToken() async {
-    return await _secureStorage.read(key: 'auth_token');
+  Future<Map<String, dynamic>> createListTask(String token, Map<String, dynamic> taskData) async {
+    final response = await client.post(
+      Uri.parse('$baseUrl/listtask/createListTask'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(taskData),
+    );
+    return jsonDecode(response.body);
   }
 
-  Future<Map<String, dynamic>> createListTask(Map<String, dynamic> taskData) async {
-    try {
-      final token = await _getToken();
-      final response = await client.post(
-        Uri.parse('$baseUrl/createListTask'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(taskData),
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to create list task: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error creating list task: $e');
-    }
+  Future<Map<String, dynamic>> getTasksByGroup(String token, String groupId) async {
+    final response = await client.get(
+      Uri.parse('$baseUrl/listtask/get-tasks-by-group/$groupId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    return jsonDecode(response.body);
   }
 
-  Future<List<dynamic>> getAllListTasksByGroup(String groupId) async {
-    try {
-      final token = await _getToken();
-      final response = await client.post(
-        Uri.parse('$baseUrl/getAllListTasksByGroup'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'groupId': groupId}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['data'] ?? [];
-      } else {
-        throw Exception('Failed to fetch list tasks: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching list tasks: $e');
-    }
+  Future<Map<String, dynamic>> updateTaskState(String token, String taskId, bool state) async {
+    final response = await client.put(
+      Uri.parse('$baseUrl/listtask/update-task-state/$taskId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'state': state}),
+    );
+    return jsonDecode(response.body);
   }
 
-  Future<List<dynamic>> getListTasksByNameAndGroup(String groupId, String name) async {
-    try {
-      final token = await _getToken();
-      final response = await client.post(
-        Uri.parse('$baseUrl/getListTasksByNameAndGroup'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'groupId': groupId, 'name': name}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['data'] ?? [];
-      } else {
-        throw Exception('Failed to fetch list tasks by name: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching list tasks by name: $e');
-    }
+  Future<Map<String, dynamic>> deleteTask(String token, String taskId) async {
+    final response = await client.delete(
+      Uri.parse('$baseUrl/listtask/delete-task/$taskId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    return jsonDecode(response.body);
   }
 
-  Future<Map<String, dynamic>> createItemFromListTask(Map<String, dynamic> taskData) async {
-    try {
-      final token = await _getToken();
-      final response = await client.post(
-        Uri.parse('$baseUrl/createItemFromListTask'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(taskData),
-      );
+  // Thêm vào list_task_service.dart
+Future<Map<String, dynamic>> updateListTaskById(String token, Map<String, dynamic> taskData) async {
+  final response = await client.post(
+    Uri.parse('$baseUrl/listtask/updateListTaskById'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode(taskData),
+  );
+  return jsonDecode(response.body);
+}
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to create item from list task: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error creating item from list task: $e');
-    }
+Future<Map<String, dynamic>> getTaskStats(String token, Map<String, dynamic> data) async {
+  final response = await client.post(
+    Uri.parse('$baseUrl/listtask/getTaskStats'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode(data),
+  );
+  return jsonDecode(response.body);
+}
+
+  Future<Map<String, dynamic>> getAllListTasksByGroupPaginated(
+    String token,
+    String groupId,
+    String state,
+    String? startDate,
+    String? endDate,
+    int page,
+    int limit,
+  ) async {
+    final data = {
+      'group': groupId,
+      'state': state,
+      'startDate': startDate ?? '',
+      'endDate': endDate ?? '',
+      'page': page,
+      'limit': limit,
+    };
+
+    final response = await client.post(
+      Uri.parse('$baseUrl/listtask/getAllListTasksByGroup'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+    return jsonDecode(response.body);
   }
 
-  Future<Map<String, dynamic>> updateListTaskById(Map<String, dynamic> taskData) async {
-    try {
-      final token = await _getToken();
-      final response = await client.post(
-        Uri.parse('$baseUrl/updateListTaskById'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(taskData),
-      );
+  Future<Map<String, dynamic>> getListTasksByNameAndGroupPaginated(
+    String token,
+    String name,
+    String groupId,
+    String state,
+    String? startDate,
+    String? endDate,
+    int page,
+    int limit,
+  ) async {
+    final data = {
+      'name': name,
+      'group': groupId,
+      'state': state,
+      'startDate': startDate ?? '',
+      'endDate': endDate ?? '',
+      'page': page,
+      'limit': limit,
+    };
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to update list task: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error updating list task: $e');
-    }
+    final response = await client.post(
+      Uri.parse('$baseUrl/listtask/getListTasksByNameAndGroup'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+    return jsonDecode(response.body);
   }
 
-  Future<Map<String, dynamic>> deleteListTaskById(String taskId) async {
-    try {
-      final token = await _getToken();
-      final response = await client.post(
-        Uri.parse('$baseUrl/deleteListTaskById'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'taskId': taskId}),
-      );
+  Future<Map<String, dynamic>> createItemFromListTaskWithExtra(
+    String token,
+    String listTaskId,
+    int extraDays,
+    String note,
+  ) async {
+    final data = {
+      'listTaskId': listTaskId,
+      'extraDays': extraDays,
+      'note': note,
+    };
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to delete list task: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error deleting list task: $e');
-    }
+    final response = await client.post(
+      Uri.parse('$baseUrl/listtask/createItemFromListTask'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+    return jsonDecode(response.body);
   }
 
-  Future<Map<String, dynamic>> getTaskStats(Map<String, dynamic> filterData) async {
-    try {
-      final token = await _getToken();
-      final response = await client.post(
-        Uri.parse('$baseUrl/getTaskStats'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(filterData),
-      );
+  Future<Map<String, dynamic>> addItemToRefrigeratorFromTask(
+    String token,
+    String groupId,
+    Map<String, dynamic> item,
+  ) async {
+    final data = {
+      'groupId': groupId,
+      'item': item,
+    };
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to fetch task stats: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching task stats: $e');
-    }
-  }
-
-  Future<Map<String, dynamic>> getTaskStatsByFood(Map<String, dynamic> filterData) async {
-    try {
-      final token = await _getToken();
-      final response = await client.post(
-        Uri.parse('$baseUrl/getTaskStatsByFood'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(filterData),
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to fetch task stats by food: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching task stats by food: $e');
-    }
-  }
-
-  Future<Map<String, dynamic>> getTaskStatsByDate(Map<String, dynamic> filterData) async {
-    try {
-      final token = await _getToken();
-      final response = await client.post(
-        Uri.parse('$baseUrl/getTaskStatsByDate'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(filterData),
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to fetch task stats by date: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching task stats by date: $e');
-    }
+    final response = await client.post(
+      Uri.parse('$baseUrl/groups/addItemToRefrigerator'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+    return jsonDecode(response.body);
   }
 }
