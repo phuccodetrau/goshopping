@@ -4,6 +4,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:go_shopping/notification/notification_screen.dart';
+import 'package:go_shopping/user/user_info.dart';
+import 'package:go_shopping/home_screen/home_screen.dart';
 
 class MealPlanScreen extends StatefulWidget {
   final String groupId;
@@ -21,6 +24,7 @@ class MealPlanScreen extends StatefulWidget {
 class _MealPlanScreenState extends State<MealPlanScreen> {
   final _secureStorage = FlutterSecureStorage();
   final String _url = dotenv.env['ROOT_URL']!;
+  int _selectedIndex = 0;
   Map<String, List<dynamic>> mealsByTime = {
     'Bữa sáng': [],
     'Bữa trưa': [],
@@ -39,7 +43,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   Future<void> _onDateChanged(DateTime newDate) async {
     setState(() {
       selectedDate = newDate;
-      isLoading = true; // Hiển thị loading khi đang fetch dữ liệu m��i
+      isLoading = true; // Hiển thị loading khi đang fetch dữ liệu mới
     });
     await _fetchMealPlans();
   }
@@ -126,6 +130,63 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     }
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 0) {  // Home tab
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+        (route) => false,  // Xóa tất cả các màn hình trong stack
+      );
+    } else if (index == 1) {  // Notification tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => NotificationScreen()),
+      );
+    } else if (index == 2) {  // Profile tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
+      );
+    }
+  }
+
+  bool _isTimePassedForMeal(String mealTime) {
+    final now = DateTime.now();
+    final currentTime = TimeOfDay.fromDateTime(now);
+    
+    // Chuyển đổi thời gian hiện tại sang số phút
+    final currentMinutes = currentTime.hour * 60 + currentTime.minute;
+    
+    // Định nghĩa thời gian kết thúc cho mỗi bữa ăn (theo giờ Việt Nam)
+    final Map<String, int> mealEndTimes = {
+      'Bữa sáng': 8 * 60 + 30,  // 8:30 AM
+      'Bữa trưa': 12 * 60,      // 12:00 PM
+      'Bữa xế': 17 * 60 + 30,   // 5:30 PM
+      'Bữa tối': 19 * 60 + 30,  // 7:30 PM
+    };
+
+    // Kiểm tra xem ngày đã qua cha
+    if (selectedDate.year < now.year ||
+        (selectedDate.year == now.year && selectedDate.month < now.month) ||
+        (selectedDate.year == now.year && selectedDate.month == now.month && selectedDate.day < now.day)) {
+      return true; // Ngày đã qua
+    }
+    
+    // Nếu là ngày hiện tại, kiểm tra giờ
+    if (selectedDate.year == now.year && 
+        selectedDate.month == now.month && 
+        selectedDate.day == now.day) {
+      final endTime = mealEndTimes[mealTime] ?? 0;
+      return currentMinutes > endTime;
+    }
+
+    return false; // Ngày trong tương lai
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,28 +227,17 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
                   Expanded(
                     child: ListView(
                       children: mealsByTime.entries.map((entry) {
+                        final bool isDisabled = _isTimePassedForMeal(entry.key);
                         return MealCard(
                           mealTime: entry.key,
                           timeRange: _getTimeRange(entry.key),
                           items: entry.value.map((recipe) => recipe['name'].toString()).toList(),
                           peopleCount: entry.value.length,
-                          onTap: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MealDetailScreen(
-                                  groupId: widget.groupId,
-                                  email: widget.email,
-                                  selectedDate: selectedDate,
-                                  selectedMealTime: entry.key,
-                                ),
-                              ),
-                            );
-                            
-                            if (result == true) {
-                              _fetchMealPlans();
-                            }
-                          },
+                          isDisabled: isDisabled,
+                          groupId: widget.groupId,
+                          email: widget.email,
+                          selectedDate: selectedDate,
+                          onRefresh: _fetchMealPlans,
                         );
                       }).toList(),
                     ),
@@ -196,6 +246,17 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
               ),
             ),
           ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.green[700],
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+        ],
+      ),
     );
   }
 
@@ -220,14 +281,22 @@ class MealCard extends StatefulWidget {
   final String timeRange;
   final List<String> items;
   final int peopleCount;
-  final VoidCallback onTap;
+  final bool isDisabled;
+  final String groupId;
+  final String email;
+  final DateTime selectedDate;
+  final Function() onRefresh;
 
   MealCard({
     required this.mealTime,
     required this.timeRange,
     required this.items,
     required this.peopleCount,
-    required this.onTap,
+    required this.isDisabled,
+    required this.groupId,
+    required this.email,
+    required this.selectedDate,
+    required this.onRefresh,
   });
 
   @override
@@ -238,7 +307,24 @@ class _MealCardState extends State<MealCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.onTap,
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MealDetailScreen(
+              groupId: widget.groupId,
+              email: widget.email,
+              selectedDate: widget.selectedDate,
+              selectedMealTime: widget.mealTime,
+              isEditable: !widget.isDisabled,
+            ),
+          ),
+        );
+        
+        if (result == true) {
+          widget.onRefresh();
+        }
+      },
       child: Card(
         margin: EdgeInsets.symmetric(vertical: 8),
         shape: RoundedRectangleBorder(
@@ -265,7 +351,9 @@ class _MealCardState extends State<MealCard> {
                       color: Colors.green[700],
                     ),
                   ),
-                  Icon(Icons.edit, color: Colors.grey),
+                  widget.isDisabled 
+                      ? Icon(Icons.visibility, color: Colors.grey)
+                      : Icon(Icons.edit, color: Colors.grey),
                 ],
               ),
               SizedBox(height: 8),
@@ -282,8 +370,6 @@ class _MealCardState extends State<MealCard> {
                         ))
                     .toList(),
               ),
-              SizedBox(height: 8),
-
             ],
           ),
         ),

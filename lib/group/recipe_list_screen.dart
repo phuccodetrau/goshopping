@@ -6,6 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../notification/notification_screen.dart';
+import '../user/user_info.dart';
 
 class RecipeListScreen extends StatefulWidget {
   final String groupId;
@@ -23,12 +25,32 @@ class RecipeListScreen extends StatefulWidget {
 class _RecipeListScreenState extends State<RecipeListScreen> {
   final _secureStorage = FlutterSecureStorage();
   final String _url = dotenv.env['ROOT_URL']!;
+  final TextEditingController _searchController = TextEditingController();
   List<dynamic> recipes = [];
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchRecipes();
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 1) {  // Notification tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => NotificationScreen()),
+      );
+    } else if (index == 2) {  // Profile tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
+      );
+    }
   }
 
   Future<void> _fetchRecipes() async {
@@ -63,13 +85,30 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
           }
         });
         print("Updated recipes list: $recipes");
+      } else {
+        throw Exception('Failed to fetch recipes');
       }
     } catch (error) {
       print("Error fetching recipes: $error");
       setState(() {
         recipes = [];
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không thể tải danh sách công thức'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
+  }
+
+  Future<void> _onRefresh() async {
+    return _fetchRecipes();
+  }
+
+  Future<void> _refreshScreen() async {
+    await _fetchRecipes();  // Đợi fetch xong
+    setState(() {});  // Force rebuild UI
   }
 
   @override
@@ -103,78 +142,88 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.search, color: Colors.grey),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Tìm trong danh sách món ăn',
-                        border: InputBorder.none,
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.search, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Tìm trong danh sách món ăn',
+                          border: InputBorder.none,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Danh sách món ăn',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.green[700],
-                fontWeight: FontWeight.bold,
+              SizedBox(height: 20),
+              Text(
+                'Danh sách món ăn',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.green[700],
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 16),
-            Expanded(
-              child: recipes.isEmpty 
-                ? Center(
-                    child: Text(
-                      'Không có công thức nào',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 16,
+              SizedBox(height: 16),
+              Expanded(
+                child: recipes.isEmpty 
+                  ? Center(
+                      child: Text(
+                        'Không có công thức nào',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: recipes.length,
-                    itemBuilder: (context, index) {
-                      final recipe = recipes[index];
-                      return RecipeItemCard(
-                        imagePath: 'images/group.png',
-                        title: recipe['name'] ?? 'Không có tên',
-                        description: recipe['description'] ?? 'Không có mô tả',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RecipeDetail(
-                                recipeName: recipe['name'],
-                                groupId: widget.groupId,
-                                email: widget.email,
+                    )
+                  : ListView.builder(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      itemCount: recipes.length,
+                      itemBuilder: (context, index) {
+                        final recipe = recipes[index];
+                        return RecipeItemCard(
+                          imagePath: 'images/group.png',
+                          title: recipe['name'] ?? 'Không có tên',
+                          description: recipe['description'] ?? 'Không có mô tả',
+                          groupId: widget.groupId,
+                          onDelete: () {
+                            _refreshScreen();
+                          },
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RecipeDetail(
+                                  recipeName: recipe['name'],
+                                  groupId: widget.groupId,
+                                  email: widget.email,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-            ),
-          ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+              ),
+              SizedBox(height: 30),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -189,13 +238,23 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
             ),
           );
           
-          // Nếu nhận được tín hiệu refresh từ màn hình thêm recipe
           if (shouldRefresh == true) {
-            _fetchRecipes(); // Gọi lại API để lấy danh sách mới
+            _fetchRecipes();
           }
         },
         backgroundColor: Colors.green,
         child: Icon(Icons.add),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.green[700],
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+        ],
       ),
     );
   }
@@ -207,12 +266,16 @@ class RecipeItemCard extends StatefulWidget {
   final String title;
   final String description;
   final VoidCallback onTap;
+  final String groupId;
+  final VoidCallback? onDelete;
 
   RecipeItemCard({
     required this.imagePath,
     required this.title,
     required this.description,
-    required this.onTap
+    required this.onTap,
+    required this.groupId,
+    this.onDelete,
   });
 
   @override
@@ -221,6 +284,76 @@ class RecipeItemCard extends StatefulWidget {
 
 class _RecipeItemCardState extends State<RecipeItemCard> {
   String selectedMeal = '';
+
+  Future<void> _deleteRecipe(BuildContext context, String recipeName, String groupId) async {
+    try {
+      final _secureStorage = FlutterSecureStorage();
+      final String? token = await _secureStorage.read(key: "auth_token");
+      final String _url = dotenv.env['ROOT_URL']!;
+
+      final response = await http.post(
+        Uri.parse('$_url/recipe/deleteRecipe'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "recipeName": recipeName,
+          "group": groupId
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (data['code'] == 704) {
+        Navigator.of(context).pop(); // Đóng dialog nếu còn mở
+        
+        // Hiển thị thông báo thành công
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10),
+                Text('Đã xóa công thức thành công'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        
+        // Đảm bảo callback được gọi và đợi nó hoàn thành
+        if (widget.onDelete != null) {
+          await Future.delayed(Duration(milliseconds: 100)); // Đợi một chút để dialog đóng hoàn toàn
+          widget.onDelete!();
+        }
+      } else {
+        // Xóa thất bại
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 10),
+                Text(data['message'] ?? 'Không thể xóa công thức'),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (error) {
+      print("Error deleting recipe: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã xảy ra lỗi khi xóa công thức'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -243,17 +376,48 @@ class _RecipeItemCardState extends State<RecipeItemCard> {
           ),
           title: Text(widget.title, style: TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(widget.description),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (selectedMeal.isNotEmpty)
-                Text(
-                  selectedMeal,
-                  style: TextStyle(
-                    color: Colors.green[700],
-                    fontSize: 12,
-                  ),
+          trailing: PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'delete') {
+                // Hiển thị dialog xác nhận trước khi xóa
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Xác nhận xóa'),
+                      content: Text('Bạn có chắc chắn muốn xóa công thức này?'),
+                      actions: [
+                        TextButton(
+                          child: Text('Hủy'),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        TextButton(
+                          child: Text(
+                            'Xóa',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          onPressed: () {
+                            _deleteRecipe(context, widget.title, widget.groupId);
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Xóa công thức'),
+                  ],
                 ),
+              ),
             ],
           ),
         ),

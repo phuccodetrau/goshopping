@@ -9,19 +9,19 @@ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await dotenv.load(fileName: ".env");
-  
+
   // Cấu hình chi tiết cho OneSignal
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
   OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID'] ?? '');
-  
+
   // Xóa các thông báo cũ
   OneSignal.Notifications.clearAll();
-  
+
   // Cấu hình thêm
   await OneSignal.Notifications.requestPermission(true);
-  
+
   // Theo dõi trạng thái subscription
   OneSignal.User.pushSubscription.addObserver((state) {
     print('Push subscription changed:');
@@ -29,7 +29,7 @@ void main() async {
     print('Token: ${state.current.id}');
     print('Status: ${state.current.jsonRepresentation()}');
   });
-  
+
   // Xử lý notification
   OneSignal.Notifications.addClickListener((event) {
     print("Clicked notification: ${event.notification.additionalData}");
@@ -49,19 +49,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorObservers: [routeObserver],
-      debugShowCheckedModeBanner: false,
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        MonthYearPickerLocalizations.delegate,
-      ],
-      supportedLocales: [
-        const Locale('en', 'US'),
-        const Locale('vi', 'VN'),
-      ],
-      home: SplashScreen()
+        navigatorObservers: [routeObserver],
+        debugShowCheckedModeBanner: false,
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          MonthYearPickerLocalizations.delegate,
+        ],
+        supportedLocales: [
+          const Locale('en', 'US'),
+          const Locale('vi', 'VN'),
+        ],
+        home: SplashScreen()
     );
   }
 }
