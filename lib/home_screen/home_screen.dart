@@ -313,35 +313,45 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final String? token = await _secureStorage.read(key: "auth_token");
 
-      // Kiểm tra xem groupId có tồn tại không trước khi gửi request
-      if (groupId == null || groupId.isEmpty) {
-        print("groupId is null or empty");
-        return;  // Dừng lại nếu groupId không hợp lệ
-      }
-
-      print("Sending request with groupId: $groupId");
+      print("Sending leave group request for groupId: $groupId"); // Debug log
 
       final response = await http.delete(
-        Uri.parse('$_url/groups/leave-group'),
+        Uri.parse('$_url/groups/leave-group/$groupId'), // Thay đổi từ query parameter sang path parameter
         headers: {
           'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
         },
-        body: jsonEncode({'groupId': groupId}),  // Gửi groupId qua body
       );
+
+      print("Leave group response status: ${response.statusCode}"); // Debug log
+      print("Leave group response body: ${response.body}"); // Debug log
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("Response from backend: $data");
-
         if (data['code'] == 700) {
           setState(() {
             userGroups.removeWhere((group) => group['id'] == groupId);
-            filteredGroups.removeWhere((group) => group['id'] == groupId);
+            filteredGroups = userGroups.map((group) => group['name']).toList();
+            filteredGroupsId = userGroups.map((group) => group['id']).toList();
           });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Rời nhóm thành công'))
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Có lỗi xảy ra khi rời nhóm'))
+          );
         }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi rời nhóm: ${response.statusCode}'))
+        );
       }
     } catch (error) {
       print("Error leaving group: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Có lỗi xảy ra khi rời nhóm'))
+      );
     }
   }
 

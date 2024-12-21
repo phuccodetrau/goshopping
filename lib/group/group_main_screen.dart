@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'chat_screen.dart';
+import 'group_list_user_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'recipe_list_screen.dart';
 import 'fridge.dart';
@@ -107,14 +107,13 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
           ),
           IconButton(
             icon: Icon(
-              Icons.chat_bubble_outline,
+              Icons.people,
               color: Colors.green[900],
             ),
             onPressed: () {
-              print('email: $email');
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ChatScreen()),
+                MaterialPageRoute(builder: (context) => GroupListUserScreen()),
               );
             },
           ),

@@ -5,9 +5,11 @@ import 'add_recipe.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../notification/notification_screen.dart';
 import '../user/user_info.dart';
+import 'package:flutter/animation.dart';
 
 class RecipeListScreen extends StatefulWidget {
   final String groupId;
@@ -27,12 +29,22 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
   final String _url = dotenv.env['ROOT_URL']!;
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> recipes = [];
+  List<dynamic> filteredRecipes = [];
   int _selectedIndex = 0;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _fetchRecipes();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _onItemTapped(int index) {
@@ -53,7 +65,25 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
     }
   }
 
+  void _onSearchChanged() {
+    final searchQuery = _searchController.text.toLowerCase();
+    setState(() {
+      if (searchQuery.isEmpty) {
+        filteredRecipes = recipes;
+      } else {
+        filteredRecipes = recipes.where((recipe) {
+          final recipeName = recipe['name'].toString().toLowerCase();
+          return recipeName.contains(searchQuery);
+        }).toList();
+      }
+    });
+  }
+
   Future<void> _fetchRecipes() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       final String? token = await _secureStorage.read(key: "auth_token");
       print("Fetching recipes for groupId: ${widget.groupId}");
@@ -79,10 +109,13 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
         setState(() {
           if (data['code'] == 709 && data['data'] != null) {
             recipes = data['data'];
+            filteredRecipes = recipes;
           } else if (data['code'] == 708) {
             recipes = [];
+            filteredRecipes = [];
             print("No recipes found for group: ${widget.groupId}");
           }
+          isLoading = false;
         });
         print("Updated recipes list: $recipes");
       } else {
@@ -92,6 +125,8 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
       print("Error fetching recipes: $error");
       setState(() {
         recipes = [];
+        filteredRecipes = [];
+        isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -144,87 +179,107 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _onRefresh,
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.grey),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Tìm trong danh sách món ăn',
-                          border: InputBorder.none,
-                        ),
-                      ),
+        child: isLoading 
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    color: Colors.green[700],
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Đang tải danh sách công thức...',
+                    style: TextStyle(
+                      color: Colors.green[700],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              SizedBox(height: 20),
-              Text(
-                'Danh sách món ăn',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.green[700],
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 16),
-              Expanded(
-                child: recipes.isEmpty 
-                  ? Center(
-                      child: Text(
-                        'Không có công thức nào',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 16,
+            )
+          : Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.search, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Tìm trong danh sách món ăn',
+                              border: InputBorder.none,
+                            ),
+                          ),
                         ),
-                      ),
-                    )
-                  : ListView.builder(
-                      physics: AlwaysScrollableScrollPhysics(),
-                      itemCount: recipes.length,
-                      itemBuilder: (context, index) {
-                        final recipe = recipes[index];
-                        return RecipeItemCard(
-                          imagePath: 'images/group.png',
-                          title: recipe['name'] ?? 'Không có tên',
-                          description: recipe['description'] ?? 'Không có mô tả',
-                          groupId: widget.groupId,
-                          onDelete: () {
-                            _refreshScreen();
-                          },
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => RecipeDetail(
-                                  recipeName: recipe['name'],
-                                  groupId: widget.groupId,
-                                  email: widget.email,
-                                ),
-                              ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'Danh sách món ăn',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.green[700],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Expanded(
+                    child: filteredRecipes.isEmpty 
+                      ? Center(
+                          child: Text(
+                            'Không có công thức nào',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 16,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          physics: AlwaysScrollableScrollPhysics(),
+                          itemCount: filteredRecipes.length,
+                          itemBuilder: (context, index) {
+                            final recipe = filteredRecipes[index];
+                            return RecipeItemCard(
+                              imagePath: 'images/group.png',
+                              title: recipe['name'] ?? 'Không có tên',
+                              description: recipe['description'] ?? 'Không có mô tả',
+                              groupId: widget.groupId,
+                              onDelete: () {
+                                _refreshScreen();
+                              },
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RecipeDetail(
+                                      recipeName: recipe['name'],
+                                      groupId: widget.groupId,
+                                      email: widget.email,
+                                    ),
+                                  ),
+                                );
+                              },
                             );
                           },
-                        );
-                      },
-                    ),
+                        ),
+                  ),
+                  SizedBox(height: 30),
+                ],
               ),
-              SizedBox(height: 30),
-            ],
-          ),
-        ),
+            ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {

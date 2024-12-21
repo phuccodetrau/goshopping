@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:go_shopping/home_screen/home_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -77,11 +78,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final String password = _passwordController.text;
 
     try {
+      // Lấy device token từ OneSignal
+      final deviceToken = await OneSignal.User.pushSubscription.id;
+      print("Device token for registration: $deviceToken");
+
       final response = await http.post(
         Uri.parse(URL),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'name': username, 'email': email, 'password': password}),
+        body: jsonEncode({
+          'name': username, 
+          'email': email, 
+          'password': password,
+          'deviceToken': deviceToken,
+        }),
       );
+
+      print("Register response: ${response.body}");
 
       final responseData = jsonDecode(response.body);
       if (responseData['status'] == true) {
@@ -89,8 +101,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         await _secureStorage.write(key: 'auth_token', value: token);
         await _secureStorage.write(key: 'email', value: responseData['user']['email']);
         await _secureStorage.write(key: 'id', value: responseData['user']['_id'].toString());
-        await _secureStorage.write(key:"name",value:responseData['user']['name'].toString());
+        await _secureStorage.write(key: "name", value: responseData['user']['name'].toString());
+        print('Registration successful. Device token: $deviceToken');
         print(await _secureStorage.read(key: 'name'));
+        
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -98,12 +112,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         );
       } else {
-        // TODO: Hiển thị thông báo lỗi nếu cần
+        print('Registration failed: ${responseData['message']}');
+        // TODO: Hiển thị thông báo lỗi
+        setState(() {
+          _responseMessage = responseData['message'];
+        });
       }
-      setState(() {});
     } catch (e) {
-      print(e);
-      setState(() {});
+      print('Registration error: $e');
+      setState(() {
+        _responseMessage = 'Đã xảy ra lỗi khi đăng ký';
+      });
     }
   }
 
