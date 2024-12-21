@@ -5,7 +5,7 @@ import 'package:go_shopping/begin/splashScreen.dart';
 import 'package:go_shopping/user/persion_infor_change.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:go_shopping/login/update_password.dart';
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
 
@@ -138,9 +138,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             child: ListView(
               children: [
                 _buildListTile(Icons.person, 'Chỉnh sửa thông tin cá nhân'),
-                _buildListTile(Icons.upgrade, 'Nâng cấp phiên bản'),
-                _buildListTile(Icons.star, 'Đánh giá'),
-                _buildListTile(Icons.share, 'Chia sẻ với bạn bè'),
+                _buildListTile(Icons.update, 'Đổi mật khẩu'),
+
                 ListTile(
                   leading: Icon(Icons.logout, color: Colors.red),
                   title: Text(
@@ -233,6 +232,16 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
           if (result == true) {
             await _initializeUserInfo();
           }
+        }
+        if(title=="Đổi mật khẩu"){
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PasswordChangeScreen(),
+            ),
+          );
+
+
         }
       },
     );
