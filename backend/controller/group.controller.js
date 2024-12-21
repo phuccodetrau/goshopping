@@ -198,5 +198,14 @@ const filterItemsWithPagination = async (req, res) => {
     }
 }
 
+const getEmailsByGroupId = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const result = await GroupService.getEmailsByGroupId(groupId);
+        return res.status(result.code === 700 ? 200 : 404).json(result);
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
 
-export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupId, getUsersByGroupId, deleteGroup, removeMember, leaveGroup, getUsersByGroupName, addItemToRefrigerator, filterItemsWithPagination}; 
+export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupId, getUsersByGroupId, deleteGroup, removeMember, leaveGroup, getUsersByGroupName, addItemToRefrigerator, filterItemsWithPagination, getEmailsByGroupId }; 

@@ -368,6 +368,46 @@ class GroupService {
             throw { code: 101, message: "Server error!", data: "" };
         }
     }
+
+    static async getEmailsByGroupId(groupId) {
+        try {
+            // Kiểm tra groupId
+            if (!groupId) {
+                return { 
+                    code: 701, 
+                    message: "Vui lòng cung cấp groupId", 
+                    data: [] 
+                };
+            }
+
+            // Tìm nhóm theo ID
+            const group = await Group.findById(groupId);
+
+            if (!group) {
+                return { 
+                    code: 704, 
+                    message: "Không tìm thấy nhóm", 
+                    data: [] 
+                };
+            }
+
+            // Lấy danh sách email từ listUser
+            const emails = group.listUser.map(user => user.email);
+
+            return { 
+                code: 700, 
+                message: "Lấy danh sách email thành công", 
+                data: emails 
+            };
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách email:', error);
+            throw { 
+                code: 101, 
+                message: "Lỗi server", 
+                data: [] 
+            };
+        }
+    }
       
     
 
