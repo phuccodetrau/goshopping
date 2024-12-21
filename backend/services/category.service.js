@@ -1,4 +1,4 @@
-import { Category } from "../models/schema.js";
+import { Category, Food } from "../models/schema.js";
 
 class CategoryService {
     static async createCategory(categoryName, groupId) {
@@ -69,10 +69,15 @@ class CategoryService {
 
     static async deleteCategory(name, groupId) {
         try {
+            const foodUsingCategory = await Food.findOne({ categoryName: name, group: groupId });
+            if (foodUsingCategory) {
+                return { code: 705, message: "Không thể xóa danh mục vì còn thực phẩm sử dụng danh mục này", data: "" };
+            }
             const deletedCategory = await Category.deleteOne({ name: name, group: groupId });
             if (deletedCategory.deletedCount === 0) {
-                return { code: 705, message: "Không tìm thấy danh mục để xóa", data: "" };
+                return { code: 706, message: "Không tìm thấy danh mục để xóa", data: "" };
             }
+    
             return { code: 704, message: "Xóa danh mục thành công", data: deletedCategory };
         } catch (error) {
             console.error("Lỗi khi xóa danh mục:", error);

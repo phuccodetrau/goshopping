@@ -1,4 +1,4 @@
-import { Unit } from "../models/schema.js";
+import { Unit, Food } from "../models/schema.js";
 
 class UnitService {
     static async createUnit(unitName, groupId) {
@@ -72,12 +72,17 @@ class UnitService {
         if (!name || !groupId) {
             return { code: 701, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" };
         }
-
+    
         try {
+            const foodUsingUnit = await Food.findOne({ unitName: name, group: groupId });
+            if (foodUsingUnit) {
+                return { code: 705, message: "Không thể xóa đơn vị vì vẫn còn thực phẩm sử dụng đơn vị này", data: "" };
+            }
             const result = await Unit.deleteOne({ name: name, group: groupId });
             if (result.deletedCount === 0) {
                 return { code: 404, message: "Đơn vị không tìm thấy", data: "" };
             }
+    
             return { code: 700, message: "Đơn vị đã xóa thành công", data: "" };
         } catch (error) {
             console.error("Lỗi khi xóa đơn vị:", error);

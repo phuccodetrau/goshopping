@@ -6,7 +6,8 @@ const createFood = async (req, res, next) => {
         const { name, categoryName, unitName, image, group } = req.body;
         
 
-        if (!name || !categoryName || !unitName || !image || !group) {
+        if (!name || !categoryName || !unitName || !group) {
+            
             return res.json({ code: 601, message: "Vui lòng cung cấp đầy đủ thông tin", data: "" });
         }
 
