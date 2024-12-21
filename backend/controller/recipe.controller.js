@@ -60,4 +60,38 @@ const getAllFoodInReceipt = async (req, res, next) => {
     }
 };
 
-export default { createRecipe, updateRecipe, deleteRecipe, getRecipeByFood, getAllRecipe, getAllFoodInReceipt };
+const useRecipe = async (req, res, next) => {
+    try {
+        const { recipeName, group } = req.body;
+        if (!recipeName || !group) {
+            return res.json({
+                code: 701,
+                message: "Vui lòng cung cấp đầy đủ thông tin",
+                data: ""
+            });
+        }
+        const result = await RecipeService.useRecipe(recipeName, group);
+        res.json(result);
+    } catch (error) {
+        return res.json({code: 101, message: "Server error!", data: ""})
+    }
+};
+
+const checkRecipeAvailability = async (req, res, next) => {
+    try {
+        const { recipeName, group } = req.body;
+        if (!recipeName || !group) {
+            return res.json({
+                code: 701,
+                message: "Vui lòng cung cấp đầy đủ thông tin",
+                data: ""
+            });
+        }
+        const result = await RecipeService.checkRecipeAvailability(recipeName, group);
+        res.json(result);
+    } catch (error) {
+        return res.json({code: 101, message: "Server error!", data: ""})
+    }
+};
+
+export default { createRecipe, updateRecipe, deleteRecipe, getRecipeByFood, getAllRecipe, getAllFoodInReceipt, useRecipe, checkRecipeAvailability };
