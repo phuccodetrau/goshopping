@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_shopping/notification/notification_screen.dart';
 import '../statistics/statistics_screen.dart';
+import 'package:flutter/services.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -380,16 +381,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body: _buildBody(),
-      floatingActionButton: _buildFloatingActionButton(),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+    return WillPopScope(
+      onWillPop: () async {
+        return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Thoát ứng dụng'),
+            content: Text('Bạn có muốn thoát khỏi ứng dụng không?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('Hủy'),
+              ),
+              TextButton(
+                onPressed: () {
+                  SystemNavigator.pop();
+                },
+                child: Text('Thoát'),
+              ),
+            ],
+          ),
+        ) ?? false;
+      },
+      child: Scaffold(
+        appBar: _buildAppBar(),
+        body: _buildBody(),
+        floatingActionButton: _buildFloatingActionButton(),
+        bottomNavigationBar: _buildBottomNavigationBar(),
+      ),
     );
   }
 
   AppBar _buildAppBar() {
     return AppBar(
+      automaticallyImplyLeading: false,
       backgroundColor: Colors.transparent,
       elevation: 0,
       title: Text(
@@ -432,11 +457,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                     child: _buildGroupCard(groupName, adminName, groupId),
+
                   );
                 },
               ),
+
             ),
-          ),
+          ),SizedBox(height: 30,),
         ],
       ),
     );
@@ -464,84 +491,89 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildGroupCard(String groupName, String adminName, String groupId) {
-    return Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-        child: Padding(
+    return Column(
+      children: [
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+          child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Row(
-                children: [
-                    CircleAvatar(radius: 30, backgroundImage: AssetImage('images/group.png')),
-                    SizedBox(width: 12),
-                    Expanded(
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                                Text(groupName, 
-                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
-                                ),
-                                SizedBox(height: 4),
-                                Row(
-                                    children: [
-                                        Text('Admin: '),
-                                        adminName == "Đang tải..." 
-                                            ? SizedBox(
-                                                width: 12,
-                                                height: 12,
-                                                child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                )
-                                              )
-                                            : Text(adminName),
-                                    ]
-                                ),
-                            ],
+              children: [
+                CircleAvatar(radius: 30, backgroundImage: AssetImage('images/group.png')),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(groupName, 
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text('Admin: '),
+                          adminName == "Đang tải..." 
+                            ? SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                )
+                              )
+                            : Text(adminName),
+                        ]
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) => _handleMenuSelection(value, groupId),
+                  itemBuilder: (BuildContext context) {
+                    final isAdmin = _isAdmin(groupId);
+                    return [
+                      PopupMenuItem(
+                        value: 'stats',
+                        child: Row(
+                          children: [
+                            Icon(Icons.bar_chart, color: Colors.blue),
+                            SizedBox(width: 8),
+                            Text('Xem thống kê'),
+                          ],
                         ),
-                    ),
-                    PopupMenuButton<String>(
-                        onSelected: (value) => _handleMenuSelection(value, groupId),
-                        itemBuilder: (BuildContext context) {
-                            final isAdmin = _isAdmin(groupId);
-                            return [
-                                PopupMenuItem(
-                                    value: 'stats',
-                                    child: Row(
-                                        children: [
-                                            Icon(Icons.bar_chart, color: Colors.blue),
-                                            SizedBox(width: 8),
-                                            Text('Xem thống kê'),
-                                        ],
-                                    ),
-                                ),
-                                if (isAdmin)
-                                    PopupMenuItem(
-                                        value: 'delete',
-                                        child: Row(
-                                            children: [
-                                                Icon(Icons.delete, color: Colors.red),
-                                                SizedBox(width: 8),
-                                                Text('Xóa nhóm'),
-                                            ],
-                                        ),
-                                    )
-                                else
-                                    PopupMenuItem(
-                                        value: 'leave',
-                                        child: Row(
-                                            children: [
-                                                Icon(Icons.exit_to_app, color: Colors.orange),
-                                                SizedBox(width: 8),
-                                                Text('Rời nhóm'),
-                                            ],
-                                        ),
-                                    ),
-                            ];
-                        },
-                        icon: Icon(Icons.more_vert),
-                    ),
-                ],
+                      ),
+                      if (isAdmin)
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Xóa nhóm'),
+                            ],
+                          ),
+                        )
+                      else
+                        PopupMenuItem(
+                          value: 'leave',
+                          child: Row(
+                            children: [
+                              Icon(Icons.exit_to_app, color: Colors.orange),
+                              SizedBox(width: 8),
+                              Text('Rời nhóm'),
+                            ],
+                          ),
+                        ),
+                    ];
+                  },
+                  icon: Icon(Icons.more_vert),
+                ),
+              ],
             ),
+          ),
         ),
+        SizedBox(height: 12),
+      ],
     );
   }
 

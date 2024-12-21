@@ -164,12 +164,7 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
         icon: Icon(Icons.arrow_back, color: Colors.grey[700]),
         onPressed: () => Navigator.pop(context),
       ),
-      actions: [
-        TextButton(
-          onPressed: () {},
-          child: Text("Bỏ qua", style: TextStyle(color: Colors.green[800])),
-        ),
-      ],
+
     );
   }
 

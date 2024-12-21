@@ -2,10 +2,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_shopping/begin/splashScreen.dart';
-import 'package:go_shopping/user/persion_infor_change.dart';
+import 'package:go_shopping/user/personal_info_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_shopping/login/update_password.dart';
+import 'package:go_shopping/notification/notification_screen.dart';
+import 'package:go_shopping/home_screen/home_screen.dart';
+
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
 
@@ -60,134 +63,114 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     }
   }
 
+  void _onItemTapped(int index) {
+    if (index == 0) {  // Home tab
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+        (route) => false,  // Xóa tất cả các màn hình trong stack
+      );
+    } else if (index == 1) {  // Notification tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => NotificationScreen()),
+      );
+    }
+    // Đang ở tab Profile (index == 2) nên không cần xử lý
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.green[700],
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+    return WillPopScope(  // Thêm WillPopScope để xử lý nút back của Android
+      onWillPop: () async {
+        Navigator.pop(context);  // Quay về màn hình trước đó
+        return false;  // Không cho phép back mặc định của Android
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.green[700],
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),  // Quay về màn hình trước đó
+          ),
         ),
-      ),
-      body: Column(
-        children: [
-          Container(
-            color: Colors.green[700],
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundImage: (_imageBase64 == null || _imageBase64 == "") ? AssetImage('images/group.png') : MemoryImage(base64Decode(_imageBase64!)),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  name.isNotEmpty ? name : 'Chưa cập nhật tên',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+        body: Column(
+          children: [
+            Container(
+              color: Colors.green[700],
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundImage: (_imageBase64 == null || _imageBase64 == "") ? AssetImage('images/group.png') : MemoryImage(base64Decode(_imageBase64!)),
                   ),
-                ),
-                Text(
-                  email,
-                  style: TextStyle(color: Colors.white70),
-                ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.message, color: Colors.white),
-                      onPressed: () {},
+                  SizedBox(height: 8),
+                  Text(
+                    name.isNotEmpty ? name : 'Chưa cập nhật tên',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    IconButton(
-                      icon: Icon(Icons.video_call, color: Colors.white),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.call, color: Colors.white),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.more_horiz, color: Colors.white),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 16),
-
-          // Thống kê
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatisticCard('03', 'Nhóm đã tham gia', Colors.orange[300]!),
-                _buildStatisticCard('5', 'Món mới', Colors.green[300]!),
-              ],
-            ),
-          ),
-          SizedBox(height: 16),
-
-          // Các tùy chọn
-          Expanded(
-            child: ListView(
-              children: [
-                _buildListTile(Icons.person, 'Chỉnh sửa thông tin cá nhân'),
-                _buildListTile(Icons.update, 'Đổi mật khẩu'),
-
-                ListTile(
-                  leading: Icon(Icons.logout, color: Colors.red),
-                  title: Text(
-                    'Đăng xuất',
-                    style: TextStyle(color: Colors.red),
                   ),
-                  onTap: () {
-                    setState(() {
-                      _secureStorage.deleteAll();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SplashScreen(),
-                        ),
-                      );
-                    });
-                  },
-                ),
-              ],
+                  Text(
+                    email,
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
-        onTap: (index) {
-          // Xử lý khi chuyển đổi tab
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.kitchen),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "",
-          ),
-        ],
-        selectedItemColor: Colors.green[700],
-        unselectedItemColor: Colors.grey,
+            SizedBox(height: 16),
+
+
+
+            // Các tùy chọn
+            Expanded(
+              child: ListView(
+                children: [
+                  _buildListTile(Icons.person, 'Chỉnh sửa thông tin cá nhân'),
+                  _buildListTile(Icons.update, 'Đổi mật khẩu'),
+
+                  ListTile(
+                    leading: Icon(Icons.logout, color: Colors.red),
+                    title: Text(
+                      'Đăng xuất',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        _secureStorage.deleteAll();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SplashScreen(),
+                          ),
+                        );
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: 2,  // Luôn sáng ở tab Profile
+          selectedItemColor: Colors.green[700],
+          unselectedItemColor: Colors.grey,
+          onTap: _onItemTapped,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+            BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+          ],
+        ),
       ),
     );
   }

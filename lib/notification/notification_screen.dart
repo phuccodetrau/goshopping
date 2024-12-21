@@ -5,6 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'notification_detail_screen.dart';
+import '../user/user_info.dart';
+
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({Key? key}) : super(key: key);
@@ -195,130 +197,158 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
+  void _onItemTapped(int index) {
+    if (index == 0) {  // Home tab
+      Navigator.pop(context);
+    } else if (index == 2) {  // Profile tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Thông báo',
-          style: TextStyle(color: Colors.green[900]),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context);
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Thông báo',
+            style: TextStyle(color: Colors.green[900]),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.green[900]),
+            onPressed: () => Navigator.pop(context),
+          ),
+          actions: [
+            if (notifications.isNotEmpty)
+              IconButton(
+                icon: Icon(Icons.done_all, color: Colors.green[900]),
+                onPressed: _markAllAsRead,
+                tooltip: 'Đánh dấu tất cả đã đọc',
+              ),
+          ],
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.green[900]),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          if (notifications.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.done_all, color: Colors.green[900]),
-              onPressed: _markAllAsRead,
-              tooltip: 'Đánh dấu tất cả đã đọc',
-            ),
-        ],
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchNotifications,
-              child: notifications.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.notifications_none, 
-                            size: 64, 
-                            color: Colors.grey
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'Không có thông báo nào',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 16
+        body: isLoading
+            ? Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _fetchNotifications,
+                child: notifications.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.notifications_none, 
+                              size: 64, 
+                              color: Colors.grey
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: notifications.length,
-                      itemBuilder: (context, index) {
-                        final notification = notifications[index];
-                        final bool isRead = notification['isRead'] ?? false;
+                            SizedBox(height: 16),
+                            Text(
+                              'Không có thông báo nào',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 16
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: notifications.length,
+                        itemBuilder: (context, index) {
+                          final notification = notifications[index];
+                          final bool isRead = notification['isRead'] ?? false;
 
-                        return Dismissible(
-                          key: Key(notification['_id']),
-                          background: Container(
-                            color: Colors.red,
-                            alignment: Alignment.centerRight,
-                            padding: EdgeInsets.only(right: 20.0),
-                            child: Icon(Icons.delete, color: Colors.white),
-                          ),
-                          direction: DismissDirection.endToStart,
-                          onDismissed: (direction) async {
-                            try {
-                              final String? token = await _secureStorage.read(key: "auth_token");
-                              await http.delete(
-                                Uri.parse('$_url/api/notifications/${notification['_id']}'),
-                                headers: {
-                                  'Authorization': 'Bearer $token',
-                                },
-                              );
-                              setState(() {
-                                notifications.removeAt(index);
-                              });
-                            } catch (error) {
-                              print("Error deleting notification: $error");
-                            }
-                          },
-                          child: Card(
-                            color: isRead ? Colors.white : Colors.green[50],
-                            child: ListTile(
-                              leading: _getNotificationIcon(notification['type']),
-                              title: Text(
-                                notification['content'],
-                                style: TextStyle(
-                                  fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
-                                ),
-                              ),
-                              subtitle: Text(
-                                _formatDate(notification['createdAt']),
-                                style: TextStyle(fontSize: 12),
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => NotificationDetailScreen(
-                                      notification: notification,
-                                      onRead: () async {
-                                        if (!isRead) {
-                                          try {
-                                            final String? token = await _secureStorage.read(key: "auth_token");
-                                            await http.put(
-                                              Uri.parse('$_url/api/notifications/${notification['_id']}/read'),
-                                              headers: {
-                                                'Authorization': 'Bearer $token',
-                                              },
-                                            );
-                                            await _fetchNotifications();
-                                          } catch (error) {
-                                            print("Error marking as read: $error");
-                                          }
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                );
-                              },
+                          return Dismissible(
+                            key: Key(notification['_id']),
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding: EdgeInsets.only(right: 20.0),
+                              child: Icon(Icons.delete, color: Colors.white),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
+                            direction: DismissDirection.endToStart,
+                            onDismissed: (direction) async {
+                              try {
+                                final String? token = await _secureStorage.read(key: "auth_token");
+                                await http.delete(
+                                  Uri.parse('$_url/api/notifications/${notification['_id']}'),
+                                  headers: {
+                                    'Authorization': 'Bearer $token',
+                                  },
+                                );
+                                setState(() {
+                                  notifications.removeAt(index);
+                                });
+                              } catch (error) {
+                                print("Error deleting notification: $error");
+                              }
+                            },
+                            child: Card(
+                              color: isRead ? Colors.white : Colors.green[50],
+                              child: ListTile(
+                                leading: _getNotificationIcon(notification['type']),
+                                title: Text(
+                                  notification['content'],
+                                  style: TextStyle(
+                                    fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  _formatDate(notification['createdAt']),
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => NotificationDetailScreen(
+                                        notification: notification,
+                                        onRead: () async {
+                                          if (!isRead) {
+                                            try {
+                                              final String? token = await _secureStorage.read(key: "auth_token");
+                                              await http.put(
+                                                Uri.parse('$_url/api/notifications/${notification['_id']}/read'),
+                                                headers: {
+                                                  'Authorization': 'Bearer $token',
+                                                },
+                                              );
+                                              await _fetchNotifications();
+                                            } catch (error) {
+                                              print("Error marking as read: $error");
+                                            }
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: 1,
+          selectedItemColor: Colors.green[700],
+          unselectedItemColor: Colors.grey,
+          onTap: _onItemTapped,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+            BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+          ],
+        ),
+      ),
     );
   }
 } 

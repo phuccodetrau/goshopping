@@ -22,11 +22,14 @@ class _AddMemberState extends State<AddMember> {
 
   List<Map<String, String>> _userSuggestions = [];
   List<Map<String, String>> _selectedUsers = [];
+  String _imageBase64 = "";
+  List<dynamic> currentGroupMembers = [];
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
+    _fetchGroupMembers();
   }
 
   @override
@@ -51,9 +54,49 @@ class _AddMemberState extends State<AddMember> {
   // Function to search users by email
   Future<void> _searchUserByEmail(String email) async {
     try {
+      // Kiểm tra xem email đã là thành viên chưa
+      bool isExistingMember = currentGroupMembers.any(
+        (member) => member['email'].toString().toLowerCase() == email.toLowerCase()
+      );
+
+      if (isExistingMember) {
+        setState(() {
+          _userSuggestions = [];  // Xóa suggestions nếu là thành viên
+        });
+        
+        // Hiển thị thông báo với style mới
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.white),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Email này đã là thành viên của nhóm!',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+        
+        // Xóa text trong search field
+        _searchController.clear();
+        return;
+      }
+
+      // Nếu không phải thành viên, tiếp tục tìm kiếm user
       final String? token = await _secureStorage.read(key: "auth_token");
       final response = await http.get(
-        Uri.parse('$_url/auth/user/get-user-name?email=$email'),
+        Uri.parse('$_url/auth/user/info?email=$email'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -61,18 +104,36 @@ class _AddMemberState extends State<AddMember> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['status'] == true && data['name'] != null) {
+        if (data['status'] == true && data['data'] != null) {
           setState(() {
             _userSuggestions = [
               {
-                "name": data['name'],
+                "name": data['data']['name'] ?? '',
                 "email": email,
+                "avatar": data['data']['avatar'] ?? '',
               }
             ];
           });
+        } else {
+          // Nếu không tìm thấy user
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.white),
+                  SizedBox(width: 10),
+                  Text('Không tìm thấy người dùng với email này'),
+                ],
+              ),
+              backgroundColor: Colors.grey[700],
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
         }
-      } else {
-        print("Failed to fetch user. Status code: ${response.statusCode}");
       }
     } catch (error) {
       print("Error searching user: $error");
@@ -86,7 +147,11 @@ class _AddMemberState extends State<AddMember> {
     }
 
     setState(() {
-      _selectedUsers.add(user);
+      _selectedUsers.add({
+        'name': user['name']!,
+        'email': user['email']!,
+        'avatar': user['avatar'] ?? '',  // Thêm avatar vào thông tin người được chọn
+      });
       _userSuggestions.clear();
       _searchController.clear();
     });
@@ -122,8 +187,12 @@ class _AddMemberState extends State<AddMember> {
 
     try {
       final String? token = await _secureStorage.read(key: "auth_token");
+      
+      // Debug log
+      print("Adding members with data: ${jsonEncode(data)}");
+      
       final response = await http.put(
-        Uri.parse('$_url/groups/add-member'),
+        Uri.parse('$_url/groups/add-member'),  // Sửa endpoint từ add-member thành add-members
         headers: {
           "Content-Type": "application/json",
           'Authorization': 'Bearer $token',
@@ -131,9 +200,25 @@ class _AddMemberState extends State<AddMember> {
         body: jsonEncode(data),
       );
 
+      // Debug log
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      final responseData = jsonDecode(response.body);
+
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Thêm thành viên thành công!")),
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10),
+                Text("Thêm thành viên thành công!"),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
         Navigator.pushReplacement(
           context,
@@ -145,17 +230,83 @@ class _AddMemberState extends State<AddMember> {
             ),
           ),
         );
-      } else {
-        print("Failed to add members. Status code: ${response.statusCode}");
+      } else if (responseData['code'] == 706) {
+        // Xử lý trường hợp thành viên đã tồn tại
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Không thể thêm thành viên.")),
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.white),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(responseData['message'] ?? "Thành viên đã tồn tại trong nhóm"),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      } else {
+        // Xử lý các lỗi khác
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 10),
+                Text("Không thể thêm thành viên. Vui lòng thử lại sau."),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } catch (error) {
       print("Error adding members: $error");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi khi thêm thành viên.")),
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white),
+              SizedBox(width: 10),
+              Text("Lỗi khi thêm thành viên: $error"),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
+    }
+  }
+
+  Future<void> _fetchGroupMembers() async {
+    try {
+      final String? token = await _secureStorage.read(key: "auth_token");
+      final response = await http.get(
+        Uri.parse('$_url/groups/get-emails-by-group-id/${widget.groupId}'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['code'] == 700) {
+          setState(() {
+            // Lưu danh sách email vào biến currentGroupMembers
+            currentGroupMembers = data['data'].map((email) => {
+              'email': email
+            }).toList();
+          });
+        }
+      }
+    } catch (error) {
+      print("Error fetching group members: $error");
     }
   }
 
@@ -202,17 +353,75 @@ class _AddMemberState extends State<AddMember> {
               ),
             ),
             SizedBox(height: 20),
-            Wrap(
-              children: _selectedUsers.map((user) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: CircleAvatar(
-                    backgroundImage: AssetImage("images/group.png"),
-                    radius: 30,
-                  ),
-                );
-              }).toList(),
-            ),
+            if (_selectedUsers.isNotEmpty) ...[  // Chỉ hiển thị khi có người được chọn
+              Text(
+                "Đã chọn",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+              SizedBox(height: 10),
+              Wrap(
+                spacing: 12.0,
+                runSpacing: 12.0,
+                children: _selectedUsers.map((user) {
+                  return Stack(
+                    children: [
+                      Column(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: (user['avatar']?.isEmpty ?? true)
+                              ? AssetImage("images/group.png") as ImageProvider
+                              : MemoryImage(base64Decode(user['avatar']!)),
+                            radius: 30,
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            user['name'] ?? '',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black87,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                      Positioned(  // Thêm nút xóa
+                        top: -10,
+                        right: -10,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.3),
+                                spreadRadius: 1,
+                                blurRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: InkWell(
+                            onTap: () => _removeUser(user),
+                            child: CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Colors.white,
+                              child: Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ],
             SizedBox(height: 20),
             Text(
               "Gợi ý",
@@ -232,9 +441,9 @@ class _AddMemberState extends State<AddMember> {
                     onTap: () => _selectUser(user),
                     child: ContactItem(
                       name: user['name']!,
-                      image: "images/group.png",
+                      avatar: user['avatar'] ?? '',
                       isSelected: _selectedUsers.any((selectedUser) =>
-                      selectedUser['email'] == user['email']),
+                        selectedUser['email'] == user['email']),
                     ),
                   );
                 },
@@ -249,12 +458,12 @@ class _AddMemberState extends State<AddMember> {
 
 class ContactItem extends StatelessWidget {
   final String name;
-  final String image;
+  final String avatar;
   final bool isSelected;
 
   const ContactItem({
     required this.name,
-    required this.image,
+    required this.avatar,
     this.isSelected = false,
   });
 
@@ -262,8 +471,10 @@ class ContactItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundImage: AssetImage(image),
         radius: 20,
+        backgroundImage: (avatar.isEmpty) 
+          ? AssetImage("images/group.png") as ImageProvider
+          : MemoryImage(base64Decode(avatar)),
       ),
       title: Text(name),
       trailing: Icon(
