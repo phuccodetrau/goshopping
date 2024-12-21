@@ -458,7 +458,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                     {
                       isFoodName.value = true;
                     }
-                    if(name != adminName && listuser[selectedUser]["name"] != name){
+                    else if(name != adminName && listuser[selectedUser]["name"] != name){
                       isRight.value = true;
                     }
                     else{

@@ -535,12 +535,15 @@ class _BuyFoodState extends State<BuyFood> {
                         endDate.isBefore(DateTime.now())
                       )
                     {
+                      print("Thiếu trường");
                       isFoodName.value = true;
                     }
-                    if(name != adminName && listuser[selectedUser]["name"] != name){
+                    else if(name != adminName && listuser[selectedUser]["name"] != name){
+                      print("Không có quền");
                       isRight.value = true;
                     }
                     else{
+                      print("ok bro");
                       String categoryName = chosenCategory;
                       String memberName = listuser[selectedUser]["name"];
                       String memberEmail = listuser[selectedUser]["email"];
