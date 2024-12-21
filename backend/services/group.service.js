@@ -351,9 +351,16 @@ class GroupService {
                 return { code: 702, message: "Nhóm không tồn tại", data: "" };
             }
             const lowerKeyword = keyword.toLowerCase();
-            const matchedItems = group.refrigerator.filter(item =>
-                lowerKeyword === "" || item.foodName.toLowerCase().includes(lowerKeyword)
-            );
+            const today = new Date();
+            const matchedItems = group.refrigerator.filter(item => {
+                const isKeywordMatched =
+                    lowerKeyword === "" || item.foodName.toLowerCase().includes(lowerKeyword);
+                const isNotExpired =
+                    item.expireDate && new Date(item.expireDate) > today; // Kiểm tra expireDate
+                
+                return isKeywordMatched && isNotExpired;
+            });
+
             const totalItems = matchedItems.length;
             const totalPages = Math.ceil(totalItems / limit);
             const startIndex = (page - 1) * limit;
