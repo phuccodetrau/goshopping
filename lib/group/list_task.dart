@@ -36,6 +36,7 @@ class _ListTaskState extends State<ListTask> with RouteAware{
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   List<dynamic> listtaskall = [];
   List<dynamic> listtaskuser = [];
+  bool isLoadedSecret = false;
   Future<void> _loadSecureValues() async {
     try{
       token = await _secureStorage.read(key: 'auth_token');
@@ -45,7 +46,9 @@ class _ListTaskState extends State<ListTask> with RouteAware{
       groupName = await _secureStorage.read(key: 'groupName');
       groupId = await _secureStorage.read(key: 'groupId');
       adminName = await _secureStorage.read(key: 'adminName');
-
+      setState(() {
+        isLoadedSecret = true;
+      });
     }catch(e){
       print('Error loading secure values: $e');
     }
@@ -418,8 +421,8 @@ class _ListTaskState extends State<ListTask> with RouteAware{
 
   Widget _buildTabBarView() {
     return Expanded(
-      child: DefaultTabController(
-        length: 2,
+      child: isLoadedSecret == false ? CircularProgressIndicator() : DefaultTabController(
+        length: name == adminName ? 2 : 1,
         child: Column(
           children: [
             TabBar(
@@ -788,7 +791,7 @@ class _ListTaskState extends State<ListTask> with RouteAware{
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => BuyOldFood(foodName: listtaskall[index]["foodName"], unitName: listtaskall[index]["unitName"], amount: listtaskall[index]["amount"], startDate: DateTime.parse(listtaskall[index]["startDate"]), endDate: DateTime.parse(listtaskall[index]["endDate"]), memberName: listtaskall[index]["name"], memberEmail: listtaskall[index]["memberEmail"], note: listtaskall[index]["note"], id: listtaskall[index]["_id"]),
+                          builder: (context) => BuyOldFood(foodName: listtaskall[index]["foodName"], unitName: listtaskall[index]["unitName"], amount: listtaskall[index]["amount"], startDate: DateTime.parse(listtaskall[index]["startDate"]), endDate: DateTime.parse(listtaskall[index]["endDate"]), memberName: listtaskall[index]["name"], memberEmail: listtaskall[index]["memberEmail"], note: listtaskall[index]["note"], id: listtaskall[index]["_id"], image: "",),
                         ),
                       );
                       break;

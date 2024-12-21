@@ -30,7 +30,8 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   List<dynamic> listfood = [];
-  // List<dynamic> listfoodbackup = [];
+  List<dynamic> listfoodbackup = [];
+  bool isFirstTime = false;
 
   Future<void> _loadSecureValues() async {
     try {
@@ -64,6 +65,7 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
       if (responseData["code"] == 600) {
         setState(() {
           listfood = responseData["data"];
+          listfoodbackup = responseData["data"];
         });
       } else {
         print("${responseData["message"]}");
@@ -76,6 +78,7 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
   Future<void> _initializeData() async {
     await _loadSecureValues();
     await _fetchFood();
+    isFirstTime = true;
   }
 
   @override
@@ -84,7 +87,10 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
     if (ModalRoute.of(context) != null) {
       routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>); // Subscribe to route observer
     }
-    _initializeData();
+    if(isFirstTime == false){
+      _initializeData();
+    }
+
   }
 
   @override
@@ -138,15 +144,15 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
                     borderSide: BorderSide.none,
                   ),
                 ),
-                // onChanged: (value) {
-                //   setState(() {
-                //     keyword = value;
-                //     listfood = listfoodbackup
-                //         .where((item) =>
-                //         item['name'].toLowerCase().contains(keyword.toLowerCase()))
-                //         .toList();
-                //   });
-                // },
+                onChanged: (value) {
+                  setState(() {
+                    keyword = value;
+                    listfood = listfoodbackup
+                        .where((item) =>
+                        item['name'].toLowerCase().contains(keyword.toLowerCase()))
+                        .toList();
+                  });
+                },
               ),
               SizedBox(height: 16),
               Text(
@@ -168,7 +174,8 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
                       name: food['name'],
                       amount: food['totalAmount'].toString(),
                       unitName: food['unitName'],
-                      categoryName: widget.categoryName
+                      categoryName: widget.categoryName,
+                      image: food["image"],
                     );
                   }).toList(),
                 ),
@@ -200,6 +207,7 @@ class FoodCard extends StatefulWidget {
   final String amount;
   final String unitName;
   final String categoryName;
+  final String image;
 
   const FoodCard({
     required this.userName,
@@ -209,6 +217,7 @@ class FoodCard extends StatefulWidget {
     required this.amount,
     required this.unitName,
     required this.categoryName,
+    required this.image,
     super.key,
   });
 
@@ -276,7 +285,7 @@ class _FoodCardState extends State<FoodCard> {
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
-                      BuyOldFood(foodName: widget.name, unitName: widget.unitName, amount: null, startDate: null, endDate: null, memberName: null, memberEmail: null, note: "", id: null,),
+                      BuyOldFood(foodName: widget.name, unitName: widget.unitName, amount: null, startDate: null, endDate: null, memberName: null, memberEmail: null, note: "", id: null, image: widget.image),
                 ),
               );
             }

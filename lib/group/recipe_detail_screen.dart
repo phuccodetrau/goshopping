@@ -272,7 +272,8 @@ class _RecipeDetailState extends State<RecipeDetail> {
                         memberName: null,
                         memberEmail: null,
                         note: "",
-                        id: null
+                        id: null,
+                        image: "",
                       ),
                     ),
                   );

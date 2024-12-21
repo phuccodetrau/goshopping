@@ -7,6 +7,7 @@ import 'meal_plan_screen.dart';
 import 'list_task.dart';
 import 'add_group/add_member.dart';
 import 'package:go_shopping/user/user_info.dart';
+import 'package:go_shopping/statistics/statistics_screen.dart';
 
 class GroupMainScreen extends StatefulWidget {
   final String groupName;
@@ -213,9 +214,8 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => MealPlanScreen(
+                    builder: (context) => StatisticsScreen(
                       groupId: widget.groupId,
-                      email: email ?? '',
                     ),
                   ),
                 );
