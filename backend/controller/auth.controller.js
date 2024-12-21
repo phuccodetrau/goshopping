@@ -42,18 +42,28 @@ const login=async(req,res,next)=>{
 }
 const register=async(req,res,next)=>{
     try {
-        const { email, password,name} = req.body;
+        const { email, password, name, deviceToken } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({status:false, message: 'All fields are required' });
         }
-        const result=await AuthService.register(email, password,name);
+        const result = await AuthService.register(email, password, name);
         if(result.user){
             const token = jwt.sign(
                 { userId: result.user._id, email: result.user.email },
                 process.env.JWT_SECRET_KEY, 
                 { expiresIn: '10h' } 
             );
+
+            if (deviceToken) {
+                try {
+                    await AuthService.updateDeviceToken(result.user._id, deviceToken);
+                    result.user.deviceToken = deviceToken;
+                } catch (error) {
+                    console.error('Error updating device token during registration:', error);
+                }
+            }
+
             res.setHeader('Authorization', `Bearer ${token}`);
             res.cookie('auth_token', token, {
                 httpOnly: true,  
@@ -61,8 +71,13 @@ const register=async(req,res,next)=>{
                 maxAge: 180, 
                 sameSite: 'Strict', 
             });
-            return  res.status(201).json({ status: true, message: 'User registered successfully',user:result.user,token:token });
-        }else{
+            return res.status(201).json({ 
+                status: true, 
+                message: 'User registered successfully',
+                user: result.user,
+                token: token 
+            });
+        } else {
             return res.status(500).json({status:false, message: result.message });
         }
 

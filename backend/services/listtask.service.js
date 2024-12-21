@@ -1,4 +1,5 @@
 import { ListTask, Item } from "../models/schema.js";
+import NotificationService from "./notification.service.js";
 
 class ListTaskService {
     static async createListTask(name, memberEmail, note, startDate, endDate, foodName, amount, unitName, state, group) {
@@ -8,6 +9,10 @@ class ListTaskService {
 
         try {
             const savedListTask = await newListTask.save();
+            
+            // Gửi thông báo cho người được giao task
+            await NotificationService.createTaskNotification(memberEmail, name, 'task_assigned');
+            
             return { code: 700, message: "Tạo phân công thành công", data: savedListTask };
         } catch (error) {
             console.error('Lỗi khi tạo phân công:', error);
@@ -20,6 +25,13 @@ class ListTaskService {
             if (!listTask) {
                 return { code: 404, message: "Không tìm thấy ListTask với id này!", data: null };
             }
+
+            // Kiểm tra nếu memberEmail thay đổi hoặc các thông tin quan trọng thay đổi
+            const isSignificantChange = memberEmail !== undefined && memberEmail !== listTask.memberEmail ||
+                                     name !== undefined && name !== listTask.name ||
+                                     startDate !== undefined && startDate !== listTask.startDate ||
+                                     endDate !== undefined && endDate !== listTask.endDate;
+
             if (name !== undefined) listTask.name = name;
             if (memberEmail !== undefined) listTask.memberEmail = memberEmail;
             if (note !== undefined) listTask.note = note;
@@ -30,7 +42,17 @@ class ListTaskService {
             if (unitName !== undefined) listTask.unitName = unitName;
             if (state !== undefined) listTask.state = state;
             if (group !== undefined) listTask.group = group;
+            
             const updatedListTask = await listTask.save();
+
+            // Nếu có thay đổi đáng kể, gửi thông báo
+            if (isSignificantChange) {
+                await NotificationService.createTaskNotification(
+                    updatedListTask.memberEmail, 
+                    updatedListTask.name,
+                    'task_updated'
+                );
+            }
 
             return {
                 code: 200,
@@ -67,7 +89,7 @@ class ListTaskService {
         }
     }
 
-    static async getListTasksByNameAndGroup(name, group, state = "Tất cả", startDate = "", endDate = "", page = 1, limit = 3) {
+    static async getListTasksByNameAndGroup(name, group, state = "T��t cả", startDate = "", endDate = "", page = 1, limit = 3) {
         try {
             const filter = { name, group };
     

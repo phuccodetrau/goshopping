@@ -28,7 +28,7 @@ class AuthService{
             return { code: 401, message: "Mật khẩu không đúng", data: "" };
         }
 
-        // Cập nhật device token
+        // C���p nhật device token
         if (deviceToken && deviceToken !== user.deviceToken) {
             console.log('Updating device token:', {
                 userId: user._id,
@@ -91,14 +91,16 @@ class AuthService{
         const newUser = new User({
             email,
             password: hashedPassword, 
-            name:name
+            name:name,
+            deviceToken: ''
         });
 
         await newUser.save();
         const return_user={
             email:newUser.email,
             _id:newUser._id,
-            name:newUser.name
+            name:newUser.name,
+            deviceToken: newUser.deviceToken
         }
         return {message:'User registered successfully',user:return_user};
       } catch (error) {
@@ -289,6 +291,26 @@ class AuthService{
             );
             return updatedUser;
         } catch (error) {
+            throw error;
+        }
+    }
+
+    static async updateDeviceToken(userId, deviceToken) {
+        try {
+            const user = await User.findById(userId);
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            if (deviceToken && deviceToken !== user.deviceToken) {
+                user.deviceToken = deviceToken;
+                await user.save();
+                console.log('Device token updated successfully for user:', userId);
+            }
+
+            return user;
+        } catch (error) {
+            console.error('Error updating device token:', error);
             throw error;
         }
     }

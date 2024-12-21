@@ -148,7 +148,7 @@ class NotificationService {
             case 'members_added':
                 return 'Thêm thành viên mới';
             default:
-                return 'Thông báo m���i';
+                return 'Thông báo mới';
         }
     }
 
@@ -185,7 +185,7 @@ class NotificationService {
                 { isRead: true },
                 { new: true }
             );
-            return { code: 802, message: "Đánh dấu đã đọc thành công", data: notification };
+            return { code: 802, message: "Đánh dấu đã đ��c thành công", data: notification };
         } catch (error) {
             console.error("Lỗi khi đánh dấu đã đọc:", error);
             throw error;
@@ -288,6 +288,35 @@ class NotificationService {
             return { code: 700, message: "Xóa nhóm thành công", data: group };
         } catch (error) {
             console.error('Error deleting group:', error);
+            throw error;
+        }
+    }
+
+    // Tạo thông báo cho task được giao
+    static async createTaskNotification(memberEmail, taskName, type = 'task_assigned') {
+        try {
+            // Tìm user dựa trên email
+            const user = await User.findOne({ email: memberEmail });
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            let title, content;
+            if (type === 'task_assigned') {
+                title = 'Nhiệm vụ mới';
+                content = `Bạn được giao nhiệm vụ mới: ${taskName}`;
+            } else if (type === 'task_updated') {
+                title = 'Cập nhật nhiệm vụ';
+                content = `Nhiệm vụ của bạn đã được cập nhật: ${taskName}`;
+            }
+
+            // Gửi push notification
+            await this.sendPushNotification([user._id], title, content);
+
+            // Tạo notification trong database
+            return await this.createNotification(user._id, type, content);
+        } catch (error) {
+            console.error('Error in createTaskNotification:', error);
             throw error;
         }
     }

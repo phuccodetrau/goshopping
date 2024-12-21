@@ -13,8 +13,9 @@ router.post('/addItemToRefrigerator', authMiddleware,groupController.addItemToRe
 router.post('/filterItemsWithPagination/', authMiddleware,groupController.filterItemsWithPagination);
 router.get('/get-admins-by-group-id', authMiddleware, groupController.getAdminsByGroupId);
 router.get('/get-admins-by-group-id/:groupId', authMiddleware, groupController.getAdminsByGroupId);
-router.delete('/leave-group', authMiddleware, groupController.leaveGroup);
+router.delete('/leave-group/:groupId', authMiddleware, groupController.leaveGroup);
 router.get('/get-emails-by-group-id/:groupId', authMiddleware, groupController.getEmailsByGroupId);
+router.delete('/remove-member', authMiddleware, groupController.removeMember);
 
 
 

@@ -225,38 +225,71 @@ class GroupService {
     
     static async leaveGroup(groupId, userEmail) {
         try {
+            console.log("Service leaveGroup:", { groupId, userEmail });
+            
             const group = await Group.findById(groupId);
             if (!group) {
-                return { code: 704, message: "Không tìm thấy nhóm", data: "" };
+                return { 
+                    code: 704, 
+                    message: "Không tìm thấy nhóm", 
+                    data: "" 
+                };
             }
+
+            // Tìm thông tin người rời nhóm trước khi xóa
+            const leavingMember = group.listUser.find(user => user.email === userEmail);
+            if (!leavingMember) {
+                return { 
+                    code: 705, 
+                    message: "Bạn không phải thành viên của nhóm này", 
+                    data: "" 
+                };
+            }
+
+            // Xóa thành viên khỏi nhóm
+            group.listUser = group.listUser.filter(user => user.email !== userEmail);
+            await group.save();
 
             // Lấy danh sách user IDs của các thành viên còn lại
             const remainingUsers = await User.find({
                 email: { 
-                    $in: group.listUser
-                        .filter(u => u.email !== userEmail)
-                        .map(u => u.email)
+                    $in: group.listUser.map(u => u.email)
                 }
             });
             const remainingUserIds = remainingUsers.map(user => user._id);
+
+            // Tìm user đã rời nhóm để gửi thông báo
+            const leavingUser = await User.findOne({ email: userEmail });
+            if (leavingUser) {
+                // Gửi thông báo cho người rời nhóm
+                await NotificationService.createNotification(
+                    leavingUser._id,
+                    'left_group',
+                    `Bạn đã rời khỏi nhóm "${group.name}"`
+                );
+            }
 
             // Gửi thông báo cho các thành viên còn lại
             if (remainingUserIds.length > 0) {
                 await NotificationService.createNotificationForMany(
                     remainingUserIds,
-                    'member_left',
-                    `Thành viên ${userEmail} đã rời khỏi nhóm "${group.name}"`
+                    'member_left_group',
+                    `${leavingMember.name} (${leavingMember.email}) đã rời khỏi nhóm "${group.name}"`
                 );
             }
 
-            // Cập nhật group
-            group.listUser = group.listUser.filter(user => user.email !== userEmail);
-            await group.save();
-
-            return { code: 700, message: "Rời nhóm thành công", data: group };
+            return { 
+                code: 700, 
+                message: "Rời nhóm thành công", 
+                data: group 
+            };
         } catch (error) {
-            console.error("Error in leaveGroup:", error);
-            throw error;
+            console.error('Lỗi khi rời nhóm:', error);
+            throw { 
+                code: 101, 
+                message: "Lỗi server khi rời nhóm", 
+                data: "" 
+            };
         }
     }
     
@@ -409,7 +442,78 @@ class GroupService {
         }
     }
       
+    static async removeMember(groupId, email) {
+        try {
+            const group = await Group.findById(groupId);
+            if (!group) {
+                return { 
+                    code: 704, 
+                    message: "Không tìm thấy nhóm", 
+                    data: "" 
+                };
+            }
+
+            // Kiểm tra xem thành viên có tồn tại trong nhóm không
+            const memberIndex = group.listUser.findIndex(user => user.email === email);
+            if (memberIndex === -1) {
+                return { 
+                    code: 705, 
+                    message: "Không tìm thấy thành viên trong nhóm", 
+                    data: "" 
+                };
+            }
+
+            // Lưu thông tin người bị xóa trước khi xóa
+            const removedMember = group.listUser[memberIndex];
+
+            // Xóa thành viên khỏi nhóm
+            group.listUser.splice(memberIndex, 1);
+            await group.save();
+
+            // Lấy danh sách user IDs của tất cả thành viên còn lại trong nhóm
+            const remainingUsers = await User.find({
+                email: { 
+                    $in: group.listUser.map(u => u.email)
+                }
+            });
+            const remainingUserIds = remainingUsers.map(user => user._id);
+
+            // Tìm user bị xóa để gửi thông báo
+            const removedUser = await User.findOne({ email: email });
+            if (removedUser) {
+                // Gửi thông báo cho người bị xóa
+                await NotificationService.createNotification(
+                    removedUser._id,
+                    'member_removed',
+                    `Bạn đã bị xóa khỏi nhóm "${group.name}"`
+                );
+            }
+
+            // Gửi thông báo cho các thành viên còn lại
+            if (remainingUserIds.length > 0) {
+                await NotificationService.createNotificationForMany(
+                    remainingUserIds,
+                    'member_removed_from_group',
+                    `Thành viên ${removedMember.name} (${removedMember.email}) đã bị xóa khỏi nhóm "${group.name}"`
+                );
+            }
+
+            return { 
+                code: 700, 
+                message: "Xóa thành viên thành công", 
+                data: group 
+            };
+        } catch (error) {
+            console.error('Lỗi khi xóa thành viên:', error);
+            throw { 
+                code: 101, 
+                message: "Lỗi server khi xóa thành viên", 
+                data: "" 
+            };
+        }
+    }
     
+
 
 
 

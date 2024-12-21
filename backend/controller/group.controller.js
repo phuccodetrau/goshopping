@@ -1,3 +1,4 @@
+import { Group } from '../models/schema.js';
 import GroupService from '../services/group.service.js';
 import FoodService from '../services/food.service.js';
 const createGroup = async (req, res) => {
@@ -45,8 +46,10 @@ const getAdminsByGroupId = async (req, res) => {
 };
 const leaveGroup = async (req, res) => {
     try {
-        const { groupId } = req.body;
-        const userEmail = req.user.email;  // Lấy email từ token auth
+        const { groupId } = req.params;
+        const userEmail = req.user.email;
+
+        console.log("Leave group request:", { groupId, userEmail });
 
         if (!groupId) {
             return res.status(400).json({ 
@@ -67,7 +70,9 @@ const leaveGroup = async (req, res) => {
         }
 
         const admins = group.listUser.filter(user => user.role === 'admin');
-        if (admins.length === 1 && admins[0].email === userEmail) {
+        const isUserAdmin = admins.some(admin => admin.email === userEmail);
+        
+        if (admins.length === 1 && isUserAdmin) {
             return res.status(400).json({
                 code: 402,
                 message: "Bạn là admin duy nhất của nhóm. Vui lòng chỉ định admin mới hoặc xóa nhóm",
@@ -76,6 +81,8 @@ const leaveGroup = async (req, res) => {
         }
 
         const result = await GroupService.leaveGroup(groupId, userEmail);
+        console.log("Leave group result:", result);
+        
         return res.status(result.code === 700 ? 200 : 400).json(result);
     } catch (error) {
         console.error("Error in leaveGroup:", error);
@@ -153,11 +160,58 @@ const deleteGroup = async (req, res) => {
 
 const removeMember = async (req, res) => {
     try {
-        const { groupName, email } = req.body;
-        const result = await GroupService.removeMember(groupName, email);
-        return res.status(result.code === 700 ? 200 : 404).json(result);
+        const { groupId, email } = req.body;
+        
+        // Kiểm tra dữ liệu đầu vào
+        if (!groupId || !email) {
+            return res.status(400).json({
+                code: 401,
+                message: "Thiếu thông tin groupId hoặc email",
+                data: ""
+            });
+        }
+
+        // Kiểm tra xem người gửi request có phải là admin không
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(404).json({
+                code: 404,
+                message: "Không tìm thấy nhóm",
+                data: ""
+            });
+        }
+
+        const requestUser = group.listUser.find(user => 
+            user.email === req.user.email && user.role === 'admin'
+        );
+
+        if (!requestUser) {
+            return res.status(403).json({
+                code: 403,
+                message: "Bạn không có quyền xóa thành viên",
+                data: ""
+            });
+        }
+
+        // Kiểm tra không cho phép xóa admin cuối cùng
+        const admins = group.listUser.filter(user => user.role === 'admin');
+        if (admins.length === 1 && email === admins[0].email) {
+            return res.status(400).json({
+                code: 400,
+                message: "Không thể xóa admin cuối cùng của nhóm",
+                data: ""
+            });
+        }
+
+        const result = await GroupService.removeMember(groupId, email);
+        return res.status(result.code === 700 ? 200 : 400).json(result);
     } catch (error) {
-        return res.status(500).json(error);
+        console.error("Error in removeMember:", error);
+        return res.status(500).json({
+            code: 500,
+            message: "Lỗi server",
+            data: ""
+        });
     }
 };
 
