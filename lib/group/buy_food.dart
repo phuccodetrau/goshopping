@@ -36,6 +36,7 @@ class _BuyFoodState extends State<BuyFood> {
   DateTime endDate = DateTime.now().subtract(Duration(days: 1));
   String note = "";
   ValueNotifier<bool> isFoodName = ValueNotifier<bool>(false);
+  ValueNotifier<bool> isRight = ValueNotifier<bool>(false);
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   File? _selectedImage;
   String _imageBase64 = "";
@@ -57,7 +58,10 @@ class _BuyFoodState extends State<BuyFood> {
   Future<void> _fetchCategories() async {
     try {
       final response =
-          await http.get(Uri.parse('$URL/category/admin/category/$groupId'));
+          await http.get(Uri.parse('$URL/category/admin/category/$groupId'), headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 707) {
         setState(() {
@@ -75,7 +79,10 @@ class _BuyFoodState extends State<BuyFood> {
   Future<void> _fetchUnits() async {
     try {
       final response =
-      await http.get(Uri.parse('$URL/unit/admin/unit/$groupId'));
+      await http.get(Uri.parse('$URL/unit/admin/unit/$groupId'), headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 700) {
         setState(() {
@@ -93,7 +100,10 @@ class _BuyFoodState extends State<BuyFood> {
   Future<void> _fetchUsers() async {
     try {
       final response =
-      await http.get(Uri.parse('$URL/groups/get-users-by-group-id/$groupId'));
+      await http.get(Uri.parse('$URL/groups/get-users-by-group-id/$groupId'), headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 700) {
         setState(() {
@@ -167,7 +177,10 @@ class _BuyFoodState extends State<BuyFood> {
 
       final response = await http.post(
         Uri.parse(apiUrl),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: json.encode(requestBody),
       );
       print("Gọi đến api");
@@ -193,6 +206,7 @@ class _BuyFoodState extends State<BuyFood> {
       final response = await http.post(
         Uri.parse(url),
         headers: {
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
@@ -495,6 +509,18 @@ class _BuyFoodState extends State<BuyFood> {
                   );
                 },
               ),
+              ValueListenableBuilder<bool>(
+                valueListenable: isRight,
+                builder: (context, isVisible, child) {
+                  return Visibility(
+                    visible: isVisible, // Dựa vào giá trị của isErrorVisible để hiển thị
+                    child: const Text(
+                      "Chỉ admin mới có quyền phân công cho người khác, bạn chỉ có quyền phân công cho chính mình!",
+                      style: TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  );
+                },
+              ),
               Container(
                 width: double.infinity,
                 height: 60,
@@ -510,7 +536,11 @@ class _BuyFoodState extends State<BuyFood> {
                       )
                     {
                       isFoodName.value = true;
-                    }else{
+                    }
+                    if(name != adminName && listuser[selectedUser]["name"] != name){
+                      isRight.value = true;
+                    }
+                    else{
                       String categoryName = chosenCategory;
                       String memberName = listuser[selectedUser]["name"];
                       String memberEmail = listuser[selectedUser]["email"];

@@ -54,15 +54,16 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
       };
       final response = await http.post(
         Uri.parse(URL + "/food/getFoodsByCategory"),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(body),
       );
       final responseData = jsonDecode(response.body);
       if (responseData["code"] == 600) {
         setState(() {
           listfood = responseData["data"];
-          print(listfood);
-          // listfoodbackup = responseData["data"];
         });
       } else {
         print("${responseData["message"]}");
@@ -161,6 +162,8 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
                 child: ListView(
                   children: listfood.map((food) {
                     return FoodCard(
+                      userName: name!,
+                      adminName: adminName!,
                       imagePath: food["image"],
                       name: food['name'],
                       amount: food['totalAmount'].toString(),
@@ -190,6 +193,8 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
   }
 }
 class FoodCard extends StatefulWidget {
+  final String userName;
+  final String adminName;
   final String imagePath;
   final String name;
   final String amount;
@@ -197,6 +202,8 @@ class FoodCard extends StatefulWidget {
   final String categoryName;
 
   const FoodCard({
+    required this.userName,
+    required this.adminName,
     required this.imagePath,
     required this.name,
     required this.amount,
@@ -246,9 +253,10 @@ class _FoodCardState extends State<FoodCard> {
         trailing: DropdownButton<String>(
           underline: SizedBox(),
           icon: Icon(Icons.more_vert, color: Colors.green[700]),
-          // value: isDropdownOpen ? '' : null,
-          items: [
+          items: widget.userName == widget.adminName ? [
             DropdownMenuItem(value: 'Chỉnh sửa', child: Text('Chỉnh sửa')),
+            DropdownMenuItem(value: 'Phân công', child: Text('Phân công')),
+          ] : [
             DropdownMenuItem(value: 'Phân công', child: Text('Phân công')),
           ],
           onChanged: (value) {

@@ -4,6 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'fridge.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class BuyOldFood extends StatefulWidget {
   final String foodName;
@@ -40,8 +42,12 @@ class _BuyOldFoodState extends State<BuyOldFood> {
   List<dynamic> listuser = [];
   int selectedUser = -1;
   ValueNotifier<bool> isFoodName = ValueNotifier<bool>(false);
+  ValueNotifier<bool> isRight = ValueNotifier<bool>(false);
   String note = "";
   int? amount;
+  File? _selectedImage;
+  String _imageBase64 = "";
+  final ImagePicker _picker = ImagePicker();
 
   Future<void> _loadSecureValues() async {
     try {
@@ -66,7 +72,10 @@ class _BuyOldFoodState extends State<BuyOldFood> {
   Future<void> _fetchUsers() async {
     try {
       final response =
-      await http.get(Uri.parse('$URL/groups/get-users-by-group-id/$groupId'));
+      await http.get(Uri.parse('$URL/groups/get-users-by-group-id/$groupId'), headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 700) {
         setState(() {
@@ -116,6 +125,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
       final response = await http.post(
         Uri.parse(url),
         headers: {
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
@@ -153,6 +163,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
       final response = await http.post(
         Uri.parse(url),
         headers: {
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
@@ -182,6 +193,16 @@ class _BuyOldFoodState extends State<BuyOldFood> {
       }
     } catch (e) {
       print("Error: $e");
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+        _imageBase64 = base64Encode(File(image.path).readAsBytesSync()); // Chuyển ảnh thành base64
+      });
     }
   }
 
@@ -227,15 +248,28 @@ class _BuyOldFoodState extends State<BuyOldFood> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Biểu ngữ trên cùng
-              Container(
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: AssetImage('images/fish.png'), // Đường dẫn đến ảnh biểu ngữ
-                    fit: BoxFit.cover,
+              GestureDetector(
+                onTap: _pickImage, // Chọn ảnh khi nhấn vào container
+                child: Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: _selectedImage != null
+                          ? FileImage(_selectedImage!) // Hiển thị ảnh đã chọn
+                          : AssetImage('images/fish.png') as ImageProvider, // Placeholder
+                      fit: BoxFit.cover,
+                    ),
                   ),
+                  child: _selectedImage == null
+                      ? Center(
+                    child: Icon(
+                      Icons.add_a_photo,
+                      color: Colors.grey,
+                    ),
+                  )
+                      : null,
                 ),
               ),
               SizedBox(height: 16),
@@ -399,6 +433,18 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                   );
                 },
               ),
+              ValueListenableBuilder<bool>(
+                valueListenable: isRight,
+                builder: (context, isVisible, child) {
+                  return Visibility(
+                    visible: isVisible, // Dựa vào giá trị của isErrorVisible để hiển thị
+                    child: const Text(
+                      "Chỉ admin mới có quyền phân công cho người khác, bạn chỉ có quyền phân công cho chính mình!",
+                      style: TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  );
+                },
+              ),
               Container(
                 width: double.infinity,
                 height: 60,
@@ -411,7 +457,11 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                     )
                     {
                       isFoodName.value = true;
-                    }else{
+                    }
+                    if(name != adminName && listuser[selectedUser]["name"] != name){
+                      isRight.value = true;
+                    }
+                    else{
                       String memberName = listuser[selectedUser]["name"];
                       String memberEmail = listuser[selectedUser]["email"];
                       String formattedStartDate = "${startDate!.toLocal()}".split(' ')[0];

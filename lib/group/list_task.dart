@@ -62,7 +62,10 @@ class _ListTaskState extends State<ListTask> with RouteAware{
       };
       final response = await http.post(
         Uri.parse(URL + "/listtask/getAllListTasksByGroup"),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(body),
       );
       final responseData = jsonDecode(response.body);
@@ -91,7 +94,10 @@ class _ListTaskState extends State<ListTask> with RouteAware{
       };
       final response = await http.post(
         Uri.parse(URL + "/listtask/getListTasksByNameAndGroup"),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(body),
       );
       final responseData = jsonDecode(response.body);
@@ -125,7 +131,10 @@ class _ListTaskState extends State<ListTask> with RouteAware{
 
       final response = await http.post(
         Uri.parse(URL + "/listtask/getAllListTasksByGroup"),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(body),
       );
 
@@ -178,7 +187,10 @@ class _ListTaskState extends State<ListTask> with RouteAware{
 
       final response = await http.post(
         Uri.parse(URL + "/listtask/getListTasksByNameAndGroup"),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(body),
       );
 
@@ -414,16 +426,20 @@ class _ListTaskState extends State<ListTask> with RouteAware{
               labelColor: Colors.green[900],
               unselectedLabelColor: Colors.grey,
               indicatorColor: Colors.green[900],
-              tabs: const [
+              tabs: name == adminName ? const [
                 Tab(text: "Quản lý"),
+                Tab(text: "Được phân công"),
+              ] : const [
                 Tab(text: "Được phân công"),
               ],
             ),
             Expanded(
               child: TabBarView(
-                children: [
+                children: name == adminName ? [
                   _buildListView("Quản lý"),
                   _buildListView("Được phân công"),
+                ] : [
+                _buildListView("Được phân công"),
                 ],
               ),
             ),
@@ -540,7 +556,8 @@ class _ListTaskState extends State<ListTask> with RouteAware{
 
       final response = await http.post(
         url,
-        headers: <String, String>{
+        headers: {
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: json.encode({
@@ -590,7 +607,8 @@ class _ListTaskState extends State<ListTask> with RouteAware{
 
       final response = await http.post(
         url,
-        headers: <String, String>{
+        headers: {
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: json.encode({

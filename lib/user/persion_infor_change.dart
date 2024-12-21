@@ -25,9 +25,10 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
   String name = "";
   String phoneNumber = "";
   bool _isLoading = false;
-  File? _imageFile;
+
+  File? _selectedImage;
+  String _imageBase64 = "";
   final ImagePicker _picker = ImagePicker();
-  String? _avatarUrl;
 
   @override
   void initState() {
@@ -67,7 +68,7 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
           setState(() {
             name = data['data']['name'] ?? '';
             phoneNumber = data['data']['phoneNumber'] ?? '';
-            _avatarUrl = data['data']['avatarUrl'];
+            _imageBase64 = data['data']['avatar'] != null ? data['data']['avatar'] : "";
             _nameController.text = name;
             _emailController.text = email;
             _phoneController.text = phoneNumber;
@@ -95,7 +96,7 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
           setState(() {
             name = data['data']['name'] ?? '';
             phoneNumber = data['data']['phoneNumber'] ?? '';
-            _avatarUrl = data['data']['avatarUrl'];
+            _imageBase64 = data['data']['avatar'] != null ? data['data']['avatar'] : "";
           });
         }
       }
@@ -118,17 +119,11 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
         throw Exception('Authentication token not found');
       }
 
-      if (_imageFile != null) {
-        await _uploadImage();
-      }
-
       final requestBody = {
         'name': _nameController.text,
         'phoneNumber': _phoneController.text,
+        "avatar": _imageBase64
       };
-
-      print('Sending request to: ${_url}/auth/user/update');
-      print('Request body: ${jsonEncode(requestBody)}');
 
       final response = await http.put(
         Uri.parse('$_url/auth/user/update'),
@@ -139,8 +134,6 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
         body: jsonEncode(requestBody),
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -174,150 +167,35 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
       }
     }
   }
-
-  Future<void> _selectImage(ImageSource source) async {
-    try {
-      final XFile? selected = await _picker.pickImage(source: source);
-      if (selected != null) {
-        setState(() {
-          _imageFile = File(selected.path);
-        });
-        await _uploadImage();
-      }
-    } catch (e) {
-      print("Error picking image: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Có lỗi xảy ra khi chọn ảnh: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _uploadImage() async {
-    if (_imageFile == null) return;
-
-    try {
-        final String? token = await _secureStorage.read(key: "auth_token");
-        
-        var request = http.MultipartRequest(
-            'POST', 
-            Uri.parse('$_url/auth/user/upload-avatar')
-        );
-        
-        request.headers['Authorization'] = 'Bearer $token';
-        
-        // Lấy mime type từ đuôi file
-        String mimeType = 'image/jpeg'; // default
-        if (_imageFile!.path.toLowerCase().endsWith('.png')) {
-            mimeType = 'image/png';
-        } else if (_imageFile!.path.toLowerCase().endsWith('.gif')) {
-            mimeType = 'image/gif';
-        }
-        
-        print('Image file path: ${_imageFile!.path}');
-        print('Image file size: ${await _imageFile!.length()}');
-        print('Mime type: $mimeType');
-        
-        var file = await http.MultipartFile.fromPath(
-            'avatar',
-            _imageFile!.path,
-            contentType: MediaType.parse(mimeType) // Thêm contentType
-        );
-        request.files.add(file);
-
-        print('Sending avatar upload request to: ${request.url}');
-        print('Headers: ${request.headers}');
-        
-        var streamedResponse = await request.send();
-        var response = await http.Response.fromStream(streamedResponse);
-        
-        print('Response status: ${response.statusCode}');
-        print('Response body: ${response.body}');
-
-        if (response.statusCode == 200) {
-            var jsonResponse = jsonDecode(response.body);
-            if (jsonResponse['status'] == true && 
-                jsonResponse['data'] != null) {
-                
-                final fullUrl = jsonResponse['data']['fullUrl'];
-                final avatarUrl = jsonResponse['data']['avatarUrl'];
-                final completeUrl = '$fullUrl$avatarUrl';
-                
-                setState(() {
-                    _avatarUrl = completeUrl;
-                });
-                print('Avatar URL updated to: $_avatarUrl');
-                
-                if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Cập nhật ảnh đại diện thành công')),
-                    );
-                }
-            } else {
-                throw Exception('Invalid response format: ${response.body}');
-            }
-        } else {
-            throw Exception('Upload failed with status: ${response.statusCode}');
-        }
-    } catch (error) {
-        print("Error uploading image: $error");
-        if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Có lỗi xảy ra khi tải ảnh lên: $error')),
-            );
-        }
-        rethrow;
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+        _imageBase64 = base64Encode(File(image.path).readAsBytesSync()); // Chuyển ảnh thành base64
+      });
     }
   }
 
   Widget _buildAvatar() {
     return Stack(
       children: [
-        CircleAvatar(
-          radius: 40,
-          backgroundImage: _imageFile != null
-              ? FileImage(_imageFile!) as ImageProvider
-              : _avatarUrl != null
-                  ? NetworkImage(_avatarUrl!)
-                  : AssetImage('images/group.png') as ImageProvider,
-          backgroundColor: Colors.grey[200],
-        ),
-        Positioned(
-          bottom: -10,
-          right: -10,
-          child: IconButton(
-            icon: Icon(Icons.camera_alt, color: Colors.green[700]),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (BuildContext context) {
-                  return SafeArea(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        ListTile(
-                          leading: Icon(Icons.photo_library),
-                          title: Text('Chọn từ thư viện'),
-                          onTap: () {
-                            Navigator.pop(context);
-                            _selectImage(ImageSource.gallery);
-                          },
-                        ),
-                        ListTile(
-                          leading: Icon(Icons.photo_camera),
-                          title: Text('Chụp ảnh'),
-                          onTap: () {
-                            Navigator.pop(context);
-                            _selectImage(ImageSource.camera);
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
+        GestureDetector(
+          onTap: _pickImage, // Chọn ảnh khi nhấn vào container
+          child: CircleAvatar(
+            radius: 40,
+            backgroundImage: _selectedImage != null
+                ? FileImage(_selectedImage!) // Hiển thị ảnh đã chọn
+                : _imageBase64 == "" ? AssetImage('images/fish.png') as ImageProvider : MemoryImage(base64Decode(_imageBase64!)), // Placeholder
+            backgroundColor: Colors.grey[200],
+            child: _selectedImage == null
+                ? Center(
+              child: Icon(
+                Icons.add_a_photo,
+                color: Colors.grey,
+              ),
+            )
+                : null,
           ),
         ),
       ],
