@@ -1,4 +1,5 @@
-import { Recipe } from "../models/schema.js";
+import mongoose from 'mongoose';
+import { Recipe, Item, Food } from "../models/schema.js";
 
 class RecipeService {
     static async createRecipe(name, description, list_item, group) {
@@ -110,6 +111,189 @@ class RecipeService {
             };
         } catch (error) {
             console.error("Lỗi khi lấy danh sách food trong recipe:", error);
+            throw error;
+        }
+    }
+
+    static async useRecipe(recipeName, group) {
+        // Bắt đầu session cho transaction
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+            // Tìm recipe
+            const recipe = await Recipe.findOne({ name: recipeName, group });
+            if (!recipe) {
+                return { code: 712, message: "Không tìm thấy recipe", data: "" };
+            }
+
+            const results = [];
+            const operations = []; // Lưu trữ các thao tác cần thực hiện
+
+            // Kiểm tra đủ số lượng trước khi thực hiện
+            for (const recipeItem of recipe.list_item) {
+                // Tìm các items còn hạn sử dụng, sắp xếp theo ngày hết hạn gần nhất
+                const items = await Item.find({
+                    foodName: recipeItem.foodName,
+                    group: group,
+                    expireDate: { $gt: new Date() }
+                }).sort({ expireDate: 1 });  // Sắp xếp tăng dần theo ngày hết hạn
+
+                let totalAvailable = items.reduce((sum, item) => sum + item.amount, 0);
+                if (totalAvailable < recipeItem.amount) {
+                    await session.abortTransaction();
+                    session.endSession();
+                    return { 
+                        code: 713, 
+                        message: `Không đủ ${recipeItem.foodName} trong tủ lạnh (cần ${recipeItem.amount}, có ${totalAvailable})`, 
+                        data: "" 
+                    };
+                }
+
+                let remainingAmount = recipeItem.amount;
+                let currentIndex = 0;
+
+                // Tính toán các thao tác cần thực hiện
+                while (remainingAmount > 0 && currentIndex < items.length) {
+                    const currentItem = items[currentIndex];
+                    
+                    if (currentItem.amount <= remainingAmount) {
+                        // Nếu item hiện tại không đủ số lượng cần
+                        remainingAmount -= currentItem.amount;
+                        operations.push({
+                            type: 'delete',
+                            itemId: currentItem._id
+                        });
+                        results.push({
+                            foodName: currentItem.foodName,
+                            amountUsed: currentItem.amount,
+                            itemId: currentItem._id,
+                            expireDate: currentItem.expireDate
+                        });
+                    } else {
+                        // Nếu item hiện tại đủ số lượng cần
+                        const newAmount = currentItem.amount - remainingAmount;
+                        operations.push({
+                            type: 'update',
+                            itemId: currentItem._id,
+                            newAmount: newAmount
+                        });
+                        results.push({
+                            foodName: currentItem.foodName,
+                            amountUsed: remainingAmount,
+                            itemId: currentItem._id,
+                            expireDate: currentItem.expireDate
+                        });
+                        remainingAmount = 0;
+                    }
+                    currentIndex++;
+                }
+            }
+
+            // Thực hiện tất cả các thao tác trong transaction
+            for (const operation of operations) {
+                if (operation.type === 'delete') {
+                    await Item.findByIdAndDelete(operation.itemId).session(session);
+                } else if (operation.type === 'update') {
+                    await Item.findByIdAndUpdate(
+                        operation.itemId,
+                        { amount: operation.newAmount }
+                    ).session(session);
+                }
+            }
+
+            // Commit transaction
+            await session.commitTransaction();
+            session.endSession();
+
+            return { 
+                code: 714, 
+                message: "Sử dụng recipe thành công", 
+                data: {
+                    recipeName: recipe.name,
+                    usedItems: results
+                }
+            };
+        } catch (error) {
+            // Rollback nếu có lỗi
+            await session.abortTransaction();
+            session.endSession();
+            console.error("Lỗi khi sử dụng recipe:", error);
+            throw error;
+        }
+    }
+
+    static async checkRecipeAvailability(recipeName, group) {
+        try {
+            const recipe = await Recipe.findOne({ name: recipeName, group });
+            if (!recipe) {
+                return { code: 712, message: "Không tìm thấy recipe", data: "" };
+            }
+
+            const availabilityCheck = [];
+
+            for (const recipeItem of recipe.list_item) {
+                // Lấy thông tin đơn vị từ Food collection trước
+                const food = await Food.findOne({ 
+                    name: recipeItem.foodName,
+                    group: group 
+                });
+
+                // Tìm các items còn hạn sử dụng
+                const items = await Item.find({
+                    foodName: recipeItem.foodName,
+                    group: group,
+                    expireDate: { $gt: new Date() }
+                }).sort({ expireDate: 1 });
+
+                // Log để debug
+                console.log(`Checking ${recipeItem.foodName}:`);
+                console.log('Recipe requires:', recipeItem.amount, recipeItem.unitName || food?.unitName);
+
+                // Chỉ tính tổng các item có cùng đơn vị với recipe/food
+                const targetUnit = recipeItem.unitName || food?.unitName;
+                const validItems = items.filter(item => item.unitName === targetUnit);
+                const totalAvailable = validItems.reduce((sum, item) => sum + item.amount, 0);
+
+                console.log('Available items:', validItems.map(item => ({
+                    amount: item.amount,
+                    unitName: item.unitName,
+                    expireDate: item.expireDate
+                })));
+                console.log('Total available:', totalAvailable, targetUnit);
+                
+                availabilityCheck.push({
+                    foodName: recipeItem.foodName,
+                    requiredAmount: recipeItem.amount,
+                    requiredUnit: targetUnit,  // Sử dụng đơn vị từ recipe hoặc food
+                    availableAmount: totalAvailable,
+                    availableUnit: targetUnit,
+                    isAvailable: totalAvailable >= recipeItem.amount,
+                    defaultUnit: food?.unitName,  // Thêm đơn vị mặc định từ Food
+                    items: validItems.map(item => ({
+                        itemId: item._id,
+                        amount: item.amount,
+                        unitName: item.unitName,
+                        expireDate: item.expireDate
+                    }))
+                });
+            }
+
+            const isAllAvailable = availabilityCheck.every(item => item.isAvailable);
+
+            return { 
+                code: 715, 
+                message: isAllAvailable ? 
+                    "Có thể sử dụng recipe này" : 
+                    "Không đủ nguyên liệu để thực hiện recipe này",
+                data: {
+                    recipeName: recipe.name,
+                    canUse: isAllAvailable,
+                    ingredients: availabilityCheck
+                }
+            };
+        } catch (error) {
+            console.error("Lỗi khi kiểm tra recipe:", error);
             throw error;
         }
     }

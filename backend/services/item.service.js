@@ -65,18 +65,49 @@ class ItemService {
         try {
             const items = await Item.find({ foodName: foodName, group: group });
             if (!items || items.length === 0) {
-                return { code: 708, message: "Không tìm thấy item nào với foodName này trong group", data: "" };
+                return { 
+                    code: 708, 
+                    message: "Không tìm thấy item nào với foodName này trong group", 
+                    data: "" 
+                };
             }
             
-            // Tính tổng amount
-            const totalAmount = items.reduce((total, item) => total + item.amount, 0);
-    
+            const currentDate = new Date();
+            
+            // Phân loại items
+            const validItems = items.filter(item => item.expireDate > currentDate);
+            const expiredItems = items.filter(item => item.expireDate <= currentDate);
+            
+            // Tính tổng amount cho từng loại
+            const totalValidAmount = validItems.reduce((total, item) => total + item.amount, 0);
+            const totalExpiredAmount = expiredItems.reduce((total, item) => total + item.amount, 0);
+
             return { 
                 code: 709, 
                 message: "Tìm kiếm item thành công", 
                 data: { 
-                    items, 
-                    totalAmount 
+                    items: items,  // Giữ lại danh sách gốc để tương thích ngược
+                    validItems: validItems,  // Items còn hạn
+                    expiredItems: expiredItems,  // Items hết hạn
+                    totalAmount: totalValidAmount + totalExpiredAmount,  // Tổng số lượng
+                    totalValidAmount: totalValidAmount,  // Tổng số lượng còn hạn
+                    totalExpiredAmount: totalExpiredAmount,  // Tổng số lượng hết hạn
+                    itemsByStatus: {
+                        valid: validItems.map(item => ({
+                            _id: item._id,
+                            amount: item.amount,
+                            unitName: item.unitName,
+                            expireDate: item.expireDate,
+                            note: item.note
+                        })),
+                        expired: expiredItems.map(item => ({
+                            _id: item._id,
+                            amount: item.amount,
+                            unitName: item.unitName,
+                            expireDate: item.expireDate,
+                            note: item.note
+                        }))
+                    }
                 } 
             };
         } catch (error) {
