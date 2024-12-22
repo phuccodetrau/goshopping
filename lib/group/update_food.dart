@@ -283,7 +283,7 @@ class _UpdateFoodState extends State<UpdateFood> with RouteAware{
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            // Action quay lại
+            Navigator.of(context).pop();
           },
         ),
       ),

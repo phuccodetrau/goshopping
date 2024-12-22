@@ -244,7 +244,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {},
+          onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           "Tủ lạnh",

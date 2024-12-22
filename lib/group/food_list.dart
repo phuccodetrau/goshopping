@@ -118,6 +118,7 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () {
+              Navigator.of(context).pop();
             },
           ),
           actions: [

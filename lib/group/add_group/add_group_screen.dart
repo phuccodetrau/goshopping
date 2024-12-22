@@ -4,6 +4,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'add_member.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class AddGroupScreen extends StatefulWidget {
   @override
@@ -19,6 +21,8 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
 
   String _email = "";
   int _charCount = 0;
+  String _imageBase64 = "";
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -81,6 +85,7 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
       final payload = {
         'name': groupName,
         'listUser': _userEmails,
+        "avatar": _imageBase64
       };
 
       print("Payload being sent: ${jsonEncode(payload)}");
@@ -105,6 +110,7 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => AddMember(
+              imageBase64: _imageBase64,
               groupName: groupName,
               groupId: groupId
             ),
@@ -127,6 +133,15 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _imageBase64 = base64Encode(File(image.path).readAsBytesSync()); // Chuyển ảnh thành base64
+      });
+    }
   }
 
   @override
@@ -194,17 +209,32 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
       },
       child: Column(
         children: [
-          Container(
-            height: 100,
-            width: 100,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.add_photo_alternate,
-              size: 40,
-              color: Colors.grey,
+          GestureDetector(
+            onTap: _pickImage,
+            child: _imageBase64 == "" ? Container(
+              height: 100,
+              width: 100,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.add_photo_alternate,
+                size: 40,
+                color: Colors.grey,
+              ),
+            ) : Container(
+              height: 100,
+              width: 100,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                image: DecorationImage(
+                  image: MemoryImage(
+                    base64Decode(_imageBase64), // Decode chuỗi Base64 thành Uint8List
+                  ),
+                  fit: BoxFit.cover, // Đảm bảo ảnh lấp đầy Container
+                ),
+              ),
             ),
           ),
           SizedBox(height: 8),

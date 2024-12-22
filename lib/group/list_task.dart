@@ -310,8 +310,10 @@ class _ListTaskState extends State<ListTask> with RouteAware{
         ),
       ),
       leading: IconButton(
-        icon: Icon(Icons.menu, color: Colors.grey[700]),
-        onPressed: () {},
+        icon: Icon(Icons.arrow_back, color: Colors.grey[700]),
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
       ),
     );
   }

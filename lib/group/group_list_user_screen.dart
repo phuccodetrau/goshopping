@@ -263,6 +263,7 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
                             padding: const EdgeInsets.all(12.0),
                             child: Row(
                               children: [
+                                user["avatar"] == "" ?
                                 CircleAvatar(
                                   radius: 30,
                                   backgroundColor: Colors.green[100],
@@ -272,6 +273,18 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
                                       fontSize: 24,
                                       color: Colors.green[900],
                                       fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ) : ClipOval(
+                                  child: Container(
+                                    color: Colors.green[100],
+                                    width: 60,
+                                    height: 60,
+                                    child: Image.memory(
+                                      base64Decode(user["avatar"]),
+                                      fit: BoxFit.cover,
+                                      width: 60,
+                                      height: 60,
                                     ),
                                   ),
                                 ),

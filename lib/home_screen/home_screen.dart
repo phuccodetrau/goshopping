@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> userGroups = [];
   List<dynamic> filteredGroups = [];
   List<dynamic> filteredGroupsId = [];
+  List<dynamic> filteredGroupsImage = [];
   Map<String, String> adminNames = {};
 
   @override
@@ -96,11 +97,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     userGroups = data['data'].map((group) => {
                         'id': group['id'],
                         'name': group['name'],
-                        'listUser': group['listUser'] ?? []
+                        'listUser': group['listUser'] ?? [],
+                        'avatar' : group["avatar"]
                     }).toList();
                     
                     filteredGroups = userGroups.map((group) => group['name']).toList();
                     filteredGroupsId = userGroups.map((group) => group['id']).toList();
+                    filteredGroupsImage = userGroups.map((group) => group["avatar"]).toList();
                 });
 
                 // Khởi tạo adminNames với giá trị mặc định
@@ -452,6 +455,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   final groupId = filteredGroupsId[index];
                   final groupName = filteredGroups[index];
                   final adminName = adminNames[groupId] ?? "Chưa có admin";
+                  final imageBase64 = filteredGroupsImage[index];
 
                   return GestureDetector(
                     onTap: () {
@@ -459,6 +463,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => GroupMainScreen(
+                            imageBase64: imageBase64,
                             groupId: groupId,
                             groupName: groupName,
                             adminName: adminName,
@@ -466,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       );
                     },
-                    child: _buildGroupCard(groupName, adminName, groupId),
+                    child: _buildGroupCard(groupName, adminName, groupId, imageBase64),
 
                   );
                 },
@@ -500,7 +505,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildGroupCard(String groupName, String adminName, String groupId) {
+  Widget _buildGroupCard(String groupName, String adminName, String groupId, String? imageBase64) {
     return Column(
       children: [
         Card(
@@ -510,7 +515,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
-                CircleAvatar(radius: 30, backgroundImage: AssetImage('images/group.png')),
+                CircleAvatar(radius: 30, backgroundImage: imageBase64 == "" || imageBase64 == null ? AssetImage('images/group.png') : MemoryImage(base64Decode(imageBase64!))),
                 SizedBox(width: 12),
                 Expanded(
                   child: Column(
