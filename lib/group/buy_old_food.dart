@@ -295,7 +295,9 @@ class _BuyOldFoodState extends State<BuyOldFood> {
               // Số lượng và phân công
               Row(
                 children: [
-                  Expanded(
+                  // Ô nhập "Số lượng"
+                  Flexible(
+                    flex: 3, // Tỷ lệ không gian của TextField
                     child: TextField(
                       controller: _amountcontroller,
                       decoration: InputDecoration(
@@ -313,20 +315,29 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                     ),
                   ),
                   SizedBox(width: 8),
-                  DropdownButton<String>(
-                    value: widget.unitName,
-                    items: <String>[widget.unitName].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
 
-                    },
+                  // Dropdown "Đơn vị"
+                  Flexible(
+                    flex: 2, // Tỷ lệ không gian của DropdownButton
+                    child: DropdownButton<String>(
+                      isExpanded: true, // Đảm bảo không gây tràn
+                      value: widget.unitName,
+                      items: <String>[widget.unitName].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        // Xử lý khi thay đổi giá trị
+                      },
+                    ),
                   ),
                   SizedBox(width: 16),
-                  Expanded(
+
+                  // Dropdown "Phân công"
+                  Flexible(
+                    flex: 5, // Tỷ lệ không gian của DropdownButtonFormField
                     child: DropdownButtonFormField<String>(
                       decoration: InputDecoration(
                         labelText: "Phân công",
@@ -335,6 +346,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                         ),
                       ),
                       value: selectedUser != -1 ? listuser[selectedUser]["name"] : null,
+                      isExpanded: true, // Đảm bảo không gây tràn
                       items: listuser.map<DropdownMenuItem<String>>((user) {
                         return DropdownMenuItem<String>(
                           value: user['name'], // Giá trị sẽ là trường 'name'
@@ -349,10 +361,11 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                         // In ra index của giá trị đã chọn
                         print("Selected index: $selectedUser");
                       },
-                    )
+                    ),
                   ),
                 ],
               ),
+
               SizedBox(height: 16),
 
               // Thời gian thực hiện dự kiến
@@ -458,7 +471,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                     {
                       isFoodName.value = true;
                     }
-                    if(name != adminName && listuser[selectedUser]["name"] != name){
+                    else if(name != adminName && listuser[selectedUser]["name"] != name){
                       isRight.value = true;
                     }
                     else{

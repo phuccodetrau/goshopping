@@ -355,7 +355,8 @@ class _BuyFoodState extends State<BuyFood> {
               SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(
+                  Flexible(
+                    flex: 2, // Tỷ lệ chia không gian (2 phần)
                     child: TextField(
                       decoration: InputDecoration(
                         labelText: "Số lượng",
@@ -363,7 +364,7 @@ class _BuyFoodState extends State<BuyFood> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      keyboardType: TextInputType.number, // Chỉ nhập số
+                      keyboardType: TextInputType.number,
                       onChanged: (value) {
                         setState(() {
                           amount = int.tryParse(value); // Cập nhật giá trị của amount
@@ -372,36 +373,41 @@ class _BuyFoodState extends State<BuyFood> {
                     ),
                   ),
                   SizedBox(width: 8),
-                  DropdownButton<String>(
-                    value: selectedUnit,
-                    items: [
-                      DropdownMenuItem<String>(
-                        value: '', // Giá trị cho tùy chọn "Tạo mới"
-                        child: Text(''),
-                      ),
-                      ...listunit.map<DropdownMenuItem<String>>((dynamic unit) {
-                        return DropdownMenuItem<String>(
-                          value: unit["name"], // Sử dụng trường "name" làm giá trị
-                          child: Text(unit["name"]),
-                        );
-                      }).toList(),
-                      DropdownMenuItem<String>(
-                        value: 'Tạo mới', // Giá trị cho tùy chọn "Tạo mới"
-                        child: Text('Tạo mới'),
-                      ),
-                    ],
-                    onChanged: (newValue) {
-                      if (newValue == 'Tạo mới') {
-                        _showCreateUnitDialog();
-                      } else {
-                        setState(() {
-                          selectedUnit = newValue!;
-                        });
-                      }
-                    },
+                  Flexible(
+                    flex: 3, // Tỷ lệ chia không gian (3 phần)
+                    child: DropdownButton<String>(
+                      isExpanded: true, // Đảm bảo DropdownButton không gây tràn
+                      value: selectedUnit,
+                      items: [
+                        DropdownMenuItem<String>(
+                          value: '',
+                          child: Text(''),
+                        ),
+                        ...listunit.map<DropdownMenuItem<String>>((dynamic unit) {
+                          return DropdownMenuItem<String>(
+                            value: unit["name"],
+                            child: Text(unit["name"]),
+                          );
+                        }).toList(),
+                        DropdownMenuItem<String>(
+                          value: 'Tạo mới',
+                          child: Text('Tạo mới'),
+                        ),
+                      ],
+                      onChanged: (newValue) {
+                        if (newValue == 'Tạo mới') {
+                          _showCreateUnitDialog();
+                        } else {
+                          setState(() {
+                            selectedUnit = newValue!;
+                          });
+                        }
+                      },
+                    ),
                   ),
-                  SizedBox(width: 16),
-                  Expanded(
+                  SizedBox(width: 8),
+                  Flexible(
+                    flex: 4, // Tỷ lệ chia không gian (4 phần)
                     child: DropdownButtonFormField<String>(
                       decoration: InputDecoration(
                         labelText: "Phân công",
@@ -409,24 +415,24 @@ class _BuyFoodState extends State<BuyFood> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
+                      isExpanded: true, // Đảm bảo Dropdown không gây tràn
                       items: listuser.map<DropdownMenuItem<String>>((user) {
                         return DropdownMenuItem<String>(
-                          value: user['name'], // Giá trị sẽ là trường 'name'
+                          value: user['name'],
                           child: Text(user['name']),
                         );
                       }).toList(),
                       onChanged: (newValue) {
                         setState(() {
-                          // Cập nhật index khi người dùng chọn một giá trị mới
                           selectedUser = listuser.indexWhere((user) => user['name'] == newValue);
                         });
-                        // In ra index của giá trị đã chọn
                         print("Selected index: $selectedUser");
                       },
-                    )
+                    ),
                   ),
                 ],
               ),
+
               SizedBox(height: 16),
               Text(
                 "Thời gian thực hiện dự kiến",
@@ -537,7 +543,7 @@ class _BuyFoodState extends State<BuyFood> {
                     {
                       isFoodName.value = true;
                     }
-                    if(name != adminName && listuser[selectedUser]["name"] != name){
+                    else if(name != adminName && listuser[selectedUser]["name"] != name){
                       isRight.value = true;
                     }
                     else{
