@@ -2,7 +2,7 @@ import { Group, User } from '../models/schema.js';
 import NotificationService from './notification.service.js';
 
 class GroupService {
-    static async createGroup(name, listUser) {
+    static async createGroup(name, listUser, avatar) {
         try {
             // Validate đầu vào
             if (!name || !listUser || !Array.isArray(listUser) || listUser.length === 0) {
@@ -19,7 +19,8 @@ class GroupService {
                     ...user,
                     role: user.role || 'member'
                 })),
-                refrigerator: []
+                refrigerator: [],
+                avatar: avatar
             });
 
             const savedGroup = await newGroup.save();
@@ -121,7 +122,7 @@ class GroupService {
             // Tìm các nhóm mà user là thành viên và lấy đầy đủ thông tin
             const groups = await Group.find(
                 { "listUser.email": email },
-                { name: 1, listUser: 1 } // Lấy name và listUser
+                { name: 1, listUser: 1, avatar: 1 } // Lấy name và listUser
             );
 
             if (groups.length === 0) {
@@ -132,8 +133,11 @@ class GroupService {
             const groupDetails = groups.map(group => ({
                 id: group._id,
                 name: group.name,
-                listUser: group.listUser // Thêm listUser vào response
+                listUser: group.listUser,
+                avatar: group.avatar
             }));
+            console.log(groups);
+            
 
             return { code: 700, message: "Lấy danh sách nhóm thành công", data: groupDetails };
         } catch (error) {
@@ -301,13 +305,19 @@ class GroupService {
             if (!group) {
                 return { code: 704, message: "Group not found", data: [] };
             }
-    
-            // Trích xuất danh sách người dùng
-            const users = group.listUser.map(user => ({
-                name: user.name,
-                email: user.email,
-                role: user.role
-            }));
+            const userEmails = group.listUser.map(user => user.email);
+
+            const users = await User.find({ email: { $in: userEmails } });
+
+            const result = group.listUser.map(groupUser => {
+                const user = users.find(u => u.email === groupUser.email);
+                return {
+                    name: groupUser.name,
+                    email: groupUser.email,
+                    role: groupUser.role,
+                    avatar: user ? user.avatar : "",
+                };
+            });
     
             return { code: 700, message: "Users retrieved successfully", data: users };
         } catch (error) {
@@ -519,11 +529,49 @@ class GroupService {
             };
         }
     }
+    static async updateGroupImage(groupId, avatar) {
+        try {
+            // Kiểm tra groupId và image
+            if (!groupId || !avatar) {
+                return {
+                    code: 701,
+                    message: "Vui lòng cung cấp groupId và image",
+                    data: null,
+                };
+            }
     
-
-
-
-
+            // Tìm nhóm theo ID
+            const group = await Group.findById(groupId);
+    
+            if (!group) {
+                return {
+                    code: 704,
+                    message: "Không tìm thấy nhóm",
+                    data: null,
+                };
+            }
+    
+            // Cập nhật image
+            group.avatar = avatar;
+            await group.save();
+    
+            return {
+                code: 700,
+                message: "Cập nhật ảnh nhóm thành công",
+                data: {
+                    groupId: group._id,
+                    avatar: group.avatar,
+                },
+            };
+        } catch (error) {
+            console.error("Lỗi khi cập nhật ảnh nhóm:", error);
+            throw {
+                code: 101,
+                message: "Lỗi server",
+                data: null,
+            };
+        }
+    }
 
 }
 

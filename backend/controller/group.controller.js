@@ -3,8 +3,8 @@ import GroupService from '../services/group.service.js';
 import FoodService from '../services/food.service.js';
 const createGroup = async (req, res) => {
     try {
-        const { name, listUser } = req.body;
-        const result = await GroupService.createGroup(name, listUser);
+        const { name, listUser, avatar } = req.body;
+        const result = await GroupService.createGroup(name, listUser, avatar);
         console.log("Create Group Payload:", req.body);
 
         return res.status(result.code === 700 ? 201 : 400).json(result);
@@ -19,6 +19,17 @@ const addMembers = async (req, res) => {
         const result = await GroupService.addMembers(groupId, members);
         console.log("Add Members Payload:", req.body);
         return res.status(result.code === 702 ? 200 : 404).json(result);
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
+
+const updateGroupImage = async (req, res) => {
+    try {
+        const { groupId, avatar } = req.body;
+        const result = await GroupService.updateGroupImage(groupId, avatar);
+        console.log("Add Avatar Payload:", req.body);
+        return res.status(result.code === 700 ? 200 : 404).json(result);
     } catch (error) {
         return res.status(500).json(error);
     }
@@ -262,4 +273,4 @@ const getEmailsByGroupId = async (req, res) => {
     }
 };
 
-export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupId, getUsersByGroupId, deleteGroup, removeMember, leaveGroup, getUsersByGroupName, addItemToRefrigerator, filterItemsWithPagination, getEmailsByGroupId }; 
+export default { createGroup, addMembers, getGroupsByMemberEmail, getAdminsByGroupId, getUsersByGroupId, deleteGroup, removeMember, leaveGroup, getUsersByGroupName, addItemToRefrigerator, filterItemsWithPagination, getEmailsByGroupId, updateGroupImage }; 

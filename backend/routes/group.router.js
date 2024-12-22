@@ -4,6 +4,7 @@ import authMiddleware from '../middleware/auth.js';
 const router = Router();
 
 router.post('/create-group', authMiddleware, groupController.createGroup);
+router.post('/update-group-image', authMiddleware, groupController.updateGroupImage);
 router.put('/add-member', authMiddleware, groupController.addMembers);
 router.get('/get-groups-by-member-email', authMiddleware, groupController.getGroupsByMemberEmail);
 router.get('/get-users-by-group-name', authMiddleware, groupController.getUsersByGroupName);

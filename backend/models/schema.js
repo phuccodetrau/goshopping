@@ -108,7 +108,7 @@ const groupSchema = new Schema({
   name: { type: String, required: true },
   listUser: [groupUserSchema],
   refrigerator: [itemSchema],
-  image: { type: String } 
+  avatar: { type: String } 
 });
 
 const notificationSchema = new Schema({
