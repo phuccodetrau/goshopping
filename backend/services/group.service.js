@@ -319,7 +319,7 @@ class GroupService {
                 };
             });
     
-            return { code: 700, message: "Users retrieved successfully", data: users };
+            return { code: 700, message: "Users retrieved successfully", data: result };
         } catch (error) {
             console.error('Error fetching users by group ID:', error);
             throw { code: 101, message: "Server error!", data: "" };
