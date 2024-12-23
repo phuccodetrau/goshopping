@@ -22,7 +22,7 @@ function Navigator(){
        </li>
        <li className="nav-item dropdown">
          <a className="dropdown-toggle nav-link" aria-expanded="false" data-bs-toggle="dropdown" href="/login">
-           <i className="fas fa-book-open" style={{fontSize:"13px"}}></i>&nbsp;User Management </a>
+           <i className="fas fa-user" style={{fontSize:"13px"}}></i>&nbsp;User Management </a>
          <div className="dropdown-menu">
            
            <Link className="dropdown-item" to="/manageuser" style={{paddingLeft:"30px"}}>
@@ -31,7 +31,7 @@ function Navigator(){
        </li>
        <li className="nav-item dropdown">
          <a className="dropdown-toggle nav-link" aria-expanded="false" data-bs-toggle="dropdown" href="/login">
-           <i className="fas fa-book-reader" style={{fontSize:"13px"}}></i>&nbsp;Group Management </a>
+           <i className="fas fa-users" style={{fontSize:"13px"}}></i>&nbsp;Group Management </a>
          <div className="dropdown-menu">
              <Link className="dropdown-item" style={{paddingLeft:"30px"}} to="/managegroup">
              <i className="fas fa-bars"></i>&nbsp;Manage all </Link>
