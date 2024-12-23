@@ -20,6 +20,7 @@ class AddRecipeScreen extends StatefulWidget {
 class _AddRecipeScreenState extends State<AddRecipeScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _searchFoodController = TextEditingController();
   final _secureStorage = FlutterSecureStorage();
   final String _url = dotenv.env['ROOT_URL']!;
   
@@ -29,12 +30,37 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
   final TextEditingController _amountController = TextEditingController();
   // Danh sách food từ API
   List<Map<String, dynamic>> foods = [];
+  List<Map<String, dynamic>> filteredFoods = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _fetchFoods();
+    _searchFoodController.addListener(_onSearchFoodChanged);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _amountController.dispose();
+    _searchFoodController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchFoodChanged() {
+    final searchQuery = _searchFoodController.text.toLowerCase();
+    setState(() {
+      if (searchQuery.isEmpty) {
+        filteredFoods = foods;
+      } else {
+        filteredFoods = foods.where((food) {
+          final foodName = food['name'].toString().toLowerCase();
+          return foodName.contains(searchQuery);
+        }).toList();
+      }
+    });
   }
 
   Future<void> _fetchFoods() async {
@@ -61,6 +87,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
         if (data['code'] == 607 && data['data'] != null) {
           setState(() {
             foods = List<Map<String, dynamic>>.from(data['data']);
+            filteredFoods = foods;
             isLoading = false;
           });
           print("Fetched foods: $foods");
@@ -72,14 +99,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
         isLoading = false;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _amountController.dispose();
-    super.dispose();
   }
 
   // Hiển thị dialog nhập amount
@@ -375,12 +394,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.home, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
+
       ),
       body: Stack(
         children: [
@@ -551,6 +565,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                         SizedBox(width: 8),
                         Expanded(
                           child: TextField(
+                            controller: _searchFoodController,
                             decoration: InputDecoration(
                               hintText: 'Tìm kiếm nguyên liệu',
                               border: InputBorder.none,
@@ -562,7 +577,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                   ),
                   SizedBox(height: 16),
                   // Danh sách food cards chưa chọn
-                  ...foods
+                  ...filteredFoods
                       .where((food) => !selectedFoods.containsKey(food['name']))
                       .map((food) => _buildFoodCard(food))
                       .toList(),

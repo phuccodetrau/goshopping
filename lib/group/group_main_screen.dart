@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'chat_screen.dart';
+import '../home_screen/home_screen.dart';
+import 'group_list_user_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'recipe_list_screen.dart';
 import 'fridge.dart';
@@ -7,9 +10,15 @@ import 'meal_plan_screen.dart';
 import 'list_task.dart';
 import 'add_group/add_member.dart';
 import 'package:go_shopping/user/user_info.dart';
+import 'package:go_shopping/statistics/statistics_screen.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import "package:go_shopping/statistics/statistics_screen.dart";
-
+import 'package:go_shopping/notification/notification_screen.dart';
 class GroupMainScreen extends StatefulWidget {
+  String? imageBase64;
   final String groupName;
   final String adminName;
   final String groupId;
@@ -17,7 +26,8 @@ class GroupMainScreen extends StatefulWidget {
   GroupMainScreen({
     required this.groupName,
     required this.adminName,
-    required this.groupId
+    required this.groupId,
+    required this.imageBase64
   });
 
   @override
@@ -31,6 +41,9 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
   String? name;
   String? token;
   int _selectedIndex = 0;
+  String _imageBase64 = "";
+  final ImagePicker _picker = ImagePicker();
+  String URL = dotenv.env['ROOT_URL']!;
 
   Future<void> _loadSecureValues() async {
     try{
@@ -47,19 +60,67 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
       print('Error loading secure values: $e');
     }
   }
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      // Chuyển ảnh thành base64
+      final base64String = base64Encode(File(image.path).readAsBytesSync());
+
+      if (base64String.isNotEmpty) {
+        print(1);
+
+        // Chuẩn bị dữ liệu gửi API
+        Map<String, String> body = {
+          'groupId': widget.groupId,
+          'avatar': base64String,
+        };
+        setState(() {
+          _imageBase64 = base64String;
+        });
+
+        try {
+          // Gọi API
+          final response = await http.post(
+            Uri.parse(URL + "/groups/update-group-image"),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode(body),
+          );
+
+          final responseData = jsonDecode(response.body);
+
+          if (responseData["code"] == 700) {
+            print("Thay ảnh đại diện nhóm thành công");
+          } else {
+            print("${responseData["message"]}");
+          }
+
+          // Cập nhật _imageBase64 khi API thành công
+        } catch (error) {
+          print("Lỗi khi gọi API: $error");
+        }
+      }
+    }
+  }
+
   void initState() {
     super.initState();
     _loadSecureValues();
   }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    if (index == 0) {
-      Navigator.of(context).pop();
-    } else if (index == 2) {
+    if (index == 0) {  // Home tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) =>HomeScreen()));
+      }else if(index==1){
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>NotificationScreen()));
+    }
+    else if (index == 2) {  // Profile tab
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
@@ -99,6 +160,7 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => AddMember(
+                    imageBase64: widget.imageBase64,
                     groupName: widget.groupName,
                     groupId: widget.groupId,
                   ),
@@ -108,14 +170,13 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
           ),
           IconButton(
             icon: Icon(
-              Icons.chat_bubble_outline,
+              Icons.people,
               color: Colors.green[900],
             ),
             onPressed: () {
-              print('email: $email');
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ChatScreen()),
+                MaterialPageRoute(builder: (context) => GroupListUserScreen()),
               );
             },
           ),
@@ -127,12 +188,18 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
             Stack(
               alignment: Alignment.bottomCenter,
               children: [
-                Image.asset(
+                widget.imageBase64 == "" || widget.imageBase64 == null ? Image.asset(
                   'images/group.png',
                   height: 180,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                ),
+                ) : _imageBase64 == "" ? Image.memory(base64Decode(widget.imageBase64!), height: 180, width: double.infinity, fit: BoxFit.cover) : Image.memory(base64Decode(_imageBase64), height: 180, width: double.infinity, fit: BoxFit.cover),
+                IconButton(onPressed: (){
+                  _pickImage();
+                }, icon: Icon(
+                  Icons.edit,
+                  color: Colors.green[900],
+                ))
               ],
             ),
             SectionTitle(title: "Quản lí thực phẩm"),
@@ -145,7 +212,6 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
                     title: "Thực phẩm tủ lạnh",
                     description: "Quản lí số lượng các loại thực phẩm",
                     color: Colors.green[700]!,
-                    iconPath: 'images/group.png',
                     onTap: (){
                       Navigator.push(
                         context,
@@ -159,7 +225,6 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
                     title: "Danh sách món ăn",
                     description: "Quản lí danh sách thực đơn, có công thức kèm theo.",
                     color: Colors.orange[700]!,
-                    iconPath: 'images/group.png',
                     onTap: () async {
                       final emailUser = await _secureStorage.read(key: "email") ?? '';
                       Navigator.push(
@@ -181,7 +246,6 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
               title: "Kế hoạch nấu ăn",
               filesCount: 4,
               adminName: widget.adminName,
-              adminAvatarPath: "images/group.png",
               onTap: (){
                 Navigator.push(
                   context,
@@ -198,7 +262,6 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
               title: "Phân công",
               filesCount: 4,
               adminName: widget.adminName,
-              adminAvatarPath: "images/group.png",
               onTap: (){
                 Navigator.push(
                   context,
@@ -210,7 +273,6 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
               title: "Thống kê",
               filesCount: 4,
               adminName: widget.adminName,
-              adminAvatarPath: "images/group.png",
               onTap: (){
                 Navigator.push(
                   context,
@@ -226,7 +288,7 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
+
         selectedItemColor: Colors.green[700],
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
@@ -269,14 +331,12 @@ class FoodCard extends StatefulWidget {
   final String title;
   final String description;
   final Color color;
-  final String iconPath;
   final VoidCallback onTap; // Thêm tham số onTap
 
   FoodCard({
     required this.title,
     required this.description,
     required this.color,
-    required this.iconPath,
     required this.onTap, // Khởi tạo onTap
   });
 
@@ -290,6 +350,7 @@ class _FoodCardState extends State<FoodCard> {
     return GestureDetector(
       onTap: widget.onTap, // Sử dụng onTap được truyền vào
       child: Container(
+        height: 175,
         width: MediaQuery.of(context).size.width * 0.4,
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -299,9 +360,6 @@ class _FoodCardState extends State<FoodCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Image.asset(widget.iconPath, height: 50),
-            ),
             SizedBox(height: 10),
             Text(
               widget.title,
@@ -331,14 +389,12 @@ class ActivityCard extends StatefulWidget {
   final String title;
   final int filesCount;
   final String adminName;
-  final String adminAvatarPath;
   final VoidCallback onTap;
 
   ActivityCard({
     required this.title,
     required this.filesCount,
     required this.adminName,
-    required this.adminAvatarPath,
     required this.onTap
   });
 
@@ -361,11 +417,6 @@ class _ActivityCardState extends State<ActivityCard> {
           ),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: AssetImage(widget.adminAvatarPath),
-              ),
-              SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -375,7 +426,7 @@ class _ActivityCardState extends State<ActivityCard> {
                   ),
                   SizedBox(height: 5),
                   Text(
-                    "${widget.filesCount} Files  Admin: ${widget.adminName}",
+                    "Admin: ${widget.adminName}",
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],

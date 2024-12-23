@@ -182,37 +182,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
       child: Column(
         children: [
           if (purchaseStats.isNotEmpty) ...[
-            Container(
-              margin: EdgeInsets.all(16),
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Biểu đồ mua sắm',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green[700],
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  _buildPurchaseChart(),
-                ],
-              ),
-            ),
             _buildPurchaseList(),
           ],
           if (purchaseStats.isEmpty) Center(
@@ -298,204 +267,122 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Thống kê tháng ${selectedDate.month}/${selectedDate.year}',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.green[700],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Thống kê tháng ${selectedDate.month}/${selectedDate.year}',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[700],
+              ),
             ),
-          ),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () async {
-                final picked = await showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return Dialog(
-                      child: Container(
-                        padding: EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Chọn tháng',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () async {
+                  final picked = await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Dialog(
+                        child: Container(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Chọn tháng',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 16),
-                            Container(
-                              height: 200,
-                              width: double.maxFinite,
-                              child: YearPicker(
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime.now(),
-                                selectedDate: selectedDate,
-                                onChanged: (DateTime value) {
-                                  Navigator.pop(context, value);
-                                },
+                              SizedBox(height: 16),
+                              Container(
+                                height: 200,
+                                width: double.maxFinite,
+                                child: YearPicker(
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime.now(),
+                                  selectedDate: selectedDate,
+                                  onChanged: (DateTime value) {
+                                    Navigator.pop(context, value);
+                                  },
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 16),
-                            Container(
-                              height: 100,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: 12,
-                                itemBuilder: (context, index) {
-                                  return Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8),
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: selectedDate.month == (index + 1)
-                                            ? Colors.green
-                                            : Colors.grey[200],
-                                      ),
-                                      onPressed: () {
-                                        final newDate = DateTime(
-                                          selectedDate.year,
-                                          index + 1,
-                                        );
-                                        Navigator.pop(context, newDate);
-                                      },
-                                      child: Text(
-                                        'T${index + 1}',
-                                        style: TextStyle(
-                                          color: selectedDate.month == (index + 1)
-                                              ? Colors.white
-                                              : Colors.black,
+                              SizedBox(height: 16),
+                              Container(
+                                height: 100,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: 12,
+                                  itemBuilder: (context, index) {
+                                    return Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 8),
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: selectedDate.month == (index + 1)
+                                              ? Colors.green
+                                              : Colors.grey[200],
+                                        ),
+                                        onPressed: () {
+                                          final newDate = DateTime(
+                                            selectedDate.year,
+                                            index + 1,
+                                          );
+                                          Navigator.pop(context, newDate);
+                                        },
+                                        child: Text(
+                                          'T${index + 1}',
+                                          style: TextStyle(
+                                            color: selectedDate.month == (index + 1)
+                                                ? Colors.white
+                                                : Colors.black,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+        
+                  if (picked != null) {
+                    setState(() {
+                      selectedDate = picked;
+                      isLoading = true;
+                    });
+                    await _fetchStatistics();
+                  }
+                },
+                child: Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today, color: Colors.green[700]),
+                      SizedBox(width: 8),
+                      Text(
+                        'Chọn tháng',
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    );
-                  },
-                );
-
-                if (picked != null) {
-                  setState(() {
-                    selectedDate = picked;
-                    isLoading = true;
-                  });
-                  await _fetchStatistics();
-                }
-              },
-              child: Padding(
-                padding: EdgeInsets.all(8),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, color: Colors.green[700]),
-                    SizedBox(width: 8),
-                    Text(
-                      'Chọn tháng',
-                      style: TextStyle(
-                        color: Colors.green[700],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPurchaseChart() {
-    if (purchaseStats.isEmpty) return Container();
-    
-    final List<BarChartGroupData> barGroups = purchaseStats.asMap().entries.map((entry) {
-      return BarChartGroupData(
-        x: entry.key,
-        barRods: [
-          BarChartRodData(
-            toY: entry.value['totalAmount']?.toDouble() ?? 0,
-            color: Colors.green[400],
-            width: 16,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ],
-      );
-    }).toList();
-
-    return Container(
-      height: 300,
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: purchaseStats.map((e) => e['totalAmount']?.toDouble() ?? 0).reduce((a, b) => a > b ? a : b) * 1.2,
-          barGroups: barGroups,
-          borderData: FlBorderData(show: false),
-          gridData: FlGridData(show: false),
-          titlesData: FlTitlesData(
-            show: true,
-            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  if (value.toInt() >= 0 && value.toInt() < purchaseStats.length) {
-                    return Container(
-                      margin: EdgeInsets.only(top: 8),
-                      child: RotatedBox(
-                        quarterTurns: 3,
-                        child: Container(
-                          width: 100,
-                          padding: EdgeInsets.only(right: 8),
-                          child: Text(
-                            purchaseStats[value.toInt()]['foodName'],
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.black87,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                  return const Text('');
-                },
-                reservedSize: 60,
-              ),
-            ),
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 40,
-                getTitlesWidget: (value, meta) {
-                  return Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: Text(
-                      value.toInt().toString(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
+          ],
         ),
       ),
     );
@@ -507,32 +394,68 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
     final recipeStats = consumptionStats.first['recipeStats'] as List;
     if (recipeStats.isEmpty) return Container();
 
+    // Tính tổng số lần sử dụng
+    final totalUses = recipeStats.fold<double>(
+      0, 
+      (sum, stat) => sum + (stat['totalUseCount']?.toDouble() ?? 0)
+    );
+
     final List<PieChartSectionData> sections = recipeStats.map((stat) {
       final index = recipeStats.indexOf(stat);
       return PieChartSectionData(
         value: stat['totalUseCount']?.toDouble() ?? 0,
-        title: '${stat['recipeName']}\n${stat['totalUseCount']}',
+        title: '',
         color: Colors.primaries[index % Colors.primaries.length],
         radius: 80,
-        titleStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-        titlePositionPercentageOffset: 0.55,
       );
     }).toList();
 
-    return Container(
-      height: 300,
-      padding: EdgeInsets.all(16),
-      child: PieChart(
-        PieChartData(
-          sections: sections,
-          centerSpaceRadius: 40,
-          sectionsSpace: 2,
+    return Column(
+      children: [
+        Container(
+          height: 250,
+          padding: EdgeInsets.all(16),
+          child: PieChart(
+            PieChartData(
+              sections: sections,
+              centerSpaceRadius: 40,
+              sectionsSpace: 2,
+            ),
+          ),
         ),
-      ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: recipeStats.asMap().entries.map((entry) {
+              final index = entry.key;
+              final stat = entry.value;
+              final useCount = stat['totalUseCount']?.toDouble() ?? 0;
+              final percentage = (useCount / totalUses * 100).toStringAsFixed(1);
+              
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.primaries[index % Colors.primaries.length],
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    '${stat['recipeName']}: ${stat['totalUseCount']} lần (${percentage}%)',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 

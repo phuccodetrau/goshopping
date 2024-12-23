@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> userGroups = [];
   List<dynamic> filteredGroups = [];
   List<dynamic> filteredGroupsId = [];
+  List<dynamic> filteredGroupsImage = [];
   Map<String, String> adminNames = {};
 
   @override
@@ -96,11 +97,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     userGroups = data['data'].map((group) => {
                         'id': group['id'],
                         'name': group['name'],
-                        'listUser': group['listUser'] ?? []
+                        'listUser': group['listUser'] ?? [],
+                        'avatar' : group["avatar"]
                     }).toList();
                     
                     filteredGroups = userGroups.map((group) => group['name']).toList();
                     filteredGroupsId = userGroups.map((group) => group['id']).toList();
+                    filteredGroupsImage = userGroups.map((group) => group["avatar"]).toList();
                 });
 
                 // Khởi tạo adminNames với giá trị mặc định
@@ -313,35 +316,45 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final String? token = await _secureStorage.read(key: "auth_token");
 
-      // Kiểm tra xem groupId có tồn tại không trước khi gửi request
-      if (groupId == null || groupId.isEmpty) {
-        print("groupId is null or empty");
-        return;  // Dừng lại nếu groupId không hợp lệ
-      }
-
-      print("Sending request with groupId: $groupId");
+      print("Sending leave group request for groupId: $groupId"); // Debug log
 
       final response = await http.delete(
-        Uri.parse('$_url/groups/leave-group'),
+        Uri.parse('$_url/groups/leave-group/$groupId'), // Thay đổi từ query parameter sang path parameter
         headers: {
           'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
         },
-        body: jsonEncode({'groupId': groupId}),  // Gửi groupId qua body
       );
+
+      print("Leave group response status: ${response.statusCode}"); // Debug log
+      print("Leave group response body: ${response.body}"); // Debug log
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("Response from backend: $data");
-
         if (data['code'] == 700) {
           setState(() {
             userGroups.removeWhere((group) => group['id'] == groupId);
-            filteredGroups.removeWhere((group) => group['id'] == groupId);
+            filteredGroups = userGroups.map((group) => group['name']).toList();
+            filteredGroupsId = userGroups.map((group) => group['id']).toList();
           });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Rời nhóm thành công'))
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Có lỗi xảy ra khi rời nhóm'))
+          );
         }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi rời nhóm: ${response.statusCode}'))
+        );
       }
     } catch (error) {
       print("Error leaving group: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Có lỗi xảy ra khi rời nhóm'))
+      );
     }
   }
 
@@ -442,23 +455,36 @@ class _HomeScreenState extends State<HomeScreen> {
                   final groupId = filteredGroupsId[index];
                   final groupName = filteredGroups[index];
                   final adminName = adminNames[groupId] ?? "Chưa có admin";
+                  final imageBase64 = filteredGroupsImage[index];
 
                   return GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GroupMainScreen(
-                            groupId: groupId,
-                            groupName: groupName,
-                            adminName: adminName,
+                      if (adminName != 'Đang tải...') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GroupMainScreen(
+                              imageBase64: imageBase64,
+                              groupId: groupId,
+                              groupName: groupName,
+                              adminName: adminName,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      } else {
+                        // Hiển thị thông báo cho người dùng
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Vui lòng đợi admin name tải xong!"),
+                            duration: Duration(seconds: 2), // Thời gian hiển thị thông báo
+                            behavior: SnackBarBehavior.floating, // Thông báo sẽ nổi trên giao diện
+                          ),
+                        );
+                      }
                     },
-                    child: _buildGroupCard(groupName, adminName, groupId),
-
+                    child: _buildGroupCard(groupName, adminName, groupId, imageBase64),
                   );
+
                 },
               ),
 
@@ -490,7 +516,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildGroupCard(String groupName, String adminName, String groupId) {
+  Widget _buildGroupCard(String groupName, String adminName, String groupId, String? imageBase64) {
     return Column(
       children: [
         Card(
@@ -500,7 +526,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
-                CircleAvatar(radius: 30, backgroundImage: AssetImage('images/group.png')),
+                CircleAvatar(radius: 30, backgroundImage: imageBase64 == "" || imageBase64 == null ? AssetImage('images/group.png') : MemoryImage(base64Decode(imageBase64!))),
                 SizedBox(width: 12),
                 Expanded(
                   child: Column(

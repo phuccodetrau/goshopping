@@ -6,10 +6,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../group_main_screen.dart';
 
 class AddMember extends StatefulWidget {
+  String? imageBase64;
   final String groupName;
   final String groupId;
 
-  AddMember({required this.groupName, required this.groupId});
+  AddMember({required this.groupName, required this.groupId, required this.imageBase64});
 
   @override
   _AddMemberState createState() => _AddMemberState();
@@ -224,6 +225,7 @@ class _AddMemberState extends State<AddMember> {
           context,
           MaterialPageRoute(
             builder: (context) => GroupMainScreen(
+              imageBase64: widget.imageBase64,
               groupId: widget.groupId,
               groupName: widget.groupName,
               adminName: "Admin",

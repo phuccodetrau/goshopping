@@ -139,7 +139,10 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
         final data = jsonDecode(response.body);
         if (data['status'] == true) {
           await _refreshUserInfo();
-
+          await _secureStorage.write(
+              key: 'name',
+              value: _nameController.text ?? ''
+          );
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Cập nhật thông tin thành công')),

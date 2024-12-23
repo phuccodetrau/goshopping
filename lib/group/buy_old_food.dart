@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'fridge.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 class BuyOldFood extends StatefulWidget {
@@ -17,15 +16,16 @@ class BuyOldFood extends StatefulWidget {
   String? memberEmail;
   String? note;
   String? id;
+  final String image;
 
 
-  BuyOldFood({required this.foodName, required this.unitName, required this.amount, required this.startDate, required this.endDate, required this.memberName, required this.memberEmail, required this.note, required this.id});
+  BuyOldFood({required this.foodName, required this.unitName, required this.amount, required this.startDate, required this.endDate, required this.memberName, required this.memberEmail, required this.note, required this.id, required this.image});
 
   @override
   _BuyOldFoodState createState() => _BuyOldFoodState();
 }
 
-class _BuyOldFoodState extends State<BuyOldFood> {
+class _BuyOldFoodState extends State<BuyOldFood>{
   String? email;
   String? id;
   String? name;
@@ -45,9 +45,6 @@ class _BuyOldFoodState extends State<BuyOldFood> {
   ValueNotifier<bool> isRight = ValueNotifier<bool>(false);
   String note = "";
   int? amount;
-  File? _selectedImage;
-  String _imageBase64 = "";
-  final ImagePicker _picker = ImagePicker();
 
   Future<void> _loadSecureValues() async {
     try {
@@ -196,15 +193,6 @@ class _BuyOldFoodState extends State<BuyOldFood> {
     }
   }
 
-  Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _selectedImage = File(image.path);
-        _imageBase64 = base64Encode(File(image.path).readAsBytesSync()); // Chuyển ảnh thành base64
-      });
-    }
-  }
 
   Future<void> _postData(memberName, memberEmail, note, start, end, amount, state, group, expireDate) async {
     if(widget.id == null){
@@ -237,7 +225,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            // Action quay lại
+            Navigator.of(context).pop();
           },
         ),
       ),
@@ -248,28 +236,17 @@ class _BuyOldFoodState extends State<BuyOldFood> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Biểu ngữ trên cùng
-              GestureDetector(
-                onTap: _pickImage, // Chọn ảnh khi nhấn vào container
-                child: Container(
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
-                    image: DecorationImage(
-                      image: _selectedImage != null
-                          ? FileImage(_selectedImage!) // Hiển thị ảnh đã chọn
-                          : AssetImage('images/fish.png') as ImageProvider, // Placeholder
-                      fit: BoxFit.cover,
-                    ),
+              Container(
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                  image: DecorationImage(
+                    image: widget.image != ""
+                        ? MemoryImage(base64Decode(widget.image!)) // Hiển thị ảnh đã chọn
+                        : AssetImage('images/fish.png') as ImageProvider, // Placeholder
+                    fit: BoxFit.cover,
                   ),
-                  child: _selectedImage == null
-                      ? Center(
-                    child: Icon(
-                      Icons.add_a_photo,
-                      color: Colors.grey,
-                    ),
-                  )
-                      : null,
                 ),
               ),
               SizedBox(height: 16),
@@ -295,9 +272,8 @@ class _BuyOldFoodState extends State<BuyOldFood> {
               // Số lượng và phân công
               Row(
                 children: [
-                  // Ô nhập "Số lượng"
-                  Flexible(
-                    flex: 3, // Tỷ lệ không gian của TextField
+                  Expanded(
+                    flex: 1,
                     child: TextField(
                       controller: _amountcontroller,
                       decoration: InputDecoration(
@@ -315,57 +291,47 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                     ),
                   ),
                   SizedBox(width: 8),
+                  DropdownButton<String>(
+                    value: widget.unitName,
+                    items: <String>[widget.unitName].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
 
-                  // Dropdown "Đơn vị"
-                  Flexible(
-                    flex: 2, // Tỷ lệ không gian của DropdownButton
-                    child: DropdownButton<String>(
-                      isExpanded: true, // Đảm bảo không gây tràn
-                      value: widget.unitName,
-                      items: <String>[widget.unitName].map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (newValue) {
-                        // Xử lý khi thay đổi giá trị
-                      },
-                    ),
+                    },
                   ),
                   SizedBox(width: 16),
-
-                  // Dropdown "Phân công"
-                  Flexible(
-                    flex: 5, // Tỷ lệ không gian của DropdownButtonFormField
-                    child: DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        labelText: "Phân công",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    flex: 3,
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          labelText: "Phân công",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      value: selectedUser != -1 ? listuser[selectedUser]["name"] : null,
-                      isExpanded: true, // Đảm bảo không gây tràn
-                      items: listuser.map<DropdownMenuItem<String>>((user) {
-                        return DropdownMenuItem<String>(
-                          value: user['name'], // Giá trị sẽ là trường 'name'
-                          child: Text(user['name']),
-                        );
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          // Cập nhật index khi người dùng chọn một giá trị mới
-                          selectedUser = listuser.indexWhere((user) => user['name'] == newValue);
-                        });
-                        // In ra index của giá trị đã chọn
-                        print("Selected index: $selectedUser");
-                      },
-                    ),
+                        value: selectedUser != -1 ? listuser[selectedUser]["name"] : null,
+                        items: listuser.map<DropdownMenuItem<String>>((user) {
+                          return DropdownMenuItem<String>(
+                            value: user['name'], // Giá trị sẽ là trường 'name'
+                            child: Text(user['name']),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            // Cập nhật index khi người dùng chọn một giá trị mới
+                            selectedUser = listuser.indexWhere((user) => user['name'] == newValue);
+                          });
+                          // In ra index của giá trị đã chọn
+                          print("Selected index: $selectedUser");
+                        },
+                      )
                   ),
                 ],
               ),
-
               SizedBox(height: 16),
 
               // Thời gian thực hiện dự kiến
@@ -466,7 +432,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
                     if(selectedUser == -1 ||
                         startDate == null ||
                         endDate == null ||
-                        amount == null
+                        amount == null || startDate!.isBefore(DateTime.now()) || endDate!.isBefore(DateTime.now())
                     )
                     {
                       isFoodName.value = true;
@@ -500,32 +466,7 @@ class _BuyOldFoodState extends State<BuyOldFood> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          // Xử lý khi chuyển đổi tab
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.kitchen),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "",
-          ),
-        ],
-        selectedItemColor: Colors.green[700],
-        unselectedItemColor: Colors.grey,
-      ),
+
     );
   }
 

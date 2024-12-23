@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../home_screen/home_screen.dart';
+import '../notification/notification_screen.dart';
+import '../user/user_info.dart';
 import 'food_list.dart';
 import 'buy_food.dart';
 import 'buy_old_food.dart';
@@ -32,6 +35,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
   ScrollController _scrollController = ScrollController();
   int currentPage = 1;
   bool isLoadingMore = false;
+  bool isLoadedCategory = false;
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   Future<void> _loadSecureValues() async {
     try {
@@ -46,7 +50,22 @@ class _FridgeState extends State<Fridge> with RouteAware {
       print('Error loading secure values: $e');
     }
   }
-
+  void _onItemTapped(int index) {
+    if (index == 0) {  // Home tab
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>HomeScreen()));
+    }else if(index==1){
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>NotificationScreen()));
+    }
+    else if (index == 2) {  // Profile tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
+      );
+    }}
   Future<void> _fetchCategories() async {
     try {
       print(groupId);
@@ -59,6 +78,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
       if (responseData['code'] == 707) {
         setState(() {
           listcategory = responseData['data'];
+          isLoadedCategory = true;
         });
       } else {
         print("${responseData["message"]}");
@@ -149,6 +169,28 @@ class _FridgeState extends State<Fridge> with RouteAware {
     }
   }
 
+  Future<String> _deleleCategory(String categoryName) async {
+    try {
+      Map<String, dynamic> body = {
+        "name": categoryName,
+        'groupId': groupId!,
+      };
+      final response = await http.delete(
+        Uri.parse(URL + "/category/admin/category"),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+      final responseData = jsonDecode(response.body);
+      return responseData["code"] == 704 ? "ok" : responseData["data"];
+    } catch (e) {
+      print("Error: $e");
+      return "";
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -220,7 +262,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {},
+          onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           "Tủ lạnh",
@@ -273,7 +315,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
                 child: Row(
                   children: [
                     _buildCategoryItem(icon: Icons.add, label: "Thẻ mới"),
-                    if (listcategory.isEmpty) CircularProgressIndicator(),
+                    if (isLoadedCategory == false) CircularProgressIndicator(),
                     ...listcategory.map((category) {
                       return _buildCategoryItem(
                         imagePath: "images/fish.png",
@@ -318,7 +360,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
                       // Xử lý khi bấm "Chỉnh sửa"
                     },
                     child: Text(
-                      "Chỉnh sửa",
+                      "",
                       style: TextStyle(color: Colors.blue),
                     ),
                   ),
@@ -362,31 +404,17 @@ class _FridgeState extends State<Fridge> with RouteAware {
         child: Icon(Icons.add, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          // Xử lý khi chuyển đổi tab
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.kitchen),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "",
-          ),
-        ],
+        currentIndex: 1,
         selectedItemColor: Colors.green[700],
         unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+        ],
       ),
+
     );
   }
 
@@ -439,6 +467,45 @@ class _FridgeState extends State<Fridge> with RouteAware {
           _showCreateCategoryDialog();
         }
       },
+      onLongPress: () {
+        // Hiển thị dialog khi người dùng nhấn giữ
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("Xóa phân loại"),
+              content: Text("Bạn có muốn xóa phân loại \"$label\" không?"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Đóng dialog
+                  },
+                  child: Text("Không"),
+                ),
+                TextButton(
+                  onPressed: () async{
+                    // Thực hiện xóa phân loại
+                    String status = await _deleleCategory(label);
+                    if (status == "") {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Tồn tại thực phẩm thuộc phân loại này!")),
+                      );
+                    } else {
+                      // Thực hiện hành động sau khi xóa thành công (nếu cần)
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Xóa phân loại thành công")),
+                      );
+                    }
+                  },
+                  child: Text("Có"),
+                ),
+              ],
+            );
+          },
+        );
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Column(
@@ -486,6 +553,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
               memberEmail: null,
               note: "",
               id: null,
+              image: image,
             ),
           ),
         );
