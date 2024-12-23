@@ -281,7 +281,7 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
                                     width: 60,
                                     height: 60,
                                     child: Image.memory(
-                                      base64Decode(user["avatar"]),
+                                      base64Decode(user["avatar"]!),
                                       fit: BoxFit.cover,
                                       width: 60,
                                       height: 60,

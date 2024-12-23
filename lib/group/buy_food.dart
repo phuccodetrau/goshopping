@@ -125,7 +125,7 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
       };
       final response = await http.post(
         Uri.parse(URL + "/unit/admin/unit"),
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", 'Authorization': 'Bearer $token',},
         body: jsonEncode(body),
       );
       final responseData = jsonDecode(response.body);

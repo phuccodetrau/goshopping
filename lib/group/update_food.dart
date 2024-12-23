@@ -38,7 +38,7 @@ class _UpdateFoodState extends State<UpdateFood> with RouteAware{
   File? _selectedImage;
   String _imageBase64 = "";
   final ImagePicker _picker = ImagePicker();
-  bool isDidChange = false;
+  int isDidChange = 0;
   Future<void> _loadSecureValues() async {
     try {
       token = await _secureStorage.read(key: 'auth_token');
@@ -237,7 +237,7 @@ class _UpdateFoodState extends State<UpdateFood> with RouteAware{
           ModalRoute.of(context)
           as PageRoute<dynamic>); // Subscribe to route observer
     }
-    if(isDidChange == false){
+    if(isDidChange == 0){
       setState(() {
         chosenCategory = widget.categoryName;
         foodName = widget.name;
@@ -266,10 +266,12 @@ class _UpdateFoodState extends State<UpdateFood> with RouteAware{
   // }
 
   Future<void> _initializeData() async {
-    isDidChange = true;
     await _loadSecureValues();
     await _fetchUnits();
-    selectedUnit = widget.unitName;
+    isDidChange += 1;
+    if(isDidChange == 1){
+      selectedUnit = widget.unitName;
+    }
     _fetchCategories();
     _fetchFoodImage();
   }
