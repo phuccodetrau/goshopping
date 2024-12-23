@@ -57,20 +57,83 @@
 
 - **Danh sách mua sắm:** Quản lý danh sách chi tiết.
 - **Kế hoạch bữa ăn:** Gợi ý món ăn từ nguyên liệu sẵn có.
+- **Thực phẩm trong tủ lạnh:** Danh sách thực phẩm trong tủ lạnh mà bạn có.
 - **Thông báo hạn sử dụng:** Nhắc nhở trực quan về thực phẩm sắp hết hạn.
-
+- **Thông tin cá nhân:** Quản lý thông tin cá nhân của bạn.
 ---
 
 ## 🚀 Hướng Dẫn Cài Đặt và Sử Dụng
-Đọc hướng dẫn này nếu bạn lần đầu làm việc với flutter:
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+Dự án được chia thành ba phần chính: **Server (Node.js)**, **Admin (React.js)**, và **Frontend (Flutter)**. Dưới đây là hướng dẫn chi tiết cho từng phần.
 
 ---
 
+### **1. Server (Node.js)**
 
-## 📧 Liên Hệ
+#### **Yêu cầu:**
+- Node.js phiên bản >= 14.x
+- npm (hoặc yarn)
 
-- **Email:** hoangdinhhung20012003@gmail.com
+#### **Hướng dẫn:**
+1. Điều hướng đến thư mục `backend`:
+   ```bash
+   cd backend
+    ```
+2. Cài đặt các dependencies:
+    ```bash
+    npm install
+    ```
+3. Chạy server với Nodemon:
+    ```bash
+    nodemon index.js
+    ```
+### **2.  Admin(React)**
+
+#### **Yêu cầu:**
+- Node.js phiên bản >= 14.x
+- npm (hoặc yarn)
+
+#### **Hướng dẫn:**
+1. Điều hướng đến thư mục `admin`:
+   ```bash
+   cd admin
+    ```
+2. Cài đặt các dependencies:
+    ```bash
+    npm install
+    ```
+3. Chạy ứng dụng trên trình duyệt web:
+    ```bash
+    npm start
+    ```
+### **3. User (Flutter)**
+
+#### **Yêu cầu:**
+- Flutter SDK
+- Một thiết bị giả lập (emulator) hoặc thiết bị thật kết nối qua USB.
+
+
+#### **Hướng dẫn:**
+1. Điều hướng đến thư mục `frontend`:
+   ```bash
+   cd frontend
+    ```
+2. Cài đặt các dependencies:
+    ```bash
+    flutter pub get
+    ```
+3. Chạy ứng dụng:
+    ```bash
+    flutter run
+    ```
+## Kết quả
+Dưới đây là kết quả một phần của giao diện, chi tiết kết quả xem tại [docx](./docs).
+### User
+![Danh sách công việc](./docs/user/list_task.png)
+![Thống kê](./docs/user/statistic.png)
+![Kế hoạch bữa ăn](./docs/user/meal_plan.png)
+
+### Admin
+![DashBoard](./docs/admin/dashboard.png)
 
 
