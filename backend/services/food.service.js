@@ -22,35 +22,46 @@ class FoodService {
 
     static async updateFood(foodName, group, newData) {
         console.log("Gọi đến api");
-        
+    
         try {
-
             const updatedFood = await Food.findOneAndUpdate(
                 { name: foodName, group },
                 { $set: newData },
                 { new: true }
             );
-
+    
             if (!updatedFood) {
                 return { code: 605, message: "Không tìm thấy thực phẩm cần cập nhật", data: "" };
             }
-
+    
+            // Cập nhật trong Item
             await Item.updateMany(
                 { foodName: foodName, group: group },
                 { $set: { foodName: newData.name || foodName, unitName: newData.unitName || undefined } }
             );
-
+    
+            // Cập nhật trong ListTask
             await ListTask.updateMany(
                 { foodName: foodName, group: group },
                 { $set: { foodName: newData.name || foodName, unitName: newData.unitName || undefined } }
             );
-
+    
+            // Cập nhật trong refrigerator của Group
             await Group.updateMany(
-                { "refrigerator.foodName": foodName, _id: group },
-                { $set: { "refrigerator.$.foodName": newData.name || foodName, "refrigerator.$.unitName": newData.unitName || undefined } }
+                { _id: group, "refrigerator.foodName": foodName },
+                {
+                    $set: {
+                        "refrigerator.$[elem].foodName": newData.name || foodName,
+                        "refrigerator.$[elem].unitName": newData.unitName || undefined
+                    }
+                },
+                {
+                    arrayFilters: [{ "elem.foodName": foodName }] // Lọc các phần tử khớp
+                }
             );
+    
             console.log("Cập nhật thực phẩm và các phụ thuộc thành công");
-
+    
             return { code: 600, message: "Cập nhật thực phẩm và các phụ thuộc thành công", data: updatedFood };
         } catch (error) {
             console.error("Error updating food with dependencies:", error);
