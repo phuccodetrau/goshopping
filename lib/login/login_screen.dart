@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isError = false;
   bool isEmailEmpty = false;
   bool isPasswordEmpty = false;
-
+  bool isPasswordVisible = false;
   @override
   void initState() {
     super.initState();
@@ -51,7 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _onLoginPressed() async {
     final String email = emailController.text;
     final String password = passwordController.text;
-    
+
+
     try {
       // Lấy device token từ OneSignal
       final deviceToken = await OneSignal.User.pushSubscription.id;
@@ -121,13 +122,16 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            // Xử lý quay lại
+
+              Navigator.pop(context);
+
           },
         ),
         title: Text(
@@ -140,147 +144,160 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Thông Tin Tài Khoản",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
-            ),
-            SizedBox(height: 16),
-
-            // Trường nhập email
-            TextField(
-              controller: emailController,
-
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                hintText: "Email",
-                hintStyle: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 16,
-                ),
-                filled: true,
-                fillColor: Colors.grey[200],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                prefixIcon: Icon(Icons.email, color: Colors.grey[600]),
-              ),
-              style: TextStyle(fontSize: 16, color: Colors.black),
-            ),
-            if (isEmailEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 5),
-                child: Text(
-                  "Vui lòng nhập email",
-                  style: TextStyle(color: Colors.red, fontSize: 12),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Thông Tin Tài Khoản",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
                 ),
               ),
-            SizedBox(height: 16),
-
-            // Trường nhập mật khẩu
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: "Mật khẩu",
-                labelStyle: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 16,
+              SizedBox(height: 16),
+        
+              // Trường nhập email
+              TextField(
+                controller: emailController,
+        
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: "Email",
+                  hintStyle: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  prefixIcon: Icon(Icons.email, color: Colors.grey[600]),
                 ),
-                filled: true,
-                fillColor: Colors.grey[200],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                prefixIcon: Icon(Icons.lock, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 16, color: Colors.black),
               ),
-              style: TextStyle(fontSize: 16, color: Colors.black),
-            ),
-            if (isPasswordEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 5),
-                child: Text(
-                  "Vui lòng nhập mật khẩu",
-                  style: TextStyle(color: Colors.red, fontSize: 12),
+              if (isEmailEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Text(
+                    "Vui lòng nhập email",
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
                 ),
-              ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ForgotPasswordScreen(),
+              SizedBox(height: 16),
+        
+              // Trường nhập mật khẩu
+              TextField(
+                controller: passwordController,
+                obscureText: !isPasswordVisible, // Điều chỉnh hiển thị mật khẩu tùy theo trạng thái của isPasswordVisible
+                decoration: InputDecoration(
+                  labelText: "Mật khẩu",
+                  labelStyle: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  prefixIcon: Icon(Icons.lock, color: Colors.grey[600]),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      isPasswordVisible ? Icons.visibility : Icons.visibility_off, // Thay đổi biểu tượng mắt tùy theo trạng thái
+                      color: Colors.grey[600],
                     ),
-                  );
-                },
-                child: Text(
-                  "Quên mật khẩu?",
+                    onPressed: () {
+                      setState(() {
+                        isPasswordVisible = !isPasswordVisible; // Chuyển đổi trạng thái khi nhấn vào biểu tượng mắt
+                      });
+                    },
+                  ),
+                ),
+                style: TextStyle(fontSize: 16, color: Colors.black),
+              ),
+              if (isPasswordEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Text(
+                    "Vui lòng nhập mật khẩu",
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ForgotPasswordScreen(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    "Quên mật khẩu?",
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 8),
+        
+              if (isError)
+                Text(
+                  "Mật khẩu hoặc tài khoản chưa chính xác, vui lòng thử lại!",
                   style: TextStyle(
-                    color: Colors.blue,
+                    color: Colors.red,
                     fontSize: 14,
                   ),
                 ),
-              ),
-            ),
-            SizedBox(height: 8),
-
-            if (isError)
-              Text(
-                "Mật khẩu chưa chính xác, vui lòng thử lại!",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 14,
-                ),
-              ),
-            SizedBox(height: 16),
-
-            ElevatedButton(
-              onPressed: isInputValid ? _onLoginPressed : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isInputValid ? Colors.green[700] : Colors.grey,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                padding: EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: Center(
-                child: Text(
-                  "Đăng nhập",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+              SizedBox(height: 16),
+        
+              ElevatedButton(
+                onPressed: isInputValid ? _onLoginPressed : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isInputValid ? Colors.green[700] : Colors.grey,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
+                  padding: EdgeInsets.symmetric(vertical: 16),
                 ),
-              ),
-            ),
-            SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(child: Divider(color: Colors.grey)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Center(
                   child: Text(
-                    "",
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                    "Đăng nhập",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                Expanded(child: Divider(color: Colors.grey)),
-              ],
-            ),
-          ],
+              ),
+              SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      "",
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey)),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

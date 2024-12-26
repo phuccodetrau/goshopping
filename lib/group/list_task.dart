@@ -4,6 +4,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:go_shopping/main.dart';
+import '../home_screen/home_screen.dart';
+import '../notification/notification_screen.dart';
+import '../user/user_info.dart';
 import 'buy_old_food.dart';
 class ListTask extends StatefulWidget {
   const ListTask({super.key});
@@ -37,6 +40,22 @@ class _ListTaskState extends State<ListTask> with RouteAware{
   List<dynamic> listtaskall = [];
   List<dynamic> listtaskuser = [];
   bool isLoadedSecret = false;
+  void _onItemTapped(int index) {
+    if (index == 0) {  // Home tab
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>HomeScreen()));
+    }else if(index==1){
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>NotificationScreen()));
+    }
+    else if (index == 2) {  // Profile tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
+      );
+    }}
   Future<void> _loadSecureValues() async {
     try{
       token = await _secureStorage.read(key: 'auth_token');
@@ -292,7 +311,7 @@ class _ListTaskState extends State<ListTask> with RouteAware{
           _buildTabBarView(),
         ],
       ),
-      floatingActionButton: _buildFloatingActionButton(),
+
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
@@ -583,7 +602,7 @@ class _ListTaskState extends State<ListTask> with RouteAware{
 
           final addItemResponse = await http.post(
             Uri.parse(addItemToRefrigeratorUrl),
-            headers: {"Content-Type": "application/json"},
+            headers: {'Authorization': 'Bearer $token', "Content-Type": "application/json"},
             body: addItemBody,
           );
 
@@ -635,42 +654,44 @@ class _ListTaskState extends State<ListTask> with RouteAware{
         builder: (context) {
           return AlertDialog(
             title: Text("Xác nhận"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min, // Đảm bảo dialog không chiếm toàn bộ chiều cao
-              children: [
-                Text("Bạn có chắc chắn muốn hoàn thành nhiệm vụ này?"),
-                Text("Hạn sử dụng là bao nhiêu ngày?"),
-                SizedBox(height: 10), // Khoảng cách giữa các widget
-                TextField(
-                  controller: numberController,
-                  keyboardType: TextInputType.number, // Bàn phím số
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: "Nhập số",
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // Đảm bảo dialog không chiếm toàn bộ chiều cao
+                children: [
+                  Text("Bạn có chắc chắn muốn hoàn thành nhiệm vụ này?"),
+                  Text("Hạn sử dụng là bao nhiêu ngày?"),
+                  SizedBox(height: 10), // Khoảng cách giữa các widget
+                  TextField(
+                    controller: numberController,
+                    keyboardType: TextInputType.number, // Bàn phím số
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: "Nhập số",
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        enteredNumber = int.tryParse(value); // Chuyển đổi giá trị nhập
+                      });
+                    },
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      enteredNumber = int.tryParse(value); // Chuyển đổi giá trị nhập
-                    });
-                  },
-                ),
-                SizedBox(height: 20),
-                Text("Ghi chú:"),
-                SizedBox(height: 10), // Khoảng cách giữa các widget
-                TextField(
-                  controller: textController,
-                  keyboardType: TextInputType.text, // Bàn phím số
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: "Ghi chú",
+                  SizedBox(height: 20),
+                  Text("Ghi chú:"),
+                  SizedBox(height: 10), // Khoảng cách giữa các widget
+                  TextField(
+                    controller: textController,
+                    keyboardType: TextInputType.text, // Bàn phím số
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: "Ghi chú",
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        enteredText = value; // Chuyển đổi giá trị nhập
+                      });
+                    },
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      enteredText = value; // Chuyển đổi giá trị nhập
-                    });
-                  },
-                ),
-              ],
+                ],
+              ),
             ),
             actions: [
               TextButton(
@@ -830,24 +851,13 @@ class _ListTaskState extends State<ListTask> with RouteAware{
     );
   }
 
-  FloatingActionButton _buildFloatingActionButton() {
-    return FloatingActionButton(
-      onPressed: () {},
-      backgroundColor: Colors.green[700],
-      child: Icon(Icons.add, color: Colors.white),
-    );
-  }
 
   BottomNavigationBar _buildBottomNavigationBar() {
     return BottomNavigationBar(
-      currentIndex: _selectedIndex,
+
       selectedItemColor: Colors.green[700],
       unselectedItemColor: Colors.grey,
-      onTap: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
+      onTap: _onItemTapped,
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
         BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
@@ -856,5 +866,6 @@ class _ListTaskState extends State<ListTask> with RouteAware{
     );
   }
 }
+
 
 

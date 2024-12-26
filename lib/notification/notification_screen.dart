@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_shopping/home_screen/home_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'notification_detail_screen.dart';
@@ -199,7 +200,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   void _onItemTapped(int index) {
     if (index == 0) {  // Home tab
-      Navigator.pop(context);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) =>HomeScreen()),
+      );
     } else if (index == 2) {  // Profile tab
       Navigator.push(
         context,

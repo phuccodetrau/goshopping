@@ -459,21 +459,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   return GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GroupMainScreen(
-                            imageBase64: imageBase64,
-                            groupId: groupId,
-                            groupName: groupName,
-                            adminName: adminName,
+                      if (adminName != 'Đang tải...') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GroupMainScreen(
+                              imageBase64: imageBase64,
+                              groupId: groupId,
+                              groupName: groupName,
+                              adminName: adminName,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      } else {
+                        // Hiển thị thông báo cho người dùng
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Vui lòng đợi admin name tải xong!"),
+                            duration: Duration(seconds: 2), // Thời gian hiển thị thông báo
+                            behavior: SnackBarBehavior.floating, // Thông báo sẽ nổi trên giao diện
+                          ),
+                        );
+                      }
                     },
                     child: _buildGroupCard(groupName, adminName, groupId, imageBase64),
-
                   );
+
                 },
               ),
 

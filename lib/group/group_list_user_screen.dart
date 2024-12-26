@@ -38,7 +38,7 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
     setState(() {
       filteredUsers = users.where((user) {
         return user['name'].toString().toLowerCase().contains(query) ||
-               user['email'].toString().toLowerCase().contains(query);
+            user['email'].toString().toLowerCase().contains(query);
       }).toList();
     });
   }
@@ -51,17 +51,17 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
   Future<void> _loadCurrentUserInfo() async {
     try {
       currentUserEmail = await _secureStorage.read(key: 'email');
-      
+
       if (users.isNotEmpty && currentUserEmail != null) {
         final currentUser = users.firstWhere(
-          (user) => user['email'] == currentUserEmail,
+              (user) => user['email'] == currentUserEmail,
           orElse: () => {'role': 'member'},
         );
-        
+
         setState(() {
           isCurrentUserAdmin = currentUser['role'] == 'admin';
         });
-        
+
         print('Current user email: $currentUserEmail');
         print('Is admin: $isCurrentUserAdmin');
       }
@@ -74,7 +74,7 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
     try {
       groupId = await _secureStorage.read(key: 'groupId');
       token = await _secureStorage.read(key: 'auth_token');
-      
+
       final response = await http.get(
         Uri.parse('$_url/groups/get-users-by-group-id/$groupId'),
         headers: {
@@ -207,9 +207,9 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
         title: Text(
           'Thành viên nhóm',
           style: TextStyle(
-            fontSize: 24,
-            color: Colors.green[900],
-            fontWeight: FontWeight.bold
+              fontSize: 24,
+              color: Colors.green[900],
+              fontWeight: FontWeight.bold
           ),
         ),
       ),
@@ -230,8 +230,8 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'Tìm kiếm thành viên',
-                        border: InputBorder.none
+                          hintText: 'Tìm kiếm thành viên',
+                          border: InputBorder.none
                       ),
                     ),
                   ),
@@ -243,115 +243,115 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
             // List of Users
             Expanded(
               child: filteredUsers.isEmpty
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.green,
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _loadGroupUsers,
-                    child: ListView.builder(
-                      itemCount: filteredUsers.length,
-                      itemBuilder: (context, index) {
-                        final user = filteredUsers[index];
-                        return Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0)
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Row(
-                              children: [
-                                user["avatar"] == "" ?
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: Colors.green[100],
-                                  child: Text(
-                                    user['name']?[0]?.toUpperCase() ?? '?',
+                  ? Center(
+                child: CircularProgressIndicator(
+                  color: Colors.green,
+                ),
+              )
+                  : RefreshIndicator(
+                onRefresh: _loadGroupUsers,
+                child: ListView.builder(
+                  itemCount: filteredUsers.length,
+                  itemBuilder: (context, index) {
+                    final user = filteredUsers[index];
+                    return Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0)
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          children: [
+                            (user["avatar"] == ""|| user["avatar"]==null) ?
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.green[100],
+                              child: Text(
+                                user['name']?[0]?.toUpperCase() ?? '?',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: Colors.green[900],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ) : ClipOval(
+                              child: Container(
+                                color: Colors.green[100],
+                                width: 60,
+                                height: 60,
+                                child: Image.memory(
+                                  base64Decode(user["avatar"]),
+                                  fit: BoxFit.cover,
+                                  width: 60,
+                                  height: 60,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user['name'] ?? 'Không có tên',
                                     style: TextStyle(
-                                      fontSize: 24,
-                                      color: Colors.green[900],
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    user['email'] ?? '',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  Text(
+                                    user['role'] == 'admin'
+                                        ? 'Trưởng nhóm'
+                                        : 'Thành viên',
+                                    style: TextStyle(
+                                      color: user['role'] == 'admin'
+                                          ? Colors.green
+                                          : Colors.grey,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                ) : ClipOval(
-                                  child: Container(
-                                    color: Colors.green[100],
-                                    width: 60,
-                                    height: 60,
-                                    child: Image.memory(
-                                      base64Decode(user["avatar"]!),
-                                      fit: BoxFit.cover,
-                                      width: 60,
-                                      height: 60,
+                                ],
+                              ),
+                            ),
+                            // Chỉ hiển thị nút 3 chấm nếu user hiện tại là admin
+                            if (isCurrentUserAdmin && user['email'] != currentUserEmail)
+                              PopupMenuButton<String>(
+                                icon: Icon(Icons.more_vert, color: Colors.grey),
+                                onSelected: (value) {
+                                  if (value == 'remove') {
+                                    _showRemoveConfirmDialog(user);
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) => [
+                                  PopupMenuItem(
+                                    value: 'remove',
+                                    child: Row(
+                                        children: [
+                                        Icon(Icons.person_remove, color: Colors.red),
+                                    SizedBox(width: 8),
+                                      Text('Xóa khỏi nhóm'),
+                                      ],
                                     ),
                                   ),
-                                ),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        user['name'] ?? 'Không có tên',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        user['email'] ?? '',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      Text(
-                                        user['role'] == 'admin' 
-                                          ? 'Quản trị viên'
-                                          : 'Thành viên',
-                                        style: TextStyle(
-                                          color: user['role'] == 'admin' 
-                                            ? Colors.green 
-                                            : Colors.grey,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Chỉ hiển thị nút 3 chấm nếu user hiện tại là admin
-                                if (isCurrentUserAdmin && user['email'] != currentUserEmail)
-                                  PopupMenuButton<String>(
-                                    icon: Icon(Icons.more_vert, color: Colors.grey),
-                                    onSelected: (value) {
-                                      if (value == 'remove') {
-                                        _showRemoveConfirmDialog(user);
-                                      }
-                                    },
-                                    itemBuilder: (BuildContext context) => [
-                                      PopupMenuItem(
-                                        value: 'remove',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.person_remove, color: Colors.red),
-                                            SizedBox(width: 8),
-                                            Text('Xóa khỏi nhóm'),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),

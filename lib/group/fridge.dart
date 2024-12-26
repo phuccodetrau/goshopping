@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../home_screen/home_screen.dart';
+import '../notification/notification_screen.dart';
+import '../user/user_info.dart';
 import 'food_list.dart';
 import 'buy_food.dart';
 import 'buy_old_food.dart';
@@ -8,6 +11,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_shopping/main.dart';
 import 'dart:typed_data';
+import 'dart:async';
+
 
 class Fridge extends StatefulWidget {
   const Fridge({super.key});
@@ -47,17 +52,38 @@ class _FridgeState extends State<Fridge> with RouteAware {
       print('Error loading secure values: $e');
     }
   }
-
+  void _onItemTapped(int index) {
+    if (index == 0) {  // Home tab
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>HomeScreen()));
+    }else if(index==1){
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>NotificationScreen()));
+    }
+    else if (index == 2) {  // Profile tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
+      );
+    }}
   Future<void> _fetchCategories() async {
     try {
-      print(groupId);
+      print("Gọi api cate");
       final response =
           await http.get(Uri.parse('$URL/category/admin/category/$groupId'), headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
           },);
       final responseData = jsonDecode(response.body);
+      Timer(Duration(seconds: 3), () {
+        setState(() {
+          isLoadedCategory = true;
+        });
+      });
       if (responseData['code'] == 707) {
+        print("lay category thanh cong");
         setState(() {
           listcategory = responseData['data'];
           isLoadedCategory = true;
@@ -135,6 +161,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
       );
       final responseData = jsonDecode(response.body);
       if (responseData["code"] == 700) {
+        print("lay thuc pham trong tu lanh thanh cong");
         setState(() {
           if (append) {
             listitem.addAll(responseData['data']);
@@ -342,7 +369,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
                       // Xử lý khi bấm "Chỉnh sửa"
                     },
                     child: Text(
-                      "Chỉnh sửa",
+                      "",
                       style: TextStyle(color: Colors.blue),
                     ),
                   ),
@@ -386,31 +413,17 @@ class _FridgeState extends State<Fridge> with RouteAware {
         child: Icon(Icons.add, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          // Xử lý khi chuyển đổi tab
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.kitchen),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "",
-          ),
-        ],
+        currentIndex: 1,
         selectedItemColor: Colors.green[700],
         unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+        ],
       ),
+
     );
   }
 

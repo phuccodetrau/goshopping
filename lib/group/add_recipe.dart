@@ -394,12 +394,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.home, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
+
       ),
       body: Stack(
         children: [

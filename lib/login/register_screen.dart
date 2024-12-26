@@ -43,7 +43,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool get _isConfirmPasswordValid =>
       _confirmPasswordController.text.isNotEmpty &&
           _passwordController.text == _confirmPasswordController.text;
-
+  bool _isPasswordVisible1 = false;
+  bool _isPasswordVisible2 = false;
   @override
   void initState() {
     super.initState();
@@ -86,8 +87,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Uri.parse(URL),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'name': username, 
-          'email': email, 
+          'name': username,
+          'email': email,
           'password': password,
           'deviceToken': deviceToken,
         }),
@@ -104,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         await _secureStorage.write(key: "name", value: responseData['user']['name'].toString());
         print('Registration successful. Device token: $deviceToken');
         print(await _secureStorage.read(key: 'name'));
-        
+
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -112,6 +113,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         );
       } else {
+        final String message=responseData['message'].toString();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$message'),
+            backgroundColor: Colors.red, // Màu nền của snackbar
+          ),
+        );
         print('Registration failed: ${responseData['message']}');
         // TODO: Hiển thị thông báo lỗi
         setState(() {
@@ -208,7 +216,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.lock),
+                  prefixIcon: Icon(Icons.lock), // Biểu tượng khóa ở bên trái
                   hintText: 'Enter your password',
                   filled: true,
                   fillColor: Colors.grey[200],
@@ -216,8 +224,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible1 ? Icons.visibility : Icons.visibility_off, // Biểu tượng mắt
+                      color: Colors.grey[600],
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible1 = !_isPasswordVisible1; // Chuyển đổi trạng thái hiển thị mật khẩu
+                      });
+                    },
+                  ),
                 ),
-                obscureText: true,
+                obscureText: !_isPasswordVisible1, // Điều chỉnh xem mật khẩu hay không
                 textInputAction: TextInputAction.next,
               ),
               if (!_isPasswordValid)
@@ -234,16 +253,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextField(
                 controller: _confirmPasswordController,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.lock),
-                  hintText: 'Confirm your password',
+                  prefixIcon: Icon(Icons.lock), // Biểu tượng khóa bên trái
+                  hintText: 'Confirm your password', // Text hiển thị trong ô input
                   filled: true,
                   fillColor: Colors.grey[200],
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible2 ? Icons.visibility : Icons.visibility_off, // Biểu tượng mắt
+                      color: Colors.grey[600],
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible2= !_isPasswordVisible2; // Đảo ngược trạng thái hiển thị mật khẩu
+                      });
+                    },
+                  ),
                 ),
-                obscureText: true,
+                obscureText: !_isPasswordVisible2, // Điều chỉnh để ẩn/hiện mật khẩu
                 textInputAction: TextInputAction.done,
               ),
               if (!_isConfirmPasswordValid)

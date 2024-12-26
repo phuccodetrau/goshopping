@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../home_screen/home_screen.dart';
 import 'meal_plan_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'add_recipe.dart';
@@ -48,22 +49,21 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
   }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    if (index == 1) {  // Notification tab
+    if (index == 0) {  // Home tab
       Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => NotificationScreen()),
-      );
-    } else if (index == 2) {  // Profile tab
+          context,
+          MaterialPageRoute(builder: (context) =>HomeScreen()));
+    }else if(index==1){
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>NotificationScreen()));
+    }
+    else if (index == 2) {  // Profile tab
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
       );
-    }
-  }
+    }}
 
   void _onSearchChanged() {
     final searchQuery = _searchController.text.toLowerCase();
@@ -301,7 +301,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
         child: Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
+
         selectedItemColor: Colors.green[700],
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,

@@ -121,13 +121,7 @@ class _FoodListScreenState extends State<FoodListScreen> with RouteAware {
               Navigator.of(context).pop();
             },
           ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.home, color: Colors.black),
-              onPressed: () {
-              },
-            ),
-          ],
+
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),

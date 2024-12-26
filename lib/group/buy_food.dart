@@ -60,10 +60,10 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
   Future<void> _fetchCategories() async {
     try {
       final response =
-          await http.get(Uri.parse('$URL/category/admin/category/$groupId'), headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },);
+      await http.get(Uri.parse('$URL/category/admin/category/$groupId'), headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 707) {
         setState(() {
@@ -125,7 +125,7 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
       };
       final response = await http.post(
         Uri.parse(URL + "/unit/admin/unit"),
-        headers: {"Content-Type": "application/json", 'Authorization': 'Bearer $token',},
+        headers: {"Content-Type": "application/json", 'Authorization': 'Bearer $token'},
         body: jsonEncode(body),
       );
       final responseData = jsonDecode(response.body);
@@ -397,6 +397,7 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
               Row(
                 children: [
                   Expanded(
+                    flex: 1,
                     child: TextField(
                       decoration: InputDecoration(
                         labelText: "Số lượng",
@@ -412,9 +413,10 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
                       },
                     ),
                   ),
-                  SizedBox(width: 1),
-                  Text(selectedUnit),
-                  SizedBox(width: 1,),
+                  Text(
+                    selectedUnit,
+                    style: TextStyle(fontSize: 16), // Cỡ chữ phù hợp
+                  ),
                   PopupMenuButton<dynamic>(
                     onSelected: (newValue) {
                       if (newValue == 'Tạo mới') {
@@ -447,28 +449,29 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
                   ),
                   SizedBox(width: 1),
                   Expanded(
-                    child: DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        labelText: "Phân công",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    flex: 3,
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          labelText: "Phân công",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      items: listuser.map<DropdownMenuItem<String>>((user) {
-                        return DropdownMenuItem<String>(
-                          value: user['name'], // Giá trị sẽ là trường 'name'
-                          child: Text(user['name']),
-                        );
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          // Cập nhật index khi người dùng chọn một giá trị mới
-                          selectedUser = listuser.indexWhere((user) => user['name'] == newValue);
-                        });
-                        // In ra index của giá trị đã chọn
-                        print("Selected index: $selectedUser");
-                      },
-                    )
+                        items: listuser.map<DropdownMenuItem<String>>((user) {
+                          return DropdownMenuItem<String>(
+                            value: user['name'], // Giá trị sẽ là trường 'name'
+                            child: Text(user['name']),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            // Cập nhật index khi người dùng chọn một giá trị mới
+                            selectedUser = listuser.indexWhere((user) => user['name'] == newValue);
+                          });
+                          // In ra index của giá trị đã chọn
+                          print("Selected index: $selectedUser");
+                        },
+                      )
                   ),
                 ],
               ),
@@ -578,11 +581,14 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
                         selectedUnit == ""
                         || startDate!.isBefore(DateTime.now()) ||
                         endDate!.isBefore(DateTime.now()) || startDate == null || endDate == null
-                      )
+                    )
                     {
                       isFoodName.value = true;
                     }
                     else if(name != adminName && listuser[selectedUser]["name"] != name){
+                      print(name);
+                      print(adminName);
+                      print( listuser[selectedUser]["name"]);
                       isRight.value = true;
                     }
                     else{
@@ -612,32 +618,8 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          // Xử lý khi chuyển đổi tab
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.kitchen),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "",
-          ),
-        ],
-        selectedItemColor: Colors.green[700],
-        unselectedItemColor: Colors.grey,
-      ),
+
+
     );
   }
 

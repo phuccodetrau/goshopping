@@ -21,7 +21,8 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
   bool _isLoading = false;
   String? _passwordMismatchError;
   String? _passwordSameError;
-
+  bool _isObscured2 = true;
+  bool _isObscured1 = true;
   @override
   void initState() {
     super.initState();
@@ -181,8 +182,22 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
+                      // Thêm biểu tượng mắt vào phía sau trường mật khẩu
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isObscured1
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isObscured1= !_isObscured1;
+                          });
+                        },
+                      ),
                     ),
-                    obscureText: true,
+                    obscureText: _isObscured1, // Đặt trạng thái ẩn/hiện
                   ),
                   // Thêm thông báo lỗi dưới ô mật khẩu mới
                   if (_passwordSameError != null)
@@ -202,9 +217,23 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      errorText: _passwordMismatchError, // Hiển thị lỗi không khớp
+                      // Hiển thị lỗi mismatch nếu có
+                      errorText: _passwordMismatchError,
+                      // Thêm biểu tượng mắt vào phía sau trường nhập mật khẩu
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isObscured2 ? Icons.visibility_off : Icons.visibility, // Tùy vào _isObscured
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          // Chuyển đổi trạng thái của _isObscured
+                          setState(() {
+                            _isObscured2 = !_isObscured2;
+                          });
+                        },
+                      ),
                     ),
-                    obscureText: true,
+                    obscureText: _isObscured2, // Sử dụng biến _isObscured để quyết định xem có ẩn mật khẩu hay không
                   ),
                   const SizedBox(height: 24),
                   Center(

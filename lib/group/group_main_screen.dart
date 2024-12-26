@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../home_screen/home_screen.dart';
 import 'group_list_user_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'recipe_list_screen.dart';
@@ -14,7 +15,8 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
+import "package:go_shopping/statistics/statistics_screen.dart";
+import 'package:go_shopping/notification/notification_screen.dart';
 class GroupMainScreen extends StatefulWidget {
   String? imageBase64;
   final String groupName;
@@ -109,13 +111,16 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
   }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    if (index == 0) {
-      Navigator.of(context).pop();
-    } else if (index == 2) {
+    if (index == 0) {  // Home tab
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) =>HomeScreen()));
+      }else if(index==1){
+      Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>NotificationScreen()));
+    }
+    else if (index == 2) {  // Profile tab
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => PersonalInfoScreen()),
@@ -283,7 +288,7 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
+
         selectedItemColor: Colors.green[700],
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
@@ -421,7 +426,7 @@ class _ActivityCardState extends State<ActivityCard> {
                   ),
                   SizedBox(height: 5),
                   Text(
-                    "${widget.filesCount} Files  Admin: ${widget.adminName}",
+                    "Admin: ${widget.adminName}",
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],

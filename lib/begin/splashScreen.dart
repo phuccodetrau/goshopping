@@ -9,21 +9,38 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  final bool _hasNavigated = false; // Biến kiểm soát để tránh chuyển tiếp lại
+  bool _isNavigating = false; // Đảm bảo không điều hướng nhiều lần
 
   @override
   void initState() {
     super.initState();
+    _startNavigation();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Nếu người dùng quay lại trang này (bằng nút back), khởi động lại điều hướng
+    if (!_isNavigating) {
+      _startNavigation();
+    }
+  }
+
+  void _startNavigation() {
     Future.delayed(const Duration(seconds: 5), () {
-      Navigator.push(context, MaterialPageRoute(builder: (context){
-        return const OnBoardingScreen();
-      }));
+      if (mounted && !_isNavigating) {
+        _isNavigating = true; // Đảm bảo chỉ điều hướng 1 lần
+        Navigator.pushReplacement(
+          context,
+          _createRoute(),
+        );
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Stack(
         children: [
           Center(
@@ -50,22 +67,24 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
-}
 
-Route _createRoute() {
-  return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => const OnBoardingScreen(),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      const begin = Offset(0.0, 1.0);
-      const end = Offset.zero;
-      const curve = Curves.ease;
+  // Hàm tạo hiệu ứng chuyển màn hình
+  Route _createRoute() {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+      const OnBoardingScreen(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(0.0, 1.0);
+        const end = Offset.zero;
+        const curve = Curves.ease;
 
-      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
 
-      return SlideTransition(
-        position: animation.drive(tween),
-        child: child,
-      );
-    },
-  );
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+      },
+    );
+  }
 }

@@ -26,10 +26,10 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
 
   Future<void> _initialize() async {
     final String email = await getEmail();
-    print(email);
+    final String token=await getToken();
 
     if (email.isNotEmpty) { // Check if email is not empty
-      if (await check_email(email)) {
+      if (await check_email(email,token)) {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -42,16 +42,21 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
 
   Future<String> getEmail() async {
     final email = await _secureStorage.read(key: "email");
-    print(await _secureStorage.read(key: "auth_token"));
+    final token= await _secureStorage.read(key: "auth_token");
     return email ?? ''; // Return empty string if email is null
   }
+  Future<String> getToken() async {
 
-  Future<bool> check_email(String email) async {
+    final token= await _secureStorage.read(key: "auth_token");
+    return token ?? ''; // Return empty string if email is null
+  }
+
+  Future<bool> check_email(String email,String token) async {
     try {
       final response = await http.post(
         Uri.parse(URL),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email}),
+        body: jsonEncode({'email': email,'token':token}),
       );
 
       final responseData = jsonDecode(response.body);

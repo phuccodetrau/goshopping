@@ -148,24 +148,26 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(height: 20),
-            _buildHeaderText(),
-            SizedBox(height: 8),
-            _buildSubHeaderText(),
-            SizedBox(height: 32),
-            _buildImageUploadSection(),
-            SizedBox(height: 32),
-            _buildGroupNameInput(),
-            SizedBox(height: 16),
-            _buildTermsText(),
-            SizedBox(height: 16),
-            _buildNextButton(),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(height: 20),
+              _buildHeaderText(),
+              SizedBox(height: 8),
+              _buildSubHeaderText(),
+              SizedBox(height: 32),
+              _buildImageUploadSection(),
+              SizedBox(height: 32),
+              _buildGroupNameInput(),
+              SizedBox(height: 16),
+              _buildTermsText(),
+              SizedBox(height: 16),
+              _buildNextButton(),
+            ],
+          ),
         ),
       ),
     );

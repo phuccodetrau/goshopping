@@ -56,10 +56,10 @@ class _UpdateFoodState extends State<UpdateFood> with RouteAware{
   Future<void> _fetchCategories() async {
     try {
       final response =
-          await http.get(Uri.parse('$URL/category/admin/category/$groupId'), headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },);
+      await http.get(Uri.parse('$URL/category/admin/category/$groupId'), headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 707) {
         setState(() {
@@ -77,10 +77,10 @@ class _UpdateFoodState extends State<UpdateFood> with RouteAware{
   Future<void> _fetchUnits() async {
     try {
       final response =
-          await http.get(Uri.parse('$URL/unit/admin/unit/$groupId'), headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },);
+      await http.get(Uri.parse('$URL/unit/admin/unit/$groupId'), headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },);
       final responseData = jsonDecode(response.body);
       if (responseData['code'] == 700) {
         setState(() {
@@ -373,7 +373,7 @@ class _UpdateFoodState extends State<UpdateFood> with RouteAware{
               ),
               Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: 10.0
+                    horizontal: 10.0
                 ),
                 child: DropdownButton<String>(
                   isExpanded: true,
@@ -414,7 +414,7 @@ class _UpdateFoodState extends State<UpdateFood> with RouteAware{
                 builder: (context, isVisible, child) {
                   return Visibility(
                     visible:
-                        isVisible, // Dựa vào giá trị của isErrorVisible để hiển thị
+                    isVisible, // Dựa vào giá trị của isErrorVisible để hiển thị
                     child: const Text(
                       "Bạn chưa nhập đầy đủ thông tin về thực phẩm",
                       style: TextStyle(color: Colors.red, fontSize: 12),

@@ -267,120 +267,123 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Thống kê tháng ${selectedDate.month}/${selectedDate.year}',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.green[700],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Thống kê tháng ${selectedDate.month}/${selectedDate.year}',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[700],
+              ),
             ),
-          ),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () async {
-                final picked = await showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return Dialog(
-                      child: Container(
-                        padding: EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Chọn tháng',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () async {
+                  final picked = await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Dialog(
+                        child: Container(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Chọn tháng',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 16),
-                            Container(
-                              height: 200,
-                              width: double.maxFinite,
-                              child: YearPicker(
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime.now(),
-                                selectedDate: selectedDate,
-                                onChanged: (DateTime value) {
-                                  Navigator.pop(context, value);
-                                },
+                              SizedBox(height: 16),
+                              Container(
+                                height: 200,
+                                width: double.maxFinite,
+                                child: YearPicker(
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime.now(),
+                                  selectedDate: selectedDate,
+                                  onChanged: (DateTime value) {
+                                    Navigator.pop(context, value);
+                                  },
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 16),
-                            Container(
-                              height: 100,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: 12,
-                                itemBuilder: (context, index) {
-                                  return Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8),
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: selectedDate.month == (index + 1)
-                                            ? Colors.green
-                                            : Colors.grey[200],
-                                      ),
-                                      onPressed: () {
-                                        final newDate = DateTime(
-                                          selectedDate.year,
-                                          index + 1,
-                                        );
-                                        Navigator.pop(context, newDate);
-                                      },
-                                      child: Text(
-                                        'T${index + 1}',
-                                        style: TextStyle(
-                                          color: selectedDate.month == (index + 1)
-                                              ? Colors.white
-                                              : Colors.black,
+                              SizedBox(height: 16),
+                              Container(
+                                height: 100,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: 12,
+                                  itemBuilder: (context, index) {
+                                    return Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 8),
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: selectedDate.month == (index + 1)
+                                              ? Colors.green
+                                              : Colors.grey[200],
+                                        ),
+                                        onPressed: () {
+                                          final newDate = DateTime(
+                                            selectedDate.year,
+                                            index + 1,
+                                          );
+                                          Navigator.pop(context, newDate);
+                                        },
+                                        child: Text(
+                                          'T${index + 1}',
+                                          style: TextStyle(
+                                            color: selectedDate.month == (index + 1)
+                                                ? Colors.white
+                                                : Colors.black,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+        
+                  if (picked != null) {
+                    setState(() {
+                      selectedDate = picked;
+                      isLoading = true;
+                    });
+                    await _fetchStatistics();
+                  }
+                },
+                child: Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today, color: Colors.green[700]),
+                      SizedBox(width: 8),
+                      Text(
+                        'Chọn tháng',
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    );
-                  },
-                );
-
-                if (picked != null) {
-                  setState(() {
-                    selectedDate = picked;
-                    isLoading = true;
-                  });
-                  await _fetchStatistics();
-                }
-              },
-              child: Padding(
-                padding: EdgeInsets.all(8),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, color: Colors.green[700]),
-                    SizedBox(width: 8),
-                    Text(
-                      'Chọn tháng',
-                      style: TextStyle(
-                        color: Colors.green[700],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
