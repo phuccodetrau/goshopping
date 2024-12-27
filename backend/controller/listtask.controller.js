@@ -114,6 +114,17 @@ const getTaskStatsByDate = async (req, res) => {
         });
     }
 };
+
+const getTasksByMemberEmail = async (req, res) => {
+    try {
+        const { memberEmail, state, startDate, endDate, page, limit } = req.body;
+        const result = await ListTaskService.getTasksByMemberEmail(memberEmail, state, startDate, endDate, page, limit);
+        return res.status(result.code === 200 ? 200 : 400).json(result);
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
+
 const updateListTaskById = async (req, res) => {
     try {
         const { listTaskId, name, memberEmail, note, startDate, endDate, foodName, amount, unitName, state, group } = req.body;
@@ -167,4 +178,4 @@ const createItemFromListTask = async (req, res) => {
 
 
 
-export default {createListTask, updateListTaskById, deleteListTaskById, getAllListTasksByGroup, getListTasksByNameAndGroup, createItemFromListTask, getTaskStats, getTaskStatsByFood, getTaskStatsByDate};
+export default {createListTask, updateListTaskById, deleteListTaskById, getAllListTasksByGroup, getListTasksByNameAndGroup, createItemFromListTask, getTaskStats, getTaskStatsByFood, getTaskStatsByDate, getTasksByMemberEmail};

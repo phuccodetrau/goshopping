@@ -4,31 +4,34 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class AddRecipeScreen extends StatefulWidget {
+class EditRecipeScreen extends StatefulWidget {
   final String groupId;
   final String email;
+  final String recipeName;
+  final String description;
+  final List<dynamic> ingredients;
 
-  AddRecipeScreen({
+  EditRecipeScreen({
     required this.groupId,
     required this.email,
+    required this.recipeName,
+    required this.description,
+    required this.ingredients,
   });
 
   @override
-  _AddRecipeScreenState createState() => _AddRecipeScreenState();
+  _EditRecipeScreenState createState() => _EditRecipeScreenState();
 }
 
-class _AddRecipeScreenState extends State<AddRecipeScreen> {
+class _EditRecipeScreenState extends State<EditRecipeScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _searchFoodController = TextEditingController();
   final _secureStorage = FlutterSecureStorage();
   final String _url = dotenv.env['ROOT_URL']!;
   
-  // Lưu trữ các food đã chọn và amount của chúng
   final Map<String, double> selectedFoods = {};
-  // Controller cho amount input
   final TextEditingController _amountController = TextEditingController();
-  // Danh sách food từ API
   List<Map<String, dynamic>> foods = [];
   List<Map<String, dynamic>> filteredFoods = [];
   bool isLoading = true;
@@ -36,6 +39,12 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
   @override
   void initState() {
     super.initState();
+    _nameController.text = widget.recipeName;
+    _descriptionController.text = widget.description;
+    // Khởi tạo selectedFoods từ ingredients hiện tại
+    for (var ingredient in widget.ingredients) {
+      selectedFoods[ingredient['foodName']] = ingredient['amount'].toDouble();
+    }
     _fetchFoods();
     _searchFoodController.addListener(_onSearchFoodChanged);
   }
@@ -66,7 +75,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
   Future<void> _fetchFoods() async {
     try {
       final String? token = await _secureStorage.read(key: "auth_token");
-      print("Fetching foods for groupId: ${widget.groupId}");
       
       final response = await http.post(
         Uri.parse('$_url/food/getAllFood'),
@@ -79,9 +87,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
         }),
       );
 
-      print("Response status: ${response.statusCode}");
-      print("Response body: ${response.body}");
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['code'] == 607 && data['data'] != null) {
@@ -90,7 +95,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
             filteredFoods = foods;
             isLoading = false;
           });
-          print("Fetched foods: $foods");
         }
       }
     } catch (error) {
@@ -101,9 +105,8 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
     }
   }
 
-  // Hiển thị dialog nhập amount
   void _showAmountDialog(String foodName, String unitName) {
-    _amountController.clear();
+    _amountController.text = selectedFoods[foodName]?.toString() ?? '';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -149,7 +152,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
         padding: const EdgeInsets.all(12.0),
         child: Row(
           children: [
-            // Icon thể hiện category
             Container(
               width: 60,
               height: 60,
@@ -166,7 +168,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
               ),
             ),
             SizedBox(width: 12),
-            // Thông tin food
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +190,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                 ],
               ),
             ),
-            // Nút thêm/xóa
             IconButton(
               icon: Icon(
                 isSelected ? Icons.remove_circle : Icons.add_circle,
@@ -228,7 +228,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
     }
   }
 
-  // Kiểm tra dữ liệu trước khi lưu
   bool _validateData() {
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -263,8 +262,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
     return true;
   }
 
-  // Hiển thị dialog xác nhận lưu
-  void _showSaveConfirmDialog() {
+  void _showUpdateConfirmDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -273,7 +271,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Bạn có chắc chắn muốn lưu công thức này?'),
+            Text('Bạn có chắc chắn muốn cập nhật công thức này?'),
             SizedBox(height: 16),
             Text(
               'Tên món: ${_nameController.text}',
@@ -291,22 +289,20 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _saveRecipe();
+              _updateRecipe();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green[700],
             ),
-            child: Text('Lưu'),
+            child: Text('Cập nhật'),
           ),
         ],
       ),
     );
   }
 
-  // Lưu công thức
-  Future<void> _saveRecipe() async {
+  Future<void> _updateRecipe() async {
     try {
-      // Hiển thị loading
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -317,7 +313,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
 
       final String? token = await _secureStorage.read(key: "auth_token");
       
-      // Chuẩn bị list_item từ selectedFoods
       final List<Map<String, dynamic>> listItem = selectedFoods.entries.map((entry) {
         return {
           "foodName": entry.key,
@@ -325,40 +320,44 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
         };
       }).toList();
 
-      // Gọi API tạo công thức
       final response = await http.post(
-        Uri.parse('$_url/recipe/createRecipe'),
+        Uri.parse('$_url/recipe/updateRecipe'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          "name": _nameController.text.trim(),
-          "description": _descriptionController.text.trim(),
-          "list_item": listItem,
-          "group": widget.groupId
+          "recipeName": widget.recipeName,
+          "group": widget.groupId,
+          "newData": {
+            "name": _nameController.text.trim(),
+            "description": _descriptionController.text.trim(),
+            "list_item": listItem
+          }
         }),
       );
 
-      // Đóng loading
-      Navigator.pop(context);
+      Navigator.pop(context); // Đóng loading dialog
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['code'] == 700) { // Thành công
+        if (data['code'] == 702) { // Mã thành công
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Tạo công thức thành công'),
+              content: Text('Cập nhật công thức thành công'),
               backgroundColor: Colors.green,
             ),
           );
 
           await Future.delayed(Duration(milliseconds: 500));
-          Navigator.pop(context, true);
-        } else if (data['code'] == 702) { // Trùng tên recipe
+          Navigator.pop(context, {
+            'newName': _nameController.text.trim(),
+            'needRefresh': true
+          });
+        } else if (data['code'] == 704) { // Trùng tên recipe
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Tên công thức đã tồn tại trong nhóm này'),
+              content: Text('Tên công thức mới đã tồn tại trong nhóm này'),
               backgroundColor: Colors.orange,
               action: SnackBarAction(
                 label: 'Đổi tên',
@@ -376,19 +375,31 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
               ),
             ),
           );
+        } else if (data['code'] == 703) { // Không tìm thấy recipe
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Không tìm thấy công thức để cập nhật'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          await Future.delayed(Duration(milliseconds: 500));
+          Navigator.pop(context);
+        } else if (data['code'] == 701) { // Danh sách nguyên liệu trống
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Danh sách nguyên liệu không được để trống'),
+              backgroundColor: Colors.red,
+            ),
+          );
         } else {
-          throw Exception(data['message'] ?? 'Không thể tạo công thức');
+          throw Exception(data['message'] ?? 'Có lỗi xảy ra khi cập nhật');
         }
-      } else {
-        throw Exception('Không thể tạo công thức');
       }
     } catch (error) {
-      // Đóng loading nếu chưa đóng
       if (Navigator.canPop(context)) {
-        Navigator.pop(context);
+        Navigator.pop(context); // Đóng loading dialog nếu có lỗi
       }
       
-      // Hiển thị lỗi
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Có lỗi xảy ra: $error'),
@@ -405,25 +416,23 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
         backgroundColor: Colors.green[700],
         elevation: 0,
         title: Text(
-          'Tạo công thức món ăn',
+          'Chỉnh sửa công thức',
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: EdgeInsets.only(bottom: 80), // Thêm padding để không bị che bởi nút lưu
+            padding: EdgeInsets.only(bottom: 80),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Tên món ăn
                   Text(
                     'Tên món ăn',
                     style: TextStyle(
@@ -446,7 +455,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                   ),
 
                   SizedBox(height: 24),
-                  // 2. Hướng dẫn cách làm
                   Text(
                     'Hướng dẫn cách làm',
                     style: TextStyle(
@@ -470,7 +478,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                   ),
 
                   SizedBox(height: 24),
-                  // 3. Danh sách nguyên liệu đã chọn
                   if (selectedFoods.isNotEmpty) ...[
                     Text(
                       'Nguyên liệu đã chọn',
@@ -548,7 +555,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                     Divider(height: 32, thickness: 1),
                   ],
 
-                  // Danh sách nguyên liệu có thể chọn
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -570,7 +576,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                     ],
                   ),
                   SizedBox(height: 8),
-                  // Thanh tìm kiếm nguyên liệu
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
@@ -594,7 +599,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                     ),
                   ),
                   SizedBox(height: 16),
-                  // Danh sách food cards chưa chọn
                   ...filteredFoods
                       .where((food) => !selectedFoods.containsKey(food['name']))
                       .map((food) => _buildFoodCard(food))
@@ -603,7 +607,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
               ),
             ),
           ),
-          // Nút lưu cố định ở dưới cùng
           Positioned(
             left: 0,
             right: 0,
@@ -623,7 +626,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   if (_validateData()) {
-                    _showSaveConfirmDialog();
+                    _showUpdateConfirmDialog();
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -634,7 +637,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                   ),
                 ),
                 child: Text(
-                  'Lưu công thức',
+                  'Cập nhật công thức',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.white,
@@ -647,4 +650,4 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
       ),
     );
   }
-}
+} 

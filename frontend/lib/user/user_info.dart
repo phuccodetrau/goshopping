@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:go_shopping/login/update_password.dart';
 import 'package:go_shopping/notification/notification_screen.dart';
 import 'package:go_shopping/home_screen/home_screen.dart';
+import 'package:go_shopping/user/user_tasks_screen.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -136,7 +137,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                 children: [
                   _buildListTile(Icons.person, 'Chỉnh sửa thông tin cá nhân'),
                   _buildListTile(Icons.update, 'Đổi mật khẩu'),
-
+                  _buildListTile(Icons.assignment, 'Danh sách công việc'),
                   ListTile(
                     leading: Icon(Icons.logout, color: Colors.red),
                     title: Text(
@@ -227,8 +228,14 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               builder: (context) => PasswordChangeScreen(),
             ),
           );
-
-
+        }
+        if(title=="Danh sách công việc"){
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserTasksScreen(email: email),
+            ),
+          );
         }
       },
     );

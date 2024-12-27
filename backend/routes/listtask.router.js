@@ -12,5 +12,6 @@ router.post("/deleteListTaskById", listtaskController.deleteListTaskById);
 router.post("/getTaskStats", listtaskController.getTaskStats);
 router.post("/getTaskStatsByFood", listtaskController.getTaskStatsByFood);
 router.post("/getTaskStatsByDate", listtaskController.getTaskStatsByDate);
+router.post("/getTasksByMemberEmail", listtaskController.getTasksByMemberEmail);
 
 export default router;

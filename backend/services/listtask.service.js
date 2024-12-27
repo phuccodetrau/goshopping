@@ -89,7 +89,7 @@ class ListTaskService {
         }
     }
 
-    static async getListTasksByNameAndGroup(name, group, state = "T��t cả", startDate = "", endDate = "", page = 1, limit = 3) {
+    static async getListTasksByNameAndGroup(name, group, state = "Tất cả", startDate = "", endDate = "", page = 1, limit = 3) {
         try {
             const filter = { name, group };
     
@@ -200,6 +200,82 @@ class ListTaskService {
             };
         } catch (error) {
             console.error("Lỗi khi chuyển ListTask thành Item:", error);
+            throw { code: 500, message: "Server error!", data: null };
+        }
+    }
+
+    static async getTasksByMemberEmail(memberEmail, state = "Tất cả", startDate = "", endDate = "", page = 1, limit = 10) {
+        try {
+            const filter = { memberEmail };
+
+            // Lọc theo state
+            if (state === "Chưa hoàn thành") {
+                filter.state = false;
+                const today = new Date();
+                filter.endDate = { $gt: today }; 
+            } else if (state === "Hoàn thành") {
+                filter.state = true;
+            } else if (state === "Quá hạn") {
+                filter.state = false;
+                const today = new Date();
+                filter.endDate = { $lt: today };
+            }
+
+            // Lọc theo ngày
+            if (startDate !== "") {
+                filter.startDate = { ...filter.startDate, $gte: new Date(startDate) };
+            }
+            if (endDate !== "") {
+                filter.endDate = { ...filter.endDate, $lte: new Date(endDate) };
+            }
+
+            const skip = (page - 1) * limit;
+
+            // Thực hiện truy vấn với populate để lấy thông tin group
+            const listTasks = await ListTask.find(filter)
+                .select('name memberEmail note startDate endDate foodName amount unitName state group price')
+                .skip(skip)
+                .limit(limit)
+                .populate({
+                    path: 'group',
+                    select: 'name'
+                })
+                .lean()
+                .exec();
+
+            // Định dạng lại dữ liệu trả về
+            const formattedTasks = listTasks.map(task => ({
+                taskId: task._id,
+                taskName: task.name,
+                memberEmail: task.memberEmail,
+                note: task.note,
+                startDate: task.startDate,
+                endDate: task.endDate,
+                foodName: task.foodName,
+                amount: task.amount,
+                unitName: task.unitName,
+                state: task.state,
+                price: task.price,
+                groupId: task.group._id,
+                groupName: task.group.name
+            }));
+
+            const totalRecords = await ListTask.countDocuments(filter);
+
+            return {
+                code: 200,
+                message: "Truy vấn thành công",
+                data: {
+                    tasks: formattedTasks,
+                    pagination: {
+                        currentPage: page,
+                        totalPages: Math.ceil(totalRecords / limit),
+                        totalRecords
+                    }
+                }
+            };
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách task của thành viên:', error);
             throw { code: 500, message: "Server error!", data: null };
         }
     }

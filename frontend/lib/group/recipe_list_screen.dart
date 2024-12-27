@@ -270,7 +270,11 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                                       email: widget.email,
                                     ),
                                   ),
-                                );
+                                ).then((needRefresh) {
+                                  if (needRefresh == true) {
+                                    _fetchRecipes();
+                                  }
+                                });
                               },
                             );
                           },
