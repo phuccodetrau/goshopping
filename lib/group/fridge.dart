@@ -546,6 +546,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
   }
 
   Widget _buildSuggestionCard(String name, String unitName, String image) {
+
     Uint8List imageBytes = base64Decode(image);
     return GestureDetector(
       onTap: () {
@@ -596,7 +597,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
                       BlendMode.darken,
                     ),
                     child:
-                    image != "" ? Image.memory(
+                    (image != "") ? Image.memory(
                       imageBytes,
                       height: 80,
                       width: double.infinity,
@@ -677,7 +678,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
               filterQuality: FilterQuality.high, // Ensure high-quality scaling
             ) :
             Image.asset(
-              "images/fish.png",
+              "images/food.png",
               height: 60,
               width: 60,
               fit: BoxFit.cover,

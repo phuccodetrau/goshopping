@@ -253,7 +253,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                           itemBuilder: (context, index) {
                             final recipe = filteredRecipes[index];
                             return RecipeItemCard(
-                              imagePath: 'images/group.png',
+                              imagePath: 'images/food.png',
                               title: recipe['name'] ?? 'Không có tên',
                               description: recipe['description'] ?? 'Không có mô tả',
                               groupId: widget.groupId,

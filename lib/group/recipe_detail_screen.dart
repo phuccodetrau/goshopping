@@ -369,7 +369,7 @@ class _RecipeDetailState extends State<RecipeDetail> {
                     SizedBox(height: 16),
                     CircleAvatar(
                       radius: 60,
-                      backgroundImage: AssetImage('images/group.png'),
+                      backgroundImage: AssetImage('images/food.png'),
                     ),
                     SizedBox(height: 16),
                     Text(

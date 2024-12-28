@@ -240,7 +240,7 @@ class _FoodCardState extends State<FoodCard> {
             height: 50,
             fit: BoxFit.cover,) :
           Image.asset(
-            "images/fish.png",
+            "images/food.png",
             width: 50,
             height: 50,
             fit: BoxFit.cover,
