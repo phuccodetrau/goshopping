@@ -210,7 +210,7 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({
+        body: json.encode({
           'name': memberName,
           'memberEmail': memberEmail,
           'note': note,
@@ -220,12 +220,13 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
           'amount': amount,
           'unitName': unitName,
           'state': state,
-          'group': group,
+          'group': group['id'],
+          'groupName': group['name']
         }),
       );
 
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+        final responseData = json.decode(response.body);
         if (responseData['code'] == 700) {
           print("Phân công mới được tạo thành công!");
         } else {
@@ -274,7 +275,10 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
 
   Future<void> _postData(foodName, categoryName, unitName, memberName, memberEmail, note, start, end, amount, state, group, expireDate) async {
     await _addNewFood(foodName, categoryName, unitName, group, _imageBase64);
-    await _addNewTask(memberName, memberEmail, note, start, end, foodName, amount, unitName, state, group);
+    await _addNewTask(memberName, memberEmail, note, start, end, foodName, amount, unitName, state, {
+      'id': group,
+      'name': groupName
+    });
   }
 
   void didChangeDependencies() {

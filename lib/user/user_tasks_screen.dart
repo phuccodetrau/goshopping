@@ -340,33 +340,6 @@ class _UserTasksScreenState extends State<UserTasksScreen> with RouteAware {
                                           ],
                                         ),
                                         SizedBox(height: 12),
-                                        // Thông tin người phân công
-                                        Row(
-                                          children: [
-                                            Icon(Icons.person_outline, size: 20, color: Colors.green[700]),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              'Người phân công:',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.grey[700],
-                                              ),
-                                            ),
-                                            SizedBox(width: 4),
-                                            Expanded(
-                                              child: Text(
-                                                task['name'] ?? 'Không có thông tin',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: Colors.grey[800],
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 12),
                                         // Thông tin thực phẩm
                                         Container(
                                           padding: EdgeInsets.all(12),

@@ -119,6 +119,29 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
         throw Exception('Authentication token not found');
       }
 
+      // Check if name exists
+      if (_nameController.text != name) {
+        final checkNameResponse = await http.get(
+          Uri.parse('$_url/auth/user/check-name?name=${Uri.encodeComponent(_nameController.text)}'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        final checkNameData = jsonDecode(checkNameResponse.body);
+        if (checkNameData['exists'] == true) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Tên người dùng đã tồn tại, vui lòng chọn tên khác')),
+            );
+          }
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
       final requestBody = {
         'name': _nameController.text,
         'phoneNumber': _phoneController.text,
@@ -133,7 +156,6 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
         },
         body: jsonEncode(requestBody),
       );
-
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
