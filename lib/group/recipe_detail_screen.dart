@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'buy_old_food.dart';
+import 'edit_recipe_screen.dart';
 
 
 class RecipeDetail extends StatefulWidget {
@@ -103,7 +104,7 @@ class _RecipeDetailState extends State<RecipeDetail> {
           'Content-Type': 'application/json',
         },
         body: jsonEncode(
-            {"recipeName": widget.recipeName, "group": widget.groupId}),
+            {"recipeName": recipeName, "group": widget.groupId}),
       );
 
       print("Response status: ${response.statusCode}");
@@ -146,7 +147,7 @@ class _RecipeDetailState extends State<RecipeDetail> {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          "recipeName": widget.recipeName,
+          "recipeName": recipeName,
           "group": widget.groupId,
         }),
       );
@@ -187,7 +188,7 @@ class _RecipeDetailState extends State<RecipeDetail> {
         final foodName = ingredient['foodName'];
         final itemDetail = itemDetails[foodName];
         
-        // Đảm bảo tất cả số lượng đều là double
+        // Đảm bảo t���t cả số lượng đều là double
         double requiredAmount = 0.0;
         try {
           requiredAmount = (ingredient['amount'] is int) 
@@ -325,7 +326,34 @@ class _RecipeDetailState extends State<RecipeDetail> {
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-
+        actions: [
+          IconButton(
+            icon: Icon(Icons.edit, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditRecipeScreen(
+                    groupId: widget.groupId,
+                    email: widget.email,
+                    recipeName: recipeName,
+                    description: recipeDescription,
+                    ingredients: ingredients,
+                  ),
+                ),
+              ).then((result) {
+                if (result != null && result is Map<String, dynamic>) {
+                  setState(() {
+                    recipeName = result['newName'] ?? recipeName;
+                  });
+                  _fetchIngredients();
+                  _checkRecipeAvailability();
+                  Navigator.pop(context, true);
+                }
+              });
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
