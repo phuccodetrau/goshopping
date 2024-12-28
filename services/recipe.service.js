@@ -24,27 +24,41 @@ class RecipeService {
 
     static async updateRecipe(recipeName, group, newData) {
         try {
-            if (newData.name) {
-                const existingRecipe = await Recipe.findOne({
+            // Kiểm tra recipe có tồn tại không
+            const existingRecipe = await Recipe.findOne({ name: recipeName, group: group });
+            if (!existingRecipe) {
+                return { code: 703, message: "Không tìm thấy recipe để cập nhật", data: "" };
+            }
+
+            // Kiểm tra list_item nếu có cập nhật
+            if (newData.list_item && newData.list_item.length === 0) {
+                return { code: 701, message: "Danh sách nguyên liệu không được để trống", data: "" };
+            }
+
+            // Kiểm tra nếu có thay đổi tên recipe
+            if (newData.name && newData.name !== recipeName) {
+                const duplicateRecipe = await Recipe.findOne({
                     name: newData.name,
-                    group: group,
-                    _id: { $ne: newData._id }
+                    group: group
                 });
                 
-                if (existingRecipe) {
+                if (duplicateRecipe) {
                     return { code: 704, message: "Tên recipe mới đã tồn tại trong group này", data: "" };
                 }
             }
 
+            // Cập nhật recipe
             const updatedRecipe = await Recipe.findOneAndUpdate(
                 { name: recipeName, group: group },
-                { $set: newData },
+                { 
+                    $set: {
+                        name: newData.name || existingRecipe.name,
+                        description: newData.description !== undefined ? newData.description : existingRecipe.description,
+                        list_item: newData.list_item || existingRecipe.list_item
+                    }
+                },
                 { new: true }
             );
-            
-            if (!updatedRecipe) {
-                return { code: 703, message: "Không tìm thấy recipe để cập nhật", data: "" };
-            }
 
             return { code: 702, message: "Cập nhật recipe thành công", data: updatedRecipe };
         } catch (error) {
@@ -285,7 +299,7 @@ class RecipeService {
                 code: 715, 
                 message: isAllAvailable ? 
                     "Có thể sử dụng recipe này" : 
-                    "Không đủ nguyên liệu để thực hiện recipe này",
+                    "Kh��ng đủ nguyên liệu để thực hiện recipe này",
                 data: {
                     recipeName: recipe.name,
                     canUse: isAllAvailable,
