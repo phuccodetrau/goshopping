@@ -320,31 +320,30 @@ class _AddMemberState extends State<AddMember> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         title: Text(
           "Thêm thành viên",
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 20,
             color: Colors.green[900],
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           Padding(
-            padding: EdgeInsets.only(right: 8),
+            padding: EdgeInsets.only(right: 16),
             child: TextButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => GroupMainScreen(
-                      imageBase64: widget.imageBase64,
-                      groupId: widget.groupId,
-                      groupName: widget.groupName,
-                      adminName: widget.adminName,
-                    ),
+              onPressed: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GroupMainScreen(
+                    imageBase64: widget.imageBase64,
+                    groupId: widget.groupId,
+                    groupName: widget.groupName,
+                    adminName: widget.adminName,
                   ),
-                );
-              },
+                ),
+              ),
               style: TextButton.styleFrom(
                 backgroundColor: Colors.grey[100],
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -362,147 +361,159 @@ class _AddMemberState extends State<AddMember> {
               ),
             ),
           ),
+        ],
+      ),
+      body: Stack(
+        children: [
           Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: TextButton.icon(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: "Nhập Email để tìm kiếm",
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    prefixIcon: Icon(Icons.search, color: Colors.grey),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                if (_selectedUsers.isNotEmpty) ...[
+                  Text(
+                    "Đã chọn",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Wrap(
+                    spacing: 12.0,
+                    runSpacing: 12.0,
+                    children: _selectedUsers.map((user) {
+                      return Stack(
+                        children: [
+                          Column(
+                            children: [
+                              CircleAvatar(
+                                backgroundImage: (user['avatar']?.isEmpty ?? true)
+                                  ? AssetImage("images/person.png") as ImageProvider
+                                  : MemoryImage(base64Decode(user['avatar']!)),
+                                radius: 30,
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                user['name'] ?? '',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black87,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                          Positioned(
+                            top: -10,
+                            right: -10,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 1,
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: InkWell(
+                                onTap: () => _removeUser(user),
+                                child: CircleAvatar(
+                                  radius: 12,
+                                  backgroundColor: Colors.white,
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ],
+                SizedBox(height: 20),
+                Text(
+                  "Gợi ý",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _userSuggestions.length,
+                    itemBuilder: (context, index) {
+                      final user = _userSuggestions[index];
+                      return GestureDetector(
+                        onTap: () => _selectUser(user),
+                        child: ContactItem(
+                          name: user['name']!,
+                          avatar: user['avatar'] ?? '',
+                          isSelected: _selectedUsers.any((selectedUser) =>
+                            selectedUser['email'] == user['email']),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: ElevatedButton(
               onPressed: _addMembers,
-              icon: Icon(Icons.check_circle_outline, color: Colors.green[700], size: 20),
-              label: Text(
-                "Hoàn tất",
-                style: TextStyle(
-                  color: Colors.green[700],
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green[700],
+                padding: EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.green[50],
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    "Hoàn tất",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ],
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: "Nhập Email để tìm kiếm",
-                filled: true,
-                fillColor: Colors.grey[200],
-                prefixIcon: Icon(Icons.search, color: Colors.grey),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            if (_selectedUsers.isNotEmpty) ...[  // Chỉ hiển thị khi có người được chọn
-              Text(
-                "Đã chọn",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-              SizedBox(height: 10),
-              Wrap(
-                spacing: 12.0,
-                runSpacing: 12.0,
-                children: _selectedUsers.map((user) {
-                  return Stack(
-                    children: [
-                      Column(
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: (user['avatar']?.isEmpty ?? true)
-                              ? AssetImage("images/person.png") as ImageProvider
-                              : MemoryImage(base64Decode(user['avatar']!)),
-                            radius: 30,
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            user['name'] ?? '',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black87,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                      Positioned(  // Thêm nút xóa
-                        top: -10,
-                        right: -10,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.3),
-                                spreadRadius: 1,
-                                blurRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: InkWell(
-                            onTap: () => _removeUser(user),
-                            child: CircleAvatar(
-                              radius: 12,
-                              backgroundColor: Colors.white,
-                              child: Icon(
-                                Icons.close,
-                                size: 16,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ],
-            SizedBox(height: 20),
-            Text(
-              "Gợi ý",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-            SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _userSuggestions.length,
-                itemBuilder: (context, index) {
-                  final user = _userSuggestions[index];
-                  return GestureDetector(
-                    onTap: () => _selectUser(user),
-                    child: ContactItem(
-                      name: user['name']!,
-                      avatar: user['avatar'] ?? '',
-                      isSelected: _selectedUsers.any((selectedUser) =>
-                        selectedUser['email'] == user['email']),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
