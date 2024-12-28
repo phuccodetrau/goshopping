@@ -262,7 +262,7 @@ class AuthService{
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'Your New Password',
-            text: `Your new password is ${newPassword}.`,
+            text: `Your new password is ${newPassword}`,
         };
        
         await transporter.sendMail(mailOptions);

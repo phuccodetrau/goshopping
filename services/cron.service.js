@@ -5,7 +5,7 @@ import NotificationService from './notification.service.js';
 class CronService {
     // Chạy mỗi ngày lúc 11:50 theo giờ Việt Nam
     static initExpirationCheck() {
-        cron.schedule('36 10 * * *', async () => {
+        cron.schedule('50 21 * * *', async () => {
             try {
                 // Lấy các item sẽ hết hạn trong 3 ngày tới
                 const threeDaysFromNow = new Date();
