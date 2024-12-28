@@ -45,7 +45,7 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
     
     final query = _searchController.text.toLowerCase();
     
-    _searchTimer = Timer(Duration(seconds: 15), () {
+    _searchTimer = Timer(Duration(seconds: 5), () {
       if (_isSearching && mounted) {
         setState(() {
           _isSearching = false;
