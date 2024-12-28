@@ -150,7 +150,10 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
             Navigator.pop(context, true);
           }
         } else {
-          throw Exception(data['message'] ?? 'Unknown error occurred');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${data['message']}')),
+          );
+
         }
       } else {
         throw Exception('Server returned status code ${response.statusCode}');
