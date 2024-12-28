@@ -317,41 +317,74 @@ class _AddMemberState extends State<AddMember> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,  // Remove back button
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           "Thêm thành viên",
-          style: TextStyle(color: Colors.green),
+          style: TextStyle(
+            fontSize: 24,
+            color: Colors.green[900],
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => GroupMainScreen(
-                    imageBase64: widget.imageBase64,
-                    groupId: widget.groupId,
-                    groupName: widget.groupName,
-                    adminName: widget.adminName,
+          Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GroupMainScreen(
+                      imageBase64: widget.imageBase64,
+                      groupId: widget.groupId,
+                      groupName: widget.groupName,
+                      adminName: widget.adminName,
+                    ),
                   ),
+                );
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.grey[100],
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              );
-            },
-            child: Text(
-              "Bỏ qua",
-              style: TextStyle(color: Colors.grey),
+              ),
+              child: Text(
+                "Bỏ qua",
+                style: TextStyle(
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
             ),
           ),
-          TextButton(
-            onPressed: _addMembers,
-            child: Text(
-              "Hoàn tất",
-              style: TextStyle(color: Colors.green),
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: TextButton.icon(
+              onPressed: _addMembers,
+              icon: Icon(Icons.check_circle_outline, color: Colors.green[700], size: 20),
+              label: Text(
+                "Hoàn tất",
+                style: TextStyle(
+                  color: Colors.green[700],
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.green[50],
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
             ),
           ),
         ],
-        backgroundColor: Colors.white,
-        elevation: 0,
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
