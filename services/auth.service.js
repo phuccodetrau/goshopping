@@ -389,5 +389,18 @@ class AuthService{
             throw error;
         }
     }
+
+    static async checkNameExists(name, excludeEmail = null) {
+        try {
+            const query = { name: name };
+            if (excludeEmail) {
+                query.email = { $ne: excludeEmail }; // Exclude the current user's email
+            }
+            const existingUser = await User.findOne(query);
+            return existingUser !== null;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 export default AuthService;

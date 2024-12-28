@@ -186,7 +186,19 @@ const updateUser = async (req, res, next) => {
         const email = req.user.email;
 
         const updateData = {};
-        if (name) updateData.name = name;
+        
+        if (name) {
+            // Check if name already exists for another user
+            const nameExists = await AuthService.checkNameExists(name, email);
+            if (nameExists) {
+                return res.status(400).json({
+                    status: false,
+                    message: 'Tên người dùng đã tồn tại, vui lòng chọn tên khác'
+                });
+            }
+            updateData.name = name;
+        }
+        
         if (phoneNumber) updateData.phoneNumber = phoneNumber;
         if (avatar != "") updateData.avatar = avatar;
 
@@ -204,6 +216,28 @@ const updateUser = async (req, res, next) => {
                 message: 'User not found' 
             });
         }
+    } catch (error) {
+        next(error);
+    }
+};
+
+const checkNameExists = async (req, res, next) => {
+    try {
+        const name = req.query.name;
+        const email = req.user.email;
+
+        if (!name) {
+            return res.status(400).json({
+                status: false,
+                message: 'Name parameter is required'
+            });
+        }
+
+        const exists = await AuthService.checkNameExists(name, email);
+        res.json({
+            status: true,
+            exists: exists
+        });
     } catch (error) {
         next(error);
     }
@@ -344,5 +378,6 @@ export default {
     getUserInfo,
     uploadAvatar,
     getAvatar,
-    updatePassword
+    updatePassword,
+    checkNameExists
 };

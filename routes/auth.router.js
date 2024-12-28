@@ -23,5 +23,6 @@ router.put('/user/update', authMiddleware, auth.updateUser);
 router.get('/user/info', authMiddleware, auth.getUserInfo);
 router.post("/user/upload-avatar", authMiddleware, upload.single('avatar'), auth.uploadAvatar);
 router.get("/user/get-avatar/:email", auth.getAvatar);
-router.post("/update_password",auth.updatePassword)
+router.post("/update_password",auth.updatePassword);
+router.get("/user/check-name", authMiddleware, auth.checkNameExists);
 export default router;
