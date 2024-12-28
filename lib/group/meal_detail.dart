@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'recipe_detail_screen.dart';
+import 'dart:async';
 
 class MealDetailScreen extends StatefulWidget {
   final String groupId;
@@ -40,7 +41,9 @@ class RecipeAvailabilityInfo {
 class _MealDetailScreenState extends State<MealDetailScreen> {
   final _secureStorage = FlutterSecureStorage();
   final String _url = dotenv.env['ROOT_URL']!;
+  final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> recipes = [];
+  List<Map<String, dynamic>> filteredRecipes = [];
   List<Map<String, dynamic>> selectedRecipes = [];
   bool isLoading = true;
   late DateTime selectedDate;
@@ -48,14 +51,63 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   String? existingMealPlanId;
   List<Map<String, dynamic>> temporaryRecipes = [];
   Map<String, RecipeAvailabilityInfo> recipeAvailability = {};
+  Timer? _searchTimer;
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
     selectedDate = widget.selectedDate;
     selectedMealTime = widget.selectedMealTime;
+    _searchController.addListener(_onSearchChanged);
     _fetchMealPlan();
     _fetchAllRecipes();
+  }
+
+  @override
+  void dispose() {
+    _searchTimer?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _searchTimer?.cancel();
+    setState(() {
+      _isSearching = true;
+    });
+    
+    final query = _searchController.text.toLowerCase();
+    
+    _searchTimer = Timer(Duration(seconds: 15), () {
+      if (_isSearching && mounted) {
+        setState(() {
+          _isSearching = false;
+          if (filteredRecipes.isEmpty) {
+            _searchController.clear();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Không tìm thấy món ăn phù hợp'),
+                backgroundColor: Colors.orange,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        });
+      }
+    });
+
+    setState(() {
+      filteredRecipes = recipes.where((recipe) {
+        return recipe['name'].toString().toLowerCase().contains(query) ||
+            recipe['description'].toString().toLowerCase().contains(query);
+      }).toList();
+      
+      if (filteredRecipes.isNotEmpty) {
+        _isSearching = false;
+        _searchTimer?.cancel();
+      }
+    });
   }
 
   Future<void> _fetchMealPlan() async {
@@ -127,6 +179,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
         if (data['code'] == 709) {
           setState(() {
             recipes = List<Map<String, dynamic>>.from(data['data']);
+            filteredRecipes = recipes; // Khởi tạo filteredRecipes với tất cả recipes
             isLoading = false;
           });
         }
@@ -604,12 +657,11 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
 
   // Sửa lại widget _buildAvailableRecipesList
   Widget _buildAvailableRecipesList() {
-    // Lọc ra những recipe chưa có trong meal plan
-    final availableRecipes = recipes.where((recipe) => 
+    final availableRecipes = filteredRecipes.where((recipe) => 
       !_isRecipeInMealPlan(recipe)
     ).toList();
 
-    if (availableRecipes.isEmpty) {
+    if (availableRecipes.isEmpty && !_isSearching) {
       return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(
@@ -750,16 +802,37 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.search, color: Colors.grey),
+                          _isSearching 
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                                ),
+                              )
+                            : Icon(Icons.search, color: Colors.grey),
                           SizedBox(width: 8),
                           Expanded(
                             child: TextField(
+                              controller: _searchController,
                               decoration: InputDecoration(
                                 hintText: 'Tìm kiếm món ăn',
                                 border: InputBorder.none,
                               ),
                             ),
                           ),
+                          if (_searchController.text.isNotEmpty)
+                            IconButton(
+                              icon: Icon(Icons.clear, color: Colors.grey),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  filteredRecipes = recipes;
+                                  _isSearching = false;
+                                });
+                              },
+                            ),
                         ],
                       ),
                     ),

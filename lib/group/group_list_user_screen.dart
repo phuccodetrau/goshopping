@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:async';
 
 class GroupListUserScreen extends StatefulWidget {
   @override
@@ -19,6 +20,8 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
   String? token;
   String? currentUserEmail;
   bool isCurrentUserAdmin = false;
+  Timer? _searchTimer;
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -29,17 +32,47 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
 
   @override
   void dispose() {
+    _searchTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged() {
+    _searchTimer?.cancel();
+    setState(() {
+      _isSearching = true;
+    });
+    
     final query = _searchController.text.toLowerCase();
+    
+    _searchTimer = Timer(Duration(seconds: 15), () {
+      if (_isSearching && mounted) {
+        setState(() {
+          _isSearching = false;
+          if (filteredUsers.isEmpty) {
+            _searchController.clear();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Không tìm thấy kết quả phù hợp'),
+                backgroundColor: Colors.orange,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        });
+      }
+    });
+
     setState(() {
       filteredUsers = users.where((user) {
         return user['name'].toString().toLowerCase().contains(query) ||
             user['email'].toString().toLowerCase().contains(query);
       }).toList();
+      
+      if (filteredUsers.isNotEmpty) {
+        _isSearching = false;
+        _searchTimer?.cancel();
+      }
     });
   }
 
@@ -217,7 +250,6 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Search Bar
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               decoration: BoxDecoration(
@@ -235,7 +267,16 @@ class _GroupListUserScreenState extends State<GroupListUserScreen> {
                       ),
                     ),
                   ),
-                  Icon(Icons.search, color: Colors.grey),
+                  _isSearching 
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                          ),
+                        )
+                      : Icon(Icons.search, color: Colors.grey),
                 ],
               ),
             ),

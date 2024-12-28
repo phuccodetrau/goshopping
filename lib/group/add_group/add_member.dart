@@ -317,15 +317,31 @@ class _AddMemberState extends State<AddMember> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,  // Remove back button
         title: Text(
           "Thêm thành viên",
           style: TextStyle(color: Colors.green),
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GroupMainScreen(
+                    imageBase64: widget.imageBase64,
+                    groupId: widget.groupId,
+                    groupName: widget.groupName,
+                    adminName: widget.adminName,
+                  ),
+                ),
+              );
+            },
+            child: Text(
+              "Bỏ qua",
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
           TextButton(
             onPressed: _addMembers,
             child: Text(
