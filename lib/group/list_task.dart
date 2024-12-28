@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:go_shopping/main.dart';
+import 'package:intl/intl.dart';
 import '../home_screen/home_screen.dart';
 import '../notification/notification_screen.dart';
 import '../user/user_info.dart';
@@ -36,6 +38,21 @@ class _ListTaskState extends State<ListTask> with RouteAware{
   int _currentPageUser = 1;
   bool _hasMoreDataUser = true;
   String URL = dotenv.env['ROOT_URL']!;
+  String convertToDateFormat(dynamic dateInput) {
+    // Kiểm tra nếu đầu vào là String
+    DateTime date;
+    if (dateInput is String) {
+      // Chuyển đổi chuỗi thành DateTime
+      date = DateTime.parse(dateInput);
+    } else if (dateInput is DateTime) {
+      date = dateInput;
+    } else {
+      throw ArgumentError("Input must be a DateTime or a valid date String");
+    }
+
+    // Định dạng ngày tháng
+    return DateFormat('dd/MM/yyyy').format(date);
+  }
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   List<dynamic> listtaskall = [];
   List<dynamic> listtaskuser = [];
@@ -514,9 +531,10 @@ class _ListTaskState extends State<ListTask> with RouteAware{
               type,
               task['foodName'],
               task['amount'].toString() + " " + task["unitName"],
-              "${task['startDate']} - ${task['endDate']}",
+              "${convertToDateFormat(task['startDate'])} - ${convertToDateFormat(task['endDate'])}",
               stateText,
               index,
+              task["name"]
             );
           },
         ),
@@ -561,9 +579,10 @@ class _ListTaskState extends State<ListTask> with RouteAware{
               type,
               task['foodName'],
               task['amount'].toString() + " " + task["unitName"],
-              "${task['startDate']} - ${task['endDate']}",
+              "${convertToDateFormat(task['startDate'])} - ${convertToDateFormat(task['endDate'])}",
               stateText,
               index,
+              task["name"]
             );
           },
         ),
@@ -571,7 +590,7 @@ class _ListTaskState extends State<ListTask> with RouteAware{
     }
   }
 
-  Widget _buildCard(String type, String foodname, String amount, String duration, String status, int index, ) {
+  Widget _buildCard(String type, String foodname, String amount, String duration, String status, int index, String name, ) {
     bool isCompleted =
         type == "Được phân công" ? status == "Hoàn thành" : false;
     Future<http.Response> _createItemFromListTask(int index, int extraDays, String note) async {
@@ -666,8 +685,12 @@ class _ListTaskState extends State<ListTask> with RouteAware{
                     keyboardType: TextInputType.number, // Bàn phím số
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
+
                       labelText: "Nhập số",
                     ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly, // Chỉ cho phép nhập số
+                    ],
                     onChanged: (value) {
                       setState(() {
                         enteredNumber = int.tryParse(value); // Chuyển đổi giá trị nhập
@@ -803,6 +826,10 @@ class _ListTaskState extends State<ListTask> with RouteAware{
                     status,
                     style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                   ),
+                  Text(
+                    name,
+                    style: TextStyle(fontSize: 16,color: Colors.grey[700])
+                  )
                 ],
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -282,6 +283,9 @@ class _BuyOldFoodState extends State<BuyOldFood>{
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly, // Chỉ cho phép nhập số
+                      ],
                       keyboardType: TextInputType.number, // Chỉ nhập số
                       onChanged: (value) {
                         setState(() {

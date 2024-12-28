@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -343,7 +344,7 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
                     image: DecorationImage(
                       image: _selectedImage != null
                           ? FileImage(_selectedImage!) // Hiển thị ảnh đã chọn
-                          : AssetImage('images/fish.png') as ImageProvider, // Placeholder
+                          : AssetImage('images/food.png') as ImageProvider, // Placeholder
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -411,6 +412,9 @@ class _BuyFoodState extends State<BuyFood> with RouteAware{
                           amount = int.tryParse(value); // Cập nhật giá trị của amount
                         });
                       },
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly, // Chỉ cho phép nhập số
+                        ]
                     ),
                   ),
                   Text(

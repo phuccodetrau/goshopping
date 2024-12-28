@@ -163,6 +163,7 @@ class _GroupMainScreenState extends State<GroupMainScreen> {
                     imageBase64: widget.imageBase64,
                     groupName: widget.groupName,
                     groupId: widget.groupId,
+                    adminName:widget.adminName,
                   ),
                 ),
               );
@@ -374,8 +375,7 @@ class _FoodCardState extends State<FoodCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.cloud, size: 20),
-                Text("20"),
+
               ],
             ),
           ],
@@ -432,7 +432,7 @@ class _ActivityCardState extends State<ActivityCard> {
                 ],
               ),
               Spacer(),
-              Icon(Icons.more_vert),
+
             ],
           ),
         ),

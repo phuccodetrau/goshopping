@@ -104,7 +104,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundImage: (_imageBase64 == null || _imageBase64 == "") ? AssetImage('images/group.png') : MemoryImage(base64Decode(_imageBase64!)),
+                    backgroundImage: (_imageBase64 == null || _imageBase64 == "") ? AssetImage('images/person.png') : MemoryImage(base64Decode(_imageBase64!)),
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -136,7 +136,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               child: ListView(
                 children: [
                   _buildListTile(Icons.person, 'Chỉnh sửa thông tin cá nhân'),
-                  _buildListTile(Icons.update, 'Đổi mật khẩu'),
+                  _buildListTile(Icons.lock, 'Đổi mật khẩu'),
                   _buildListTile(Icons.assignment, 'Danh sách công việc'),
                   ListTile(
                     leading: Icon(Icons.logout, color: Colors.red),

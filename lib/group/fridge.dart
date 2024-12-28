@@ -603,34 +603,14 @@ class _FridgeState extends State<Fridge> with RouteAware {
                       fit: BoxFit.cover,
                     ) :
                     Image.asset(
-                      "images/fish.png",
+                      "images/food.png",
                       height: 80,
                       width: double.infinity,
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 12.5,
-                  left: 28,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Hành động khi bấm "Mua thêm"
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    ),
-                    child: Text(
-                      "Mua thêm",
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ),
+
               ],
             ),
             Padding(
@@ -654,7 +634,7 @@ class _FridgeState extends State<Fridge> with RouteAware {
                         style: TextStyle(fontSize: 12, color: Colors.red),
                       ),
                       Spacer(),
-                      Icon(Icons.group, size: 12, color: Colors.grey),
+
                     ],
                   ),
                 ],

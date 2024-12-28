@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
@@ -111,10 +112,15 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
         content: TextField(
           controller: _amountController,
           keyboardType: TextInputType.number,
+
           decoration: InputDecoration(
             hintText: 'Nhập số lượng ($unitName)',
             border: OutlineInputBorder(),
+            labelText: "Nhập số"
           ),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly, // Chỉ cho phép nhập số
+            ]
         ),
         actions: [
           TextButton(

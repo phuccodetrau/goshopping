@@ -456,32 +456,7 @@ class _UpdateFoodState extends State<UpdateFood> with RouteAware{
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          // Xử lý khi chuyển đổi tab
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.kitchen),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "",
-          ),
-        ],
-        selectedItemColor: Colors.green[700],
-        unselectedItemColor: Colors.grey,
-      ),
+
     );
   }
 

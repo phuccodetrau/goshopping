@@ -7,10 +7,11 @@ import '../group_main_screen.dart';
 
 class AddMember extends StatefulWidget {
   String? imageBase64;
+  final String adminName;
   final String groupName;
   final String groupId;
 
-  AddMember({required this.groupName, required this.groupId, required this.imageBase64});
+  AddMember({required this.groupName, required this.groupId, required this.imageBase64,required this.adminName});
 
   @override
   _AddMemberState createState() => _AddMemberState();
@@ -228,7 +229,7 @@ class _AddMemberState extends State<AddMember> {
               imageBase64: widget.imageBase64,
               groupId: widget.groupId,
               groupName: widget.groupName,
-              adminName: "Admin",
+              adminName: widget.adminName,
             ),
           ),
         );
@@ -375,7 +376,7 @@ class _AddMemberState extends State<AddMember> {
                         children: [
                           CircleAvatar(
                             backgroundImage: (user['avatar']?.isEmpty ?? true)
-                              ? AssetImage("images/group.png") as ImageProvider
+                              ? AssetImage("images/person.png") as ImageProvider
                               : MemoryImage(base64Decode(user['avatar']!)),
                             radius: 30,
                           ),
@@ -475,7 +476,7 @@ class ContactItem extends StatelessWidget {
       leading: CircleAvatar(
         radius: 20,
         backgroundImage: (avatar.isEmpty) 
-          ? AssetImage("images/group.png") as ImageProvider
+          ? AssetImage("images/person.png") as ImageProvider
           : MemoryImage(base64Decode(avatar)),
       ),
       title: Text(name),

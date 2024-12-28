@@ -18,7 +18,7 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
   final int _maxChars = 75;
   final String _url = dotenv.env['ROOT_URL']!;
   List<Map<String, String>> _userEmails = [];
-
+  late final String adminName;
   String _email = "";
   int _charCount = 0;
   String _imageBase64 = "";
@@ -63,7 +63,7 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
   Future<void> _initializeUserEmail() async {
     final emailUser = await _secureStorage.read(key: "email") ?? '';
     print("User email: $emailUser");
-
+    adminName=await _secureStorage.read(key: "name")??'';
     // Await the user name fetching process
     final userName = await getUserNameByEmail(emailUser);
     print("Fetched name for user: $userName");
@@ -112,7 +112,8 @@ class _AddGroupScreenState extends State<AddGroupScreen> {
             builder: (context) => AddMember(
               imageBase64: _imageBase64,
               groupName: groupName,
-              groupId: groupId
+              groupId: groupId,
+              adminName: adminName
             ),
           ),
         );

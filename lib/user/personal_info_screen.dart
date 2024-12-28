@@ -189,7 +189,7 @@ class _PersonalInformationChangeScreenState extends State<PersonalInformationCha
             radius: 40,
             backgroundImage: _selectedImage != null
                 ? FileImage(_selectedImage!) // Hiển thị ảnh đã chọn
-                : _imageBase64 == "" ? AssetImage('images/fish.png') as ImageProvider : MemoryImage(base64Decode(_imageBase64!)), // Placeholder
+                : _imageBase64 == "" ? AssetImage('images/person.png') as ImageProvider : MemoryImage(base64Decode(_imageBase64!)), // Placeholder
             backgroundColor: Colors.grey[200],
             child: _selectedImage == null
                 ? Center(
