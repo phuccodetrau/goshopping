@@ -55,11 +55,9 @@ class _UserTasksScreenState extends State<UserTasksScreen> with RouteAware {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-      if (hasMoreData && !isLoading) {
-        currentPage++;
-        _fetchTasks(loadMore: true);
-      }
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.95 && !isLoading && hasMoreData) {
+      currentPage++;
+      _fetchTasks(loadMore: true);
     }
   }
 
@@ -68,6 +66,12 @@ class _UserTasksScreenState extends State<UserTasksScreen> with RouteAware {
       setState(() {
         isLoading = true;
         currentPage = 1;
+        tasks = [];
+      });
+    } else {
+      if (isLoading) return; // Prevent multiple simultaneous loading requests
+      setState(() {
+        isLoading = true;
       });
     }
 
@@ -90,13 +94,16 @@ class _UserTasksScreenState extends State<UserTasksScreen> with RouteAware {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['code'] == 200) {
+          final newTasks = data['data']['tasks'] as List;
+          final totalRecords = data['data']['pagination']['totalRecords'] as int;
+          
           setState(() {
             if (loadMore) {
-              tasks.addAll(data['data']['tasks']);
+              tasks.addAll(newTasks);
             } else {
-              tasks = data['data']['tasks'];
+              tasks = newTasks;
             }
-            hasMoreData = tasks.length < data['data']['pagination']['totalRecords'];
+            hasMoreData = tasks.length < totalRecords;
             isLoading = false;
           });
         }
