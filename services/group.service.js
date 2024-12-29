@@ -1,4 +1,4 @@
-import { Group, User } from '../models/schema.js';
+import { Group, ListTask, Food, Category, Unit, Item, User } from '../models/schema.js';
 import NotificationService from './notification.service.js';
 
 class GroupService {
@@ -199,31 +199,39 @@ class GroupService {
 
     static async deleteGroup(groupId, userEmail) {
         try {
+            // Kiểm tra xem group có tồn tại không
             const group = await Group.findById(groupId);
             if (!group) {
                 return { code: 404, message: "Không tìm thấy nhóm", data: "" };
             }
 
-            // Lấy danh sách user IDs trước khi xóa nhóm
-            const users = await User.find({ 
-                email: { $in: group.listUser.map(u => u.email) } 
-            });
-            const userIds = users.map(user => user._id);
+            // Kiểm tra xem người dùng có phải là admin không
+            const userInGroup = group.listUser.find(user => user.email === userEmail);
+            if (!userInGroup || userInGroup.role !== 'admin') {
+                return { code: 403, message: "Bạn không có quyền xóa nhóm này", data: "" };
+            }
 
-            // Gửi thông báo cho tất cả thành viên
-            await NotificationService.createNotificationForMany(
-                userIds,
-                'group_deleted',
-                `Nhóm "${group.name}" đã bị xóa bởi admin ${userEmail}`
-            );
+            // Xóa tất cả các documents liên quan từ các collections khác
+            await Promise.all([
+                // Xóa tất cả ListTask của group
+                ListTask.deleteMany({ group: groupId }),
+                // Xóa tất cả Food của group
+                Food.deleteMany({ group: groupId }),
+                // Xóa tất cả Category của group
+                Category.deleteMany({ group: groupId }),
+                // Xóa tất cả Unit của group
+                Unit.deleteMany({ group: groupId }),
+                // Xóa tất cả Item của group
+                Item.deleteMany({ group: groupId }),
+            ]);
 
-            // Xóa nhóm
+            // Xóa group
             await Group.findByIdAndDelete(groupId);
 
-            return { code: 700, message: "Xóa nhóm thành công", data: group };
+            return { code: 700, message: "Xóa nhóm thành công", data: "" };
         } catch (error) {
-            console.error('Error deleting group:', error);
-            throw error;
+            console.error("Lỗi khi xóa nhóm:", error);
+            throw { code: 500, message: "Lỗi server", data: "" };
         }
     }
     

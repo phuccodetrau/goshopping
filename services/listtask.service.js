@@ -1,4 +1,4 @@
-import { ListTask, Group } from "../models/schema.js";
+import { ListTask, Group, Item } from "../models/schema.js";
 import NotificationService from "./notification.service.js";
 
 class ListTaskService {
@@ -250,7 +250,7 @@ class ListTaskService {
             }
             const skip = (page - 1) * limit;
             // Thực hiện truy vấn với populate để lấy thông tin group
-            const listTasks = await ListTask.find(filter)
+            let listTasks = await ListTask.find(filter)
                 .select('name memberEmail note startDate endDate foodName amount unitName state group price')
                 .skip(skip)
                 .limit(limit)
@@ -260,6 +260,10 @@ class ListTaskService {
                 })
                 .lean()
                 .exec();
+
+            // Lọc bỏ các task có group không tồn tại
+            listTasks = listTasks.filter(task => task.group !== null);
+
             // Định dạng lại dữ liệu trả về
             const formattedTasks = listTasks.map(task => ({
                 taskId: task._id,
@@ -276,6 +280,7 @@ class ListTaskService {
                 groupId: task.group._id,
                 groupName: task.group.name
             }));
+
             const totalRecords = await ListTask.countDocuments(filter);
             return {
                 code: 200,
