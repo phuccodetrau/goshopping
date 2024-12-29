@@ -170,7 +170,7 @@ class _OtpScreenState extends State<OtpScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            // Action quay lại
+            Navigator.of(context).pop();
           },
         ),
       ),

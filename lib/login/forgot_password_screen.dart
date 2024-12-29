@@ -14,7 +14,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   TextEditingController _emailController = TextEditingController();
   String? _errorText;
   bool _isEmailValid = false;
+  bool _isLoading = false;
+
   Future<void> forgot_password()async{
+    setState(() {
+      _isLoading = true;
+    });
+    
     String email=_emailController.text;
     try {
       final response = await http.post(
@@ -25,8 +31,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       final responseData = jsonDecode(response.body);
       print(responseData);
+      
+      setState(() {
+        _isLoading = false;
+      });
+      
       if(responseData['status']==true){
-
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -34,16 +44,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         );
       }else{
-        //TODO
         setState(() {
           _errorText="Kiểm tra lại email của bạn! Thử lại sau vài giây!";
         });
-      }}catch(err){
+      }
+    } catch(err) {
       setState(() {
+        _isLoading = false;
         _errorText="Kiểm tra lại email của bạn.";
       });
     }
-
   }
   // Hàm kiểm tra email hợp lệ
   void _validateEmail(String value) {
@@ -129,7 +139,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               child: SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton(
+                child: _isLoading 
+                  ? Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
                   onPressed: _isEmailValid ? () {
                     forgot_password();
 
